@@ -1,0 +1,169 @@
+.aiResearchReportPage {
+  height: 100%;
+  position: relative;
+
+  .aiResearchReportPage_header {
+    width: 100%;
+    height: 238rpx;
+    // background: url('@/assets/corpDetail/corpDetail27.png') no-repeat;
+    // background-size: 100% 100%;
+    position: absolute;
+    top: 0;
+
+    .aiResearchReportPage_header_bg {
+      width: 100%;
+      height: 100%;
+    }
+
+    .aiResearchReportPage_header_title {
+      font-family: PingFang SC, PingFang SC;
+      font-weight: 500;
+      font-size: 40rpx;
+      color: #333333;
+      position: absolute;
+      top: 46rpx;
+      left: 24rpx;
+    }
+  }
+
+  .aiResearchReportPage_content {
+    width: 100%;
+    padding: 24rpx;
+    box-sizing: border-box;
+    position: absolute;
+    top: 182rpx;
+    padding-bottom: 100rpx;
+
+    .aiResearchReportPage_content_item {
+      margin-bottom: 48rpx;
+      font-family: PingFang SC, PingFang SC;
+      color: #000000;
+
+      .aiResearchReportPage_content_title {
+        font-weight: 500;
+        font-size: 40rpx;
+        margin-bottom: 24rpx;
+      }
+
+      .aiResearchReportPage_content_text {
+        font-weight: 400;
+        font-size: 28rpx;
+        line-height: 1.6;
+        
+        // 添加段落间距样式
+        p {
+          margin: 16rpx 0;
+          padding: 0;
+        }
+        
+        // 列表项间距
+        ul, ol {
+          margin: 16rpx 0;
+          padding-left: 32rpx;
+          
+          li {
+            margin: 8rpx 0;
+            line-height: 1.5;
+          }
+        }
+        
+        // 标题间距
+        h1, h2, h3, h4, h5, h6 {
+          margin: 24rpx 0 16rpx 0;
+          line-height: 1.4;
+        }
+        
+        // 分隔线间距
+        hr {
+          margin: 32rpx 0;
+          border: none;
+          border-top: 1rpx solid #e0e0e0;
+        }
+        
+        // div 容器间距
+        div {
+          margin: 12rpx 0;
+        }
+      }
+    }
+  }
+}
+
+// 加载页面样式
+.aiResearchReportPage_loading {
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+
+  .loading_container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 0 60rpx;
+    margin-top: 200rpx;
+    overflow: hidden;
+
+    .loading_robot {
+      width: 198rpx;
+      height: 198rpx;
+      margin-bottom: 94rpx;
+      animation: float 2s ease-in-out infinite;
+    }
+
+
+    .progress_container {
+      width: 100%;
+      margin-bottom: 88rpx;
+
+      .progress_bar {
+        width: 100%;
+        height: 26rpx;
+        background: #F6F6F6;
+        border-radius: 4rpx;
+        overflow: hidden;
+        border-radius: 20rpx;
+
+        .progress_fill {
+          height: 100%;
+          background: linear-gradient(90deg, #2156FE 0%, #1D4ED8 100%);
+          border-radius: 4rpx;
+          transition: width 0.3s ease;
+          border-radius: 20rpx;
+        }
+      }
+    }
+
+    .loading_title {
+      font-family: PingFang SC, PingFang SC;
+      font-weight: 600;
+      font-size: 32rpx;
+      color: #000000;
+      margin-bottom: 42rpx;
+      text-align: center;
+    }
+
+    .loading_subtitle {
+      font-family: PingFang SC, PingFang SC;
+      font-weight: 400;
+      font-size: 28rpx;
+      color: #000000;
+      text-align: center;
+      line-height: 40rpx;
+    }
+  }
+}
+
+// 浮动动画
+@keyframes float {
+
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-20rpx);
+  }
+}
+

@@ -23,7 +23,7 @@ class TaroRequest {
     interceptors?: TaroInterceptors
   }) {
     this.baseConfig = {
-      timeout: config?.timeout || 60000,
+      timeout: config?.timeout || 120000,
       header: config?.header || {}
     }
 

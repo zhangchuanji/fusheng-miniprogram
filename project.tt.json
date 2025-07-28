@@ -1,7 +1,7 @@
 {
   "miniprogramRoot": "./",
-  "projectname": "taro-mini",
-  "description": "taro框架小程序项目",
+  "projectname": "盖利克斯AI",
+  "description": "盖利克斯AI小程序",
   "appid": "touristappid",
   "setting": {
     "urlCheck": true,

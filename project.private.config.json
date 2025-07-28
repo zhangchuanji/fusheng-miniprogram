@@ -1,6 +1,6 @@
 {
   "libVersion": "3.8.10",
-  "projectname": "taro-mini",
+  "projectname": "盖利克斯AI",
   "setting": {
     "urlCheck": true,
     "coverView": false,
@@ -17,6 +17,6 @@
     "compileHotReLoad": true,
     "checkInvalidKey": true,
     "ignoreDevUnusedFiles": true,
-    "bigPackageSizeSupport": false
+    "bigPackageSizeSupport": true
   }
 }

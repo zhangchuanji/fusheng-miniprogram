@@ -1,0 +1,119 @@
+.enterprise-page {
+    background: #fff;
+    min-height: 100vh;
+    padding: 24rpx;
+    box-sizing: border-box;
+}
+
+.enterprise-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 30rpx;
+    min-height: 96rpx;
+}
+
+.enterprise-content {
+    flex: 1;
+    padding-left: 20rpx;
+    font-family: PingFang SC, PingFang SC;
+    font-weight: 500;
+    font-size: 28rpx;
+    color: #333333;
+}
+
+.enterprise-content-disabled {
+    flex: 1;
+    padding-left: 20rpx;
+    font-family: PingFang SC, PingFang SC;
+    font-weight: 500;
+    font-size: 28rpx;
+    color: #333333;
+}
+
+.enterprise-label {
+    min-width: 180rpx;
+    font-family: PingFang SC, PingFang SC;
+    font-weight: 500;
+    font-size: 28rpx;
+    color: #868686;
+}
+
+.enterprise-input {
+    flex: 1;
+    margin-left: 32rpx;
+    font-size: 30rpx;
+    color: #333;
+    background: transparent;
+    border: none;
+    outline: none;
+    padding: 24rpx 0;
+}
+
+.enterprise-btn-box {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 32rpx;
+    margin: 80rpx 32rpx 0 32rpx;
+}
+
+.enterprise-btn {
+    width: 338rpx;
+    height: 86rpx;
+    background: #2156FE;
+    border-radius: 20rpx;
+    font-family: PingFang SC, PingFang SC;
+    font-weight: 500;
+    font-size: 28rpx;
+    color: #FFFFFF;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    border: 2rpx solid #2156FE;
+}
+
+.enterprise-btn-cancel {
+    all: unset;
+    width: 338rpx;
+    height: 86rpx;
+    background: #F8F8F8;
+    border-radius: 20rpx 20rpx 20rpx 20rpx;
+    font-family: PingFang SC, PingFang SC;
+    font-weight: 500;
+    font-size: 28rpx;
+    color: #333333;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2rpx solid #F8F8F8;
+}
+
+.enterprise-license-img {
+    width: 120rpx;
+    height: 120rpx;
+    border-radius: 16rpx;
+    object-fit: cover;
+    margin-left: 32rpx;
+    background: #f8f8f8;
+}
+
+.enterprise-license-upload {
+    width: 120rpx;
+    height: 120rpx;
+    border-radius: 16rpx;
+    background: #f8f8f8;
+    color: #ccc;
+    font-size: 80rpx;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+}
+
+// 必填星号
+.enterprise-label>text {
+    color: #FF1818;
+    margin-right: 8rpx;
+}

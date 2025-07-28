@@ -17,20 +17,18 @@ import { exampleAPI } from '@/api/example'
 // 请求参数类型
 import { IExampleRequest } from '@/api/types/example'
 
-export const getExampleDataAsync = createAsyncThunk<
-  void,
-  IExampleRequest,
-  IThunkState
->('example/getExampleDataAsync', async (payload, { dispatch }) => {
-  // 请求接口获取数据
-  exampleAPI(payload, (res) => {
-    if (res.success) {
-      dispatch(dataAction({ type: 'set', data: res.data }))
-    } else {
-      console.log(res)
-    }
-  })
-},
+export const getExampleDataAsync = createAsyncThunk<void, IExampleRequest, IThunkState>(
+  'example/getExampleDataAsync',
+  async (payload, { dispatch }) => {
+    // 请求接口获取数据
+    exampleAPI(payload, res => {
+      if (res.success) {
+        dispatch(dataAction({ type: 'set', data: res.data }))
+      } else {
+        console.log(res)
+      }
+    })
+  },
   {
     condition: undefined // 禁用条件,禁用 AbortController 依赖
   }

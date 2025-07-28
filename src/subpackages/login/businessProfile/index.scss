@@ -1,0 +1,181 @@
+.business-profile-page {
+    // min-height: 100vh;
+    background: #fff;
+    font-family: PingFang SC, sans-serif;
+    padding: 0 24rpx;
+}
+
+.bp-header {
+    position: relative;
+
+    .bp-title {
+        font-size: 40rpx;
+        font-weight: 600;
+        color: #333;
+        margin: 16rpx 0;
+        display: block;
+    }
+
+    .bp-desc {
+        font-size: 28rpx;
+        color: #4A4A4A;
+        display: block;
+    }
+}
+
+.bp-core-section {
+    margin-top: 40rpx;
+
+    .bp-core-box {
+        border-radius: 32rpx;
+        background: #F7FAFF;
+        border: 4rpx solid #474AFF;
+        padding: 32rpx 20rpx;
+
+        .bp-core-item {
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 16rpx;
+
+            .bp-dot {
+                color: #2156FE;
+                font-size: 28rpx;
+                margin-right: 10rpx;
+            }
+
+            .bp-core-text {
+                font-family: PingFang SC, PingFang SC;
+                font-weight: 400;
+                font-size: 28rpx;
+                color: #4A4A4A;
+
+                .bp-core-title {
+                    font-family: PingFang SC, PingFang SC;
+                    font-weight: 500;
+                    font-size: 28rpx;
+                    color: #4A4A4A;
+                }
+            }
+        }
+    }
+}
+
+.bp-focus-section {
+    margin-top: 34rpx;
+
+    .bp-focus-title {
+        font-family: PingFang SC, PingFang SC;
+        font-weight: 500;
+        font-size: 32rpx;
+        color: #333333;
+    }
+
+    .bp-focus-desc {
+        margin-top: 20rpx;
+        font-family: PingFang SC, PingFang SC;
+        font-weight: 400;
+        font-size: 28rpx;
+        color: #4A4A4A;
+        display: block;
+    }
+
+    .bp-tags {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 20rpx;
+        margin-top: 20rpx;
+    }
+
+    .bp-tag {
+        height: 84rpx;
+        background: #F8F8F8;
+        border-radius: 16rpx;
+        color: #333333;
+        font-size: 28rpx;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        border: 3rpx solid #F8F8F8;
+        position: relative;
+    }
+
+    .bp-tag-selected {
+        border: 3rpx solid #1F55FF;
+    }
+
+    .bp-tag-selected::after {
+        content: '';
+        position: absolute;
+        right: 0;
+        bottom: 0;
+        width: 30rpx;
+        height: 30rpx;
+        background: #1F55FF;
+        // border-bottom-right-radius: 16rpx;
+        border-top-left-radius: 16rpx;
+        z-index: 1;
+        display: block;
+    }
+
+    .bp-tag-selected::before {
+        content: '';
+        position: absolute;
+        right: 0rpx;
+        bottom: 0rpx;
+        width: 30rpx;
+        height: 30rpx;
+        background: url('data:image/svg+xml;utf8,<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M7 13.5L11 17L17 10.5" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>') no-repeat center/contain;
+        z-index: 2;
+        display: block;
+    }
+}
+
+.bp-custom-section {
+    margin-top: 28px;
+}
+
+.bp-custom-title {
+    font-size: 32rpx;
+    color: #333333;
+    font-weight: 500;
+    margin-bottom: 16rpx;
+    display: block;
+}
+
+.bp-custom-input {
+    width: 100%;
+    min-height: 84rpx;
+    background: #F8F8F8;
+    border-radius: 16rpx;
+    padding: 0 24rpx;
+    font-family: PingFang SC, PingFang SC;
+    font-weight: 400;
+    font-size: 28rpx;
+    color: #A5A5A5;
+    box-sizing: border-box;
+    color: #000000;
+}
+
+.bp-custom-input::placeholder {
+    color: #A0A0A0;
+}
+
+.bp-next-btn {
+    width: 530rpx;
+    height: 84rpx;
+    background: #2156FE;
+    color: #fff;
+    font-size: 32rpx;
+    font-weight: 500;
+    border-radius: 41rpx;
+    margin-top: 72rpx;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    margin: 0 auto;
+    margin-top: 32rpx;
+}

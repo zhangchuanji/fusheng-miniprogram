@@ -1,0 +1,870 @@
+.chatPage {
+  width: 100%;
+  height: 100%;
+  padding: 0 24rpx;
+  box-sizing: border-box;
+  padding-top: 32rpx;
+  position: relative;
+
+  .chatPage_inputs {
+    width: 100%;
+    height: 100%;
+    background: #F7F7F7;
+    border-radius: 32rpx;
+    box-sizing: border-box;
+    padding: 16rpx;
+    position: relative;
+    font-family: PingFang SC, PingFang SC;
+    font-weight: 400;
+    font-size: 32rpx;
+    color: #333333;
+    margin-top: 20rpx;
+  }
+
+  .nut-dialog-footer .nut-dialog-footer-cancel {
+    background: #F8F8F8;
+    border: none;
+    border-radius: 12rpx;
+    box-sizing: border-box;
+    padding: 16rpx;
+    position: relative;
+    font-family: PingFang SC, PingFang SC;
+    font-weight: 500;
+    font-size: 28rpx;
+    color: #333333;
+  }
+
+  .nut-dialog-footer .nut-dialog-footer-ok {
+    background: #2156FE;
+    border: none;
+    border-radius: 12rpx;
+    box-sizing: border-box;
+    padding: 16rpx;
+    position: relative;
+    font-family: PingFang SC, PingFang SC;
+    font-weight: 500;
+    font-size: 28rpx;
+    color: #FFFFFF;
+  }
+
+  .chatPage_default {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+
+    .chatPage_img {
+      width: 100%;
+      height: 336rpx;
+      box-sizing: border-box;
+    }
+
+    .chatPage_recommend {
+      width: 100%;
+      min-height: 10rpx;
+      background: #fff;
+      border-radius: 32rpx;
+      box-sizing: border-box;
+
+      .chatPage_recommend_title {
+        width: 100%;
+        height: 60rpx;
+        background: #fff;
+        box-sizing: border-box;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+
+        .recommend_left {
+          display: flex;
+          align-items: center;
+
+          .recommend_left_img {
+            width: 56rpx;
+            height: 60rpx;
+            margin-right: 10rpx;
+          }
+
+          .recommend_left_text {
+            font-family: PingFang SC, PingFang SC;
+            font-weight: 400;
+            font-size: 28rpx;
+            color: #8190A4;
+          }
+        }
+
+        .recommend_right {
+          display: flex;
+          align-items: center;
+
+          .recommend_right_img {
+            width: 32rpx;
+            height: 32rpx;
+            margin-left: 12rpx;
+          }
+
+          .recommend_right_text {
+            font-family: PingFang SC, PingFang SC;
+            font-weight: 400;
+            font-size: 28rpx;
+            color: #8190A4;
+          }
+        }
+      }
+
+      .chatPage_recommend_content {
+        width: 100%;
+        height: 100%;
+        box-sizing: border-box;
+        margin-top: 26rpx;
+
+        .chatPage_recommend_content_item {
+          display: inline-block;
+          max-width: 100%;
+          min-width: 10rpx;
+          background: #EAF6FE;
+          border-radius: 200rpx;
+          margin-bottom: 24rpx;
+          padding: 0 20rpx;
+          font-family: PingFang SC, PingFang SC;
+          font-weight: 500;
+          font-size: 28rpx;
+          color: #333333;
+          line-height: 72rpx;
+          height: auto;
+          box-sizing: border-box;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+
+        &.fade-out {
+          animation: fadeOut 0.3s forwards;
+        }
+
+        &.fade-in {
+          animation: fadeIn 0.3s forwards;
+        }
+      }
+    }
+  }
+
+  .chatPage_content {
+    width: 100%;
+    box-sizing: border-box;
+    overflow: hidden;
+
+    &::-webkit-scrollbar {
+      display: none !important;
+    }
+
+    .chatMsg {
+      display: flex;
+      margin-bottom: 16rpx;
+    }
+
+    .user {
+      justify-content: flex-end;
+    }
+
+    .ai {
+      justify-content: flex-start;
+    }
+
+    .chatMsg_user {
+      min-width: 10rpx;
+      min-height: 76rpx;
+      background: #49A7FF;
+      box-sizing: border-box;
+      font-family: PingFang SC, PingFang SC;
+      font-weight: 500;
+      font-size: 32rpx;
+      color: #FFFFFF;
+      padding: 16rpx 24rpx;
+      border-radius: 32rpx 32rpx 0 32rpx;
+      max-width: 70%;
+      word-break: break-all;
+      margin-top: 50rpx;
+    }
+
+    .chatMsg_ai {
+      width: 100%;
+      height: 100%;
+      background: #fff;
+      border-radius: 32rpx;
+      padding: 16rpx 0;
+      box-sizing: border-box;
+      color: #333;
+      font-size: 32rpx;
+      word-break: break-all;
+
+      .chatMsg_ai_fun_line {
+        width: 100%;
+        height: 86rpx;
+        border-radius: 16rpx;
+        border: 3rpx solid rgba(27, 91, 255, 0.16);
+        font-family: PingFang SC, PingFang SC;
+        font-weight: 500;
+        font-size: 32rpx;
+        color: #1B5BFF;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-top: 40rpx;
+        box-sizing: border-box;
+      }
+
+      .chat_ai_company {
+        width: 100%;
+        min-height: 324rpx;
+        background: #F7F7F7;
+        border-radius: 24rpx;
+        padding: 24rpx;
+        box-sizing: border-box;
+        margin-top: 24rpx;
+        display: flex;
+        position: relative;
+
+        .bottom_index {
+          position: absolute;
+          bottom: 0;
+          right: 0;
+          width: 52rpx;
+          height: 46rpx;
+          border-radius: 24rpx 0 24rpx 0;
+
+          &:nth-child(1) {
+            background: #FFCE53;
+            font-family: DIN Alternate, DIN Alternate;
+            font-weight: bold;
+            font-size: 32rpx;
+            color: #C67E0A;
+          }
+
+          &:nth-child(2) {
+            background: #D2DDE9;
+            font-family: DIN Alternate, DIN Alternate;
+            font-weight: bold;
+            font-size: 32rpx;
+            color: #7B8D9F;
+          }
+
+          &:nth-child(3) {
+            background: #E2BE99;
+            font-family: DIN Alternate, DIN Alternate;
+            font-weight: bold;
+            font-size: 32rpx;
+            color: #C4792C;
+          }
+        }
+
+        .company_left {
+          width: 106rpx;
+          height: 106rpx;
+          border-radius: 14rpx;
+          border: 2rpx solid #E9E9E9;
+
+          .company_left_img {
+            width: 100%;
+            height: 100%;
+          }
+        }
+
+        .company_right {
+          padding-left: 20rpx;
+          box-sizing: border-box;
+          flex: 1;
+          display: flex;
+          flex-direction: column;
+          justify-content: space-between;
+
+          .company_right_top {
+            width: 100%;
+            font-family: PingFang SC, PingFang SC;
+            font-weight: 500;
+            font-size: 32rpx;
+            color: #2B2B2B;
+            margin-bottom: 10rpx;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+          }
+
+          .company_right_tags {
+            width: 100%;
+            height: 44rpx;
+            display: flex;
+            align-items: center;
+            gap: 20rpx;
+            margin-bottom: 12rpx;
+
+            .company_right_tag {
+              min-width: 50rpx;
+              height: 44rpx;
+              border-radius: 8rpx;
+              border: 2rpx solid #1B5BFF;
+              font-family: PingFang SC, PingFang SC;
+              font-weight: 500;
+              font-size: 24rpx;
+              color: #1B5BFF;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              padding: 0 10rpx;
+              box-sizing: border-box;
+            }
+          }
+
+          .company_right_info {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            margin-bottom: 10rpx;
+
+            .legal-person {
+              font-family: PingFang SC, PingFang SC;
+              font-weight: 400;
+              font-size: 24rpx;
+              color: #333333;
+              margin-right: 30rpx;
+            }
+
+            .address {
+              height: 22rpx;
+              font-family: PingFang SC, PingFang SC;
+              font-weight: 500;
+              font-size: 24rpx;
+              color: #6E6E6E;
+              padding-right: 16rpx;
+              border-right: 2rpx solid #BACDFF;
+              margin-right: 22rpx;
+              line-height: 1;
+            }
+
+            .website {
+              width: 92rpx;
+              height: 44rpx;
+              background: #E6EDFF;
+              border-radius: 8rpx;
+              display: flex;
+              align-items: center;
+              justify-content: space-between;
+              padding: 0 8rpx;
+              box-sizing: border-box;
+              font-family: PingFang SC, PingFang SC;
+              font-weight: 400;
+              font-size: 24rpx;
+              color: #1B5BFF;
+
+              .website_img {
+                width: 24rpx;
+                height: 24rpx;
+              }
+            }
+          }
+
+          .company_right_date {
+            width: 100%;
+            font-family: PingFang SC, PingFang SC;
+            font-weight: 400;
+            font-size: 24rpx;
+            color: #333333;
+            margin-bottom: 12rpx;
+          }
+
+          .company_right_tabs {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            gap: 20rpx;
+
+            .company_right_tab {
+              min-width: 50;
+              height: 46rpx;
+              background: #FF9C23;
+              border-radius: 10rpx;
+              font-family: PingFang SC, PingFang SC;
+              font-weight: 500;
+              font-size: 24rpx;
+              color: #FFFFFF;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              padding: 0 15rpx;
+              box-sizing: border-box;
+            }
+          }
+        }
+      }
+
+      .chatMsg_ai_text {
+        width: 100%;
+        height: 100%;
+        font-family: PingFang SC, PingFang SC;
+        font-weight: 500;
+        font-size: 32rpx;
+        color: #2B2B2B;
+        line-height: 1.6;
+
+        // Markdown样式
+        h1,
+        h2,
+        h3,
+        h4,
+        h5,
+        h6 {
+          margin: 16rpx 0 8rpx 0;
+          font-weight: 600;
+          color: #2B2B2B;
+        }
+
+        h1 {
+          font-size: 36rpx;
+        }
+
+        h2 {
+          font-size: 34rpx;
+        }
+
+        h3 {
+          font-size: 32rpx;
+        }
+
+        h4,
+        h5,
+        h6 {
+          font-size: 30rpx;
+        }
+
+        p {
+          margin: 8rpx 0;
+          line-height: 1.6;
+        }
+
+        ul,
+        ol {
+          margin: 8rpx 0;
+          padding-left: 32rpx;
+        }
+
+        li {
+          margin: 4rpx 0;
+          line-height: 1.6;
+        }
+
+        code {
+          background: #f5f5f5;
+          padding: 4rpx 8rpx;
+          border-radius: 8rpx;
+          font-family: 'Courier New', monospace;
+          font-size: 28rpx;
+          color: #e74c3c;
+        }
+
+        pre {
+          background: #f8f9fa;
+          padding: 16rpx;
+          border-radius: 12rpx;
+          margin: 16rpx 0;
+          overflow-x: auto;
+          border-left: 4rpx solid #49A7FF;
+
+          code {
+            background: none;
+            padding: 0;
+            color: #333;
+            font-size: 28rpx;
+          }
+        }
+
+        blockquote {
+          border-left: 4rpx solid #49A7FF;
+          padding-left: 16rpx;
+          margin: 16rpx 0;
+          color: #666;
+          font-style: italic;
+        }
+
+        strong {
+          font-weight: 600;
+          color: #2B2B2B;
+        }
+
+        em {
+          font-style: italic;
+          color: #666;
+        }
+
+        a {
+          color: #49A7FF;
+          text-decoration: none;
+        }
+
+        table {
+          border-collapse: collapse;
+          width: 100%;
+          margin: 16rpx 0;
+          font-size: 28rpx;
+
+          th,
+          td {
+            border: 1rpx solid #ddd;
+            padding: 8rpx 12rpx;
+            text-align: left;
+          }
+
+          th {
+            background: #f5f5f5;
+            font-weight: 600;
+          }
+        }
+
+        hr {
+          border: none;
+          border-top: 1rpx solid #eee;
+          margin: 16rpx 0;
+        }
+      }
+
+      .chatMsg_ai_fun {
+        width: 100%;
+        height: 100%;
+        background: #fff;
+        border-radius: 32rpx;
+        box-sizing: border-box;
+        display: flex;
+        align-items: center;
+        gap: 40rpx;
+        margin-top: 42rpx;
+
+        .chatMsg_ai_fun_img {
+          width: 32rpx;
+          height: 32rpx;
+          cursor: pointer;
+          transition: all 0.2s ease-in-out;
+          filter: grayscale(0);
+
+          // 点击动画效果
+          &.button-click-animation {
+            transform: scale(0.8);
+            transition: transform 0.1s ease-in-out;
+          }
+
+          // 激活状态 - 变色效果
+          &.button-active {
+            filter: grayscale(0) brightness(1.2) saturate(1.5);
+            transform: scale(1.1);
+          }
+
+          // 悬停效果
+          &:hover {
+            transform: scale(1.05);
+            filter: grayscale(0) brightness(1.1);
+          }
+
+          // 点击时的缩放效果
+          &:active {
+            transform: scale(0.9);
+            transition: transform 0.05s ease-in-out;
+          }
+        }
+      }
+    }
+  }
+
+  .chatPage_bottom {
+    width: 100%;
+    height: 314rpx;
+    background: linear-gradient(180deg, rgba(240, 243, 255, 0) 0%, #F0F3FF 100%);
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 100;
+    padding: 0 24rpx;
+    padding-top: 60rpx;
+    box-sizing: border-box;
+
+    .chatPage_bottom_input {
+      width: 100%;
+      height: 170rpx;
+      background: #fff;
+      border-radius: 32rpx;
+      box-sizing: border-box;
+      padding: 24rpx;
+      position: relative;
+      z-index: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+
+      /* 渐变边框实现，线条在border内侧 */
+      &::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        border-radius: 32rpx;
+        padding: 0;
+        z-index: 2;
+        pointer-events: none;
+        background: linear-gradient(90deg, #83FFDF 0%, #6881FF 100%);
+        /* 只显示内边框线条 */
+        -webkit-mask:
+          linear-gradient(#fff 0 0) content-box,
+          linear-gradient(#fff 0 0);
+        -webkit-mask-composite: xor;
+        mask-composite: exclude;
+        /* 线宽2rpx */
+        padding: 4rpx;
+        box-sizing: border-box;
+      }
+
+      .chatPage_input {
+        font-family: PingFang SC, PingFang SC;
+        font-weight: 400;
+        font-size: 32rpx;
+        color: #000000;
+      }
+
+      .chatPage_fun {
+        width: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+
+        .chatPage_fun_left {
+          display: flex;
+          align-items: center;
+
+          .chatPage_fun_left1 {
+            width: 48rpx;
+            height: 48rpx;
+            margin-right: 20rpx;
+          }
+
+          .chatPage_fun_left2 {
+            width: 184rpx;
+            height: 60rpx;
+            background: #F4F4F4;
+            border-radius: 16rpx;
+            font-family: PingFang SC, PingFang SC;
+            font-weight: 500;
+            font-size: 28rpx;
+            color: #333333;
+            padding: 16rpx;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-sizing: border-box;
+
+            .chatPage_fun_left2Img {
+              width: 32rpx;
+              height: 32rpx;
+              margin-right: 6rpx;
+            }
+          }
+        }
+
+        .chatPage_fun_right {
+          width: 48rpx;
+          height: 48rpx;
+        }
+      }
+    }
+  }
+}
+
+@keyframes fadeOut {
+  0% {
+    opacity: 1;
+  }
+
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes fadeIn {
+  0% {
+    opacity: 0;
+  }
+
+  100% {
+    opacity: 1;
+  }
+}
+
+@keyframes loading-bounce {
+
+  0%,
+  80%,
+  100% {
+    transform: scale(0);
+    opacity: 0.5;
+  }
+
+  40% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+// 科技感加载动画样式
+.tech-loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 32rpx 0;
+  min-height: 120rpx;
+}
+
+.tech-loading-dots {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16rpx;
+  margin-bottom: 24rpx;
+}
+
+.tech-dot {
+  width: 16rpx;
+  height: 16rpx;
+  background: linear-gradient(135deg, #49A7FF 0%, #6881FF 100%);
+  border-radius: 50%;
+  position: relative;
+  animation: tech-pulse 1.4s ease-in-out infinite both;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: -4rpx;
+    left: -4rpx;
+    right: -4rpx;
+    bottom: -4rpx;
+    background: linear-gradient(135deg, rgba(73, 167, 255, 0.3) 0%, rgba(104, 129, 255, 0.3) 100%);
+    border-radius: 50%;
+    animation: tech-glow 1.4s ease-in-out infinite both;
+  }
+
+  &:nth-child(1) {
+    animation-delay: -0.32s;
+
+    &::before {
+      animation-delay: -0.32s;
+    }
+  }
+
+  &:nth-child(2) {
+    animation-delay: -0.16s;
+
+    &::before {
+      animation-delay: -0.16s;
+    }
+  }
+
+  &:nth-child(3) {
+    animation-delay: 0s;
+
+    &::before {
+      animation-delay: 0s;
+    }
+  }
+}
+
+.tech-loading-text {
+  font-family: PingFang SC, PingFang SC;
+  font-weight: 500;
+  font-size: 28rpx;
+  color: #8190A4;
+  text-align: center;
+  position: relative;
+  animation: tech-text-fade 2s ease-in-out infinite;
+
+  &::after {
+    content: '';
+    position: absolute;
+    bottom: -8rpx;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 0;
+    height: 2rpx;
+    background: linear-gradient(90deg, #49A7FF 0%, #6881FF 100%);
+    animation: tech-line-expand 2s ease-in-out infinite;
+  }
+}
+
+@keyframes tech-pulse {
+
+  0%,
+  80%,
+  100% {
+    transform: scale(0.8);
+    opacity: 0.6;
+  }
+
+  40% {
+    transform: scale(1.2);
+    opacity: 1;
+  }
+}
+
+@keyframes tech-glow {
+
+  0%,
+  80%,
+  100% {
+    transform: scale(0.8);
+    opacity: 0.3;
+  }
+
+  40% {
+    transform: scale(1.4);
+    opacity: 0.6;
+  }
+}
+
+@keyframes tech-text-fade {
+
+  0%,
+  100% {
+    opacity: 0.7;
+  }
+
+  50% {
+    opacity: 1;
+  }
+}
+
+@keyframes tech-line-expand {
+  0% {
+    width: 0;
+    opacity: 0;
+  }
+
+  50% {
+    width: 60rpx;
+    opacity: 1;
+  }
+
+  100% {
+    width: 0;
+    opacity: 0;
+  }
+}
+
+// 发光动画关键帧
+@keyframes glow {
+  0% {
+    opacity: 0.3;
+    transform: scale(1);
+  }
+
+  100% {
+    opacity: 0.6;
+    transform: scale(1.1);
+  }
+}

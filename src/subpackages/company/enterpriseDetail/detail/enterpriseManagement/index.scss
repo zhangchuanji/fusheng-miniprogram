@@ -1,0 +1,77 @@
+.detailPage {
+    background: #F0F2F6;
+    height: 100vh;
+    overflow-y: auto;
+    padding-bottom: 50rpx;
+
+    .header {
+        width: 100%;
+        height: 88rpx;
+        display: flex;
+        align-items: center;
+        padding: 24rpx;
+        box-sizing: border-box;
+        background: #F0F2F6;
+
+        .header-title {
+            font-weight: 500;
+            font-size: 28rpx;
+            color: #333;
+        }
+    }
+
+    .enterprise-card-list {
+        padding: 0 24rpx;
+        box-sizing: border-box;
+    }
+
+    .enterprise-card {
+        width: 100%;
+        min-height: 240rpx;
+        background: #FFFFFF;
+        border-radius: 20rpx;
+        padding: 24rpx;
+        box-sizing: border-box;
+        margin-bottom: 24rpx;
+        display: flex;
+
+        .enterprise-card-left {
+            width: 64rpx;
+            height: 64rpx;
+            border-radius: 10rpx;
+            border: 2rpx solid #EBEBEB;
+            background: #FFFFFF;
+            border-radius: 20rpx;
+            margin-right: 28rpx;
+        }
+
+        .enterprise-card-right {
+            flex: 1;
+
+            .right-title {
+                font-family: PingFang SC, PingFang SC;
+                font-weight: 500;
+                font-size: 28rpx;
+                color: #426EFF;
+                margin-bottom: 12rpx;
+            }
+
+            .right-text {
+                width: 100%;
+                height: 44rpx;
+                font-family: PingFang SC, PingFang SC;
+                font-weight: 400;
+                font-size: 24rpx;
+                color: #868686;
+                margin-bottom: 10rpx;
+                display: flex;
+                align-items: center;
+
+                &:last-child {
+                    margin-bottom: 0;
+                }
+            }
+
+        }
+    }
+}

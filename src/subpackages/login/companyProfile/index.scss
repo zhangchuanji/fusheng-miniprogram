@@ -1,0 +1,162 @@
+.company_profile_page {
+    width: 100%;
+    min-height: 100vh;
+    background: #fff;
+    box-sizing: border-box;
+    padding: 0 24rpx;
+    position: relative;
+    font-family: PingFang SC, PingFang SC;
+
+    .cp_title {
+        font-family: PingFang SC, PingFang SC;
+        font-weight: 600;
+        font-size: 40rpx;
+        color: #333333;
+        margin-bottom: 16rpx;
+    }
+
+    .cp_desc {
+        font-family: PingFang SC, PingFang SC;
+        font-weight: 400;
+        font-size: 28rpx;
+        color: #4A4A4A;
+        margin-bottom: 78rpx;
+    }
+
+    .cp_section {
+        margin-bottom: 136rpx;
+    }
+
+    .cp_label {
+        font-family: PingFang SC, PingFang SC;
+        font-weight: 500;
+        font-size: 32rpx;
+        color: #333333;
+        margin-bottom: 42rpx;
+        display: flex;
+        align-items: center;
+    }
+
+    .cp_required {
+        color: #F53F3F;
+        font-size: 32rpx;
+        margin-left: 4rpx;
+    }
+
+    .cp_company_list {
+        display: flex;
+        flex-direction: column;
+        gap: 32rpx;
+        margin-bottom: 0;
+        position: relative;
+        overflow: visible;
+    }
+
+    .cp_company_item {
+        display: flex;
+        // align-items: center;
+    }
+
+    .nut-icon {
+        width: 28rpx;
+        height: 28rpx;
+        background: #E7E7E7;
+        border-radius: 8rpx;
+    }
+
+    .nut-checkbox-icon-checked {
+        color: #2156FE;
+    }
+
+    .cp_company_name {
+        margin-left: 20rpx;
+        font-family: PingFang SC, PingFang SC;
+        font-weight: 500;
+        font-size: 28rpx;
+        color: #333333;
+    }
+
+    .cp_company_input {
+        width: 602rpx;
+        height: 72rpx;
+        background: #F8F8F8;
+        border-radius: 12rpx;
+        font-size: 28rpx;
+        padding-left: 24rpx;
+        box-sizing: border-box;
+    }
+
+    .cp_error_text {
+        font-family: PingFang SC, PingFang SC;
+        font-weight: 400;
+        font-size: 24rpx;
+        color: #F53F3F;
+        margin-top: 12rpx;
+        margin-left: 48rpx;
+    }
+
+    .cp_name_input {
+        width: 100%;
+        height: 72rpx;
+        background: #F8F8F8;
+        border-radius: 12rpx;
+        font-size: 28rpx;
+        color: #000;
+        border: none;
+        box-sizing: border-box;
+        padding-left: 24rpx;
+    }
+
+    .cp_next_btn {
+        width: 530rpx;
+        height: 84rpx;
+        background: #2156FE;
+        color: #fff;
+        font-size: 32rpx;
+        font-weight: 500;
+        border-radius: 41rpx;
+        margin-top: 72rpx;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: none;
+        margin: 0 auto;
+    }
+
+    .nut-cell-group-wrap {
+        margin: 0 !important;
+    }
+
+    .nut-cell {
+        padding: 0 !important;
+    }
+
+    .cp_suggest_list {
+        position: absolute;
+        right: 76rpx;
+        background: #fff;
+        border: 1px solid #eee;
+        z-index: 9999;
+        width: 596rpx;
+        max-height: 300rpx;
+        overflow-y: auto;
+        border-radius: 12rpx;
+        box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.08);
+        padding: 12rpx;
+        box-sizing: border-box;
+    }
+
+    .cp_suggest_item {
+        padding: 20rpx 32rpx;
+        font-size: 28rpx;
+        color: #333;
+        cursor: pointer;
+        background: #fff;
+        transition: background 0.2s;
+        border-bottom: 2rpx solid #eee;
+    }
+
+    .cp_suggest_item:hover {
+        background: #f5f5f5;
+    }
+}

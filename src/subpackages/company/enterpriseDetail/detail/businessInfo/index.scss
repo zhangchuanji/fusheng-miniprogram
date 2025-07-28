@@ -1,0 +1,107 @@
+.detailPage {
+    width: 100%;
+    height: 100%;
+    background: #F0F2F6;
+    overflow: hidden;
+    overflow-y: auto;
+    padding: 24rpx;
+    box-sizing: border-box;
+    padding-top: 0;
+
+    .header {
+        width: 100%;
+        height: 88rpx;
+        display: flex;
+        align-items: center;
+        background: #F0F2F6;
+
+        .header-title {
+            font-weight: 500;
+            font-size: 28rpx;
+            color: #333;
+        }
+    }
+
+    .content {
+        width: 100%;
+        padding: 24rpx;
+        box-sizing: border-box;
+        background: #FFFFFF;
+        border-radius: 20rpx;
+        margin-bottom: 24rpx;
+
+        .content-item-row {
+            width: 100%;
+            margin-bottom: 32rpx;
+
+            &:last-child {
+                margin-bottom: 0;
+            }
+
+            .row-title {
+                font-family: PingFang SC, PingFang SC;
+                font-weight: 400;
+                font-size: 24rpx;
+                color: #868686;
+                margin-bottom: 8rpx;
+            }
+
+            .row-value {
+                font-family: PingFang SC, PingFang SC;
+                font-weight: 500;
+                font-size: 26rpx;
+                color: #333333;
+            }
+        }
+
+        .content-item-two-row {
+            width: 100%;
+            margin-bottom: 32rpx;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+
+            &:last-child {
+                margin-bottom: 0;
+            }
+
+            .row-left {
+                width: 50%;
+
+                .row-left-title {
+                    font-family: PingFang SC, PingFang SC;
+                    font-weight: 400;
+                    font-size: 24rpx;
+                    color: #868686;
+                    margin-bottom: 8rpx;
+                }
+
+                .row-left-value {
+                    font-family: PingFang SC, PingFang SC;
+                    font-weight: 500;
+                    font-size: 26rpx;
+                    color: #333333;
+                }
+            }
+
+            .row-right {
+                width: 50%;
+
+                .row-right-title {
+                    font-family: PingFang SC, PingFang SC;
+                    font-weight: 400;
+                    font-size: 24rpx;
+                    color: #868686;
+                    margin-bottom: 8rpx;
+                }
+
+                .row-right-value {
+                    font-family: PingFang SC, PingFang SC;
+                    font-weight: 500;
+                    font-size: 26rpx;
+                    color: #333333;
+                }
+            }
+        }
+    }
+}

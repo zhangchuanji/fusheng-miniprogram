@@ -1,0 +1,154 @@
+.detailPage {
+    width: 100%;
+    height: 100%;
+    padding: 24rpx;
+    padding-bottom: 100rpx;
+    box-sizing: border-box;
+
+    .top {
+        width: 100%;
+        height: 100%;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20rpx;
+
+        .top_left_Img {
+            width: 258rpx;
+            height: 52rpx;
+        }
+
+        .top_right {
+            font-family: PingFang SC, PingFang SC;
+            font-weight: 500;
+            font-size: 24rpx;
+            color: #333333;
+
+            .top_right_item_text {
+                font-family: DIN Alternate, DIN Alternate;
+                font-weight: bold;
+                font-size: 48rpx;
+                color: #385AB8;
+            }
+        }
+    }
+
+    .table {
+        width: 100%;
+        height: 100%;
+        box-sizing: border-box;
+        --nutui-table-border-color: #F3F3F3;
+
+        .nut-table-wrapper {
+            width: auto;
+        }
+
+        .nut-table-main-head-tr {
+            height: 106rpx;
+            line-height: 106rpx;
+            background: #F5F7FB;
+        }
+
+        .nut-table-main-body-tr {
+            height: 100rpx;
+            line-height: 100rpx;
+        }
+
+        .nut-table-main-head-tr-th,
+        .nut-table-main-body-tr-td {
+            padding: 0;
+            font-family: PingFang SC, PingFang SC;
+            font-weight: 500;
+            font-size: 28rpx;
+            color: #333333;
+        }
+
+        .nut-table-main-body-tr-td {
+            font-family: PingFang SC, PingFang SC;
+            font-weight: 500;
+            font-size: 24rpx;
+            color: #7B7B7B;
+        }
+    }
+
+    .common_title {
+        width: 100%;
+        height: 100%;
+        margin-top: 40rpx;
+
+        .common_title_title {
+            width: 100%;
+            font-family: PingFang SC, PingFang SC;
+            font-weight: 500;
+            font-size: 28rpx;
+            color: #333333;
+        }
+
+        .common_text {
+            font-family: PingFang SC, PingFang SC;
+            font-weight: 400;
+            font-size: 28rpx;
+            color: #333333;
+            margin-top: 12rpx;
+        }
+
+        .common_content {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 20rpx;
+            margin-top: 20rpx;
+
+            .common_item {
+                width: 100%;
+                height: 130rpx;
+                background: #F8F8F8;
+                border-radius: 8rpx;
+                padding: 24rpx;
+                box-sizing: border-box;
+                display: flex;
+                flex-direction: column;
+                justify-content: space-between;
+
+                .common_item_left {
+                    width: 100%;
+                    display: flex;
+                    font-family: PingFang SC, PingFang SC;
+                    font-weight: 400;
+                    font-size: 28rpx;
+                    color: #333333;
+
+                    .common_item_left_text {
+                        font-family: PingFang SC, PingFang SC;
+                        font-weight: 400;
+                        font-size: 28rpx;
+                        color: #3E8DF6;
+                        margin-left: 12rpx;
+                    }
+                }
+
+                .common_item_right {
+                    font-family: PingFang SC, PingFang SC;
+                    font-weight: 400;
+                    font-size: 28rpx;
+                    color: #333333;
+                }
+            }
+
+            .common_content_item {
+                min-width: 10rpx;
+                height: 60rpx;
+                background: #F8F8F8;
+                border-radius: 8rpx;
+                padding: 8rpx 12rpx;
+                box-sizing: border-box;
+                font-family: PingFang SC, PingFang SC;
+                font-weight: 400;
+                font-size: 28rpx;
+                color: #333333;
+            }
+        }
+    }
+}

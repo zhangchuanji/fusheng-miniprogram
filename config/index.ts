@@ -1,7 +1,7 @@
 import path from 'path'
 
 const config = {
-  projectName: 'taro-mini',
+  projectName: '盖利克斯AI',
   date: '2025-6-27',
   designWidth: 375,
   deviceRatio: {
@@ -16,13 +16,10 @@ const config = {
     '@': path.resolve(__dirname, '..', 'src')
   },
   plugins: ['@tarojs/plugin-html'],
-  defineConstants: {
-  },
+  defineConstants: {},
   copy: {
-    patterns: [
-    ],
-    options: {
-    }
+    patterns: [],
+    options: {}
   },
   framework: 'react',
   compiler: {
@@ -50,6 +47,34 @@ const config = {
           generateScopedName: '[name]__[local]___[hash:base64:5]'
         }
       }
+    },
+    miniCssExtractPluginOption: {
+      ignoreOrder: true
+    },
+    // 添加输入法兼容性配置
+    webpackChain(chain) {
+      chain.merge({
+        module: {
+          rules: [
+            {
+              test: /\.js$/,
+              loader: 'babel-loader',
+              options: {
+                presets: [
+                  [
+                    '@babel/preset-env',
+                    {
+                      targets: {
+                        browsers: ['last 2 versions', 'iOS >= 8', 'Android >= 4.1']
+                      }
+                    }
+                  ]
+                ]
+              }
+            }
+          ]
+        }
+      })
     }
   },
   h5: {
@@ -65,8 +90,7 @@ const config = {
       },
       autoprefixer: {
         enable: true,
-        config: {
-        }
+        config: {}
       },
       cssModules: {
         enable: false, // 默认为 false，如需使用 css modules 功能，则设为 true
@@ -75,7 +99,8 @@ const config = {
           generateScopedName: '[name]__[local]___[hash:base64:5]'
         }
       }
-    }
+    },
+
   }
 }
 

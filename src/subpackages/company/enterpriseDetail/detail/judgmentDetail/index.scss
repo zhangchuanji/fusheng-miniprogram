@@ -1,0 +1,220 @@
+.detailPage {
+    width: 100%;
+    height: 100%;
+    background: #F0F2F6;
+    padding: 24rpx;
+    box-sizing: border-box;
+
+    .header {
+        font-family: PingFang SC, PingFang SC;
+        font-weight: 600;
+        font-size: 32rpx;
+        color: #333333;
+        margin-bottom: 16rpx;
+    }
+
+    .enterprise-card {
+        width: 100%;
+        min-height: 100rpx;
+        background: #FFFFFF;
+        border-radius: 20rpx;
+        padding: 24rpx;
+        box-sizing: border-box;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        position: relative;
+        margin-bottom: 40rpx;
+
+        .enterprise-title {
+            width: 100%;
+            font-family: PingFang SC, PingFang SC;
+            font-weight: 500;
+            font-size: 28rpx;
+            color: #333333;
+            margin-bottom: 20rpx;
+        }
+
+        .enterprise-date {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+
+            .enterprise-date-text {
+                font-family: PingFang SC, PingFang SC;
+                font-weight: 400;
+                font-size: 24rpx;
+                color: #868686;
+            }
+        }
+
+        .enterprise-content {
+            width: 100%;
+            height: 196rpx;
+            background: #F8F9FB;
+            border-radius: 16rpx;
+            margin-top: 16rpx;
+            padding: 24rpx;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+
+            .enterprise-content-title {
+                font-family: PingFang SC, PingFang SC;
+                font-weight: 400;
+                font-size: 24rpx;
+                color: #868686;
+            }
+        }
+    }
+
+    .card {
+        width: 100%;
+        min-height: 100rpx;
+        background: #FFFFFF;
+        border-radius: 20rpx;
+
+        .card-title {
+            width: 100%;
+            height: 92rpx;
+            line-height: 92rpx;
+            font-family: PingFang SC, PingFang SC;
+            font-weight: 600;
+            font-size: 32rpx;
+            color: #333333;
+            padding: 0 24rpx;
+            border: 2rpx solid #F0F2F6;
+        }
+
+        .card-content {
+            width: 100%;
+            padding: 24rpx;
+            box-sizing: border-box;
+
+            .title-con {
+                height: 28rpx;
+                font-family: PingFang SC, PingFang SC;
+                font-weight: 500;
+                font-size: 28rpx;
+                color: #333333;
+                padding-left: 8rpx;
+                border-left: 4rpx solid #1B5BFF;
+                display: flex;
+                align-items: center;
+                justify-content: flex-start;
+                margin-bottom: 16rpx;
+            }
+
+            .text-con {
+                font-family: PingFang SC, PingFang SC;
+                font-weight: 400;
+                font-size: 24rpx;
+                color: #868686;
+                margin-bottom: 16rpx;
+            }
+
+            .text-con-value {
+                width: 100%;
+                min-height: 40rpx;
+                background: #F8F9FB;
+                border-radius: 16rpx;
+                padding: 24rpx;
+                box-sizing: border-box;
+                display: flex;
+                align-items: center;
+                justify-content: flex-start;
+
+                .steps-list {
+                    width: 100%;
+
+                    .steps-item {
+                        width: 100%;
+                        display: flex;
+
+                        .steps-item-dot {
+                            margin-top: 14rpx;
+
+                            .steps-item-dot-icon {
+                                width: 10rpx;
+                                height: 10rpx;
+                                background: #D9D9D9;
+                                border-radius: 50%;
+                            }
+
+                            .steps-item-dot-line {
+                                width: 2rpx;
+                                height: 120rpx;
+                                background: #D9D9D9;
+                                margin-top: 8rpx;
+                                margin: 0 auto;
+                                margin-top: 8rpx;
+                            }
+
+                        }
+
+                        .steps-item-title {
+                            flex: 1;
+                            padding-left: 20rpx;
+
+                            .steps-item-title-time {
+                                font-family: PingFang SC, PingFang SC;
+                                font-weight: 400;
+                                font-size: 24rpx;
+                                color: #868686;
+                            }
+
+                            .steps-item-title-text {
+                                font-family: PingFang SC, PingFang SC;
+                                font-weight: 400;
+                                font-size: 24rpx;
+                                color: #333333;
+                            }
+                        }
+
+                    }
+
+                    .steps-bottom {
+                        width: 100%;
+                        padding-left: 28rpx;
+                        box-sizing: border-box;
+                        margin-top: 32rpx;
+
+                        .steps-bottom-title {
+                            width: 100%;
+                            display: flex;
+                            align-items: center;
+                            justify-content: space-between;
+
+                            .steps-bottom-left {
+                                font-family: PingFang SC, PingFang SC;
+                                font-weight: 400;
+                                font-size: 24rpx;
+                                color: #868686;
+                            }
+
+                            .steps-bottom-right {
+                                font-family: PingFang SC, PingFang SC;
+                                font-weight: 400;
+                                font-size: 24rpx;
+                                color: #1B5BFF;
+                                display: flex;
+                                align-items: center;
+                            }
+                        }
+
+                        .steps-bottom-content {
+                            width: 100%;
+                            margin-top: 5rpx;
+                            font-family: PingFang SC, PingFang SC;
+                            font-weight: 400;
+                            font-size: 24rpx;
+                            color: #333333;
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

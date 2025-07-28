@@ -1,6 +1,8 @@
+import { refreshTokenAPI } from '@/api/login'
 import { BASE_URL, TIME_OUT } from './config'
 import TaroRequest from './request'
 import { appURL } from './url'
+import Taro from '@tarojs/taro'
 
 // 创建Taro请求实例的工厂函数
 const createTaroRequest = (baseURL: string) => {
@@ -8,22 +10,43 @@ const createTaroRequest = (baseURL: string) => {
     baseURL,
     timeout: TIME_OUT,
     header: {
-      'Authorization': `Bearer test1`,
       'tenant-id': '1'
     },
     interceptors: {
-      requestSuccessFn: (config) => {
+      requestSuccessFn: config => {
+        // 在请求拦截器中动态获取token
+        const tokenData = Taro.getStorageSync('token')
+
+        if (tokenData) {
+          const token = tokenData.accessToken
+          config.header = {
+            ...config.header,
+            Authorization: `Bearer ${token}`
+          }
+        }
         return config
       },
-      requestFailureFn: (error) => {
+      requestFailureFn: error => {
         console.log('Taro请求失败', error)
         return error
         // return Promise.reject(error)
       },
-      responseSuccessFn: (res) => {
+      responseSuccessFn: res => {
         // 统一处理响应数据
         if (res.statusCode === 200) {
           if (res.data.code == 0) {
+            return res.data
+          } else if (res.data.code == 401) {
+            Taro.reLaunch({
+              url: '/pages/login/index'
+            })
+            refreshTokenAPI({ refreshToken: Taro.getStorageSync('token').refreshToken }, response => {
+              if (response.success) {
+                // 刷新成功，更新token和登录时间
+                Taro.setStorageSync('token', response.data)
+                Taro.setStorageSync('loginTime', Date.now())
+              }
+            })
             return res.data
           } else {
             throw res.data
@@ -32,7 +55,7 @@ const createTaroRequest = (baseURL: string) => {
           throw res
         }
       },
-      responseFailureFn: (error) => {
+      responseFailureFn: error => {
         console.log('Taro响应失败', error)
         return error
         // return Promise.reject(error)
@@ -48,3 +71,5 @@ export const taroRequest = createTaroRequest(BASE_URL + appURL)
 export const taroHttpRequest = taroRequest.request.bind(taroRequest)
 export const taroGet = taroRequest.get.bind(taroRequest)
 export const taroPost = taroRequest.post.bind(taroRequest)
+export const taroPut = taroRequest.put.bind(taroRequest)
+export const taroDelete = taroRequest.delete.bind(taroRequest)
