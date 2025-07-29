@@ -468,6 +468,11 @@
           font-weight: 400;
           font-size: 24rpx;
           color: #929292;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          display: -webkit-box;
+          -webkit-line-clamp: 2;
+          -webkit-box-orient: vertical;
         }
       }
     }
@@ -479,7 +484,8 @@
     background: #fff;
     margin-top: 8rpx;
     padding: 24rpx;
-
+    box-sizing: border-box;
+    
     .enterprise_dynamic_title {
       font-family: PingFang SC, PingFang SC;
       font-weight: 500;
