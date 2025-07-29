@@ -158,6 +158,22 @@ function Index() {
     }
   }
 
+  // 处理查看全部动态点击
+  const toAllDynamic = () => {
+    let res = { companyHotResultResponse: companyDetail?.companyHotResultResponse, name: company.name }
+    Taro.navigateTo({
+      url: `/subpackages/company/enterpriseDetail/detail/dynamicInfo/index?item=${JSON.stringify(res)}`
+    })
+  }
+
+  // 处理查看全部风险点击
+  const toAllRisk = () => {
+    let res = { enterpriseResponses: companyDetail?.enterpriseResponses, name: company.name }
+    Taro.navigateTo({
+      url: `/subpackages/company/enterpriseDetail/detail/scanInfo/index?item=${JSON.stringify(res)}`
+    })
+  }
+
   // 处理取消弹窗
   const handleDialogCancel = () => {
     setShowCustomDialog(false)
@@ -237,7 +253,7 @@ function Index() {
       <Popup position="bottom" style={{ height: '50%' }} visible={isShowInvalid} onClose={() => setIsShowInvalid(false)}>
         <View className="popup_header">
           <View className="popup_header_title">无效线索原因</View>
-          <Image onClick={() => setIsShowInvalid(false)} src={require('@/assets/enterprise/enterprise14.png')} className="popup_header_img" />
+          <Image onClick={() => setIsShowInvalid(false)} src="http://36.141.100.123:10013/glks/assets/enterprise/enterprise14.png" className="popup_header_img" />
         </View>
         <View className="invalid_content">不匹配原因不匹配原因不匹配原因不匹配原因不匹配原因不匹配原因不匹配原因不匹配原因不匹配原因</View>
         <View onClick={() => setShowRestoreDialog(true)} className="invalid_content_button">
@@ -251,7 +267,7 @@ function Index() {
           <View className="popup_header_title" style={{ fontSize: '40rpx', color: '#333333', textAlign: 'left', paddingLeft: '24rpx' }}>
             反馈-不匹配/不合适
           </View>
-          <Image onClick={() => setIsShowFeedback(false)} src={require('@/assets/enterprise/enterprise14.png')} className="popup_header_img" />
+          <Image onClick={() => setIsShowFeedback(false)} src="http://36.141.100.123:10013/glks/assets/enterprise/enterprise14.png" className="popup_header_img" />
         </View>
         <View className="feedBack_content">
           <Checkbox.Group defaultValue={['1']} style={{ width: '100%', padding: '24rpx', boxSizing: 'border-box' }}>
@@ -281,7 +297,7 @@ function Index() {
 
       <View className="enterpriseContent_item">
         <View className="enterpriseContent_item_top">
-          <Image src={require('@/assets/enterprise/enterprise11.png')} className="enterpriseContent_item_Img" />
+          <Image src="http://36.141.100.123:10013/glks/assets/enterprise/enterprise11.png" className="enterpriseContent_item_Img" />
           <View className="enterpriseContent_item_Text">
             <View className="title">{company.name}</View>
             <View className="enterpriseContent_item_tag">
@@ -341,21 +357,21 @@ function Index() {
 
         <View className="enterpriseContent_item_product_phone">
           <View className="phone_left">
-            <Image src={require('@/assets/corpDetail/corpDetail20.png')} className="phone_left_img" />
+            <Image src="http://36.141.100.123:10013/glks/assets/corpDetail/corpDetail20.png" className="phone_left_img" />
             <View className="phone_text">0772-3750099</View>
             <View className="phone_more">全部456</View>
           </View>
           <View className="phone_right">
             <View className="phone_right_item">
-              <Image src={require('@/assets/corpDetail/corpDetail21.png')} className="phone_right_img" />
+              <Image src="http://36.141.100.123:10013/glks/assets/corpDetail/corpDetail21.png" className="phone_right_img" />
               <View className="phone_right_text">官网</View>
             </View>
             <View className="phone_right_item">
-              <Image src={require('@/assets/corpDetail/corpDetail22.png')} className="phone_right_img" />
+              <Image src="http://36.141.100.123:10013/glks/assets/corpDetail/corpDetail22.png" className="phone_right_img" />
               <View className="phone_right_text">邮箱</View>
             </View>
             <View className="phone_right_item">
-              <Image src={require('@/assets/corpDetail/corpDetail23.png')} className="phone_right_img" />
+              <Image src="http://36.141.100.123:10013/glks/assets/corpDetail/corpDetail23.png" className="phone_right_img" />
               <View className="phone_right_text">产品应用</View>
             </View>
           </View>
@@ -363,23 +379,23 @@ function Index() {
 
         <View className="enterpriseContent_item_product_phone">
           <View className="phone_left">
-            <Image src={require('@/assets/corpDetail/corpDetail24.png')} className="phone_left_img" />
+            <Image src="http://36.141.100.123:10013/glks/assets/corpDetail/corpDetail24.png" className="phone_left_img" />
             <View className="phone_more">{company.location}</View>
           </View>
         </View>
 
-        <Image onClick={() => toAiResearchReport()} src={require('@/assets/corpDetail/corpDetail18.png')} className="enterpriseContent_Img" />
+        <Image onClick={() => toAiResearchReport()} src="http://36.141.100.123:10013/glks/assets/corpDetail/corpDetail18.png" className="enterpriseContent_Img" />  
       </View>
 
       {/* 智能分析结果 */}
       <View className="analysis">
         <View className="analysis_content" onClick={() => Taro.navigateTo({ url: '/subpackages/company/enterpriseDetail/detail/analysisInfo/index' })}>
           <View className="analysis_top">
-            <Image src={require('@/assets/corpDetail/corpDetail25.png')} className="analysis_top_Img" />
+            <Image src="http://36.141.100.123:10013/glks/assets/corpDetail/corpDetail25.png" className="analysis_top_Img" />
             <View className="analysis_top_left">
               匹配度：<Text className="analysis_top_left_text">{Math.floor(company.score)}%</Text>
             </View>
-            <Image src={require('@/assets/corpDetail/corpDetail19.png')} className="analysis_top_leftImg" />
+            <Image src="http://36.141.100.123:10013/glks/assets/corpDetail/corpDetail19.png" className="analysis_top_leftImg" />
           </View>
           <View className="analysis_bottom">
             <View className="analysis_bottom_item">
@@ -420,7 +436,7 @@ function Index() {
           <View className="businessItem">
             企业商品：<Text style={{ color: '#DD9A43' }}>29</Text>
           </View>
-          <Image src={require('@/assets/corpDetail/corpDetail19.png')} className="business_intelligence_content_img" />
+          <Image src="http://36.141.100.123:10013/glks/assets/corpDetail/corpDetail19.png" className="business_intelligence_content_img" />
         </View>
       </View>
 
@@ -441,7 +457,7 @@ function Index() {
               setShowBusinessIntelligence(false)
               setShowPopup(false)
             }}
-            src={require('@/assets/enterprise/enterprise14.png')}
+            src="http://36.141.100.123:10013/glks/assets/enterprise/enterprise14.png"
             className="popup_header_img"
           />
         </View>
@@ -463,15 +479,15 @@ function Index() {
           <ScrollView scrollX>
             <View className="businessItem-tags">
               <View className="enterprise_graph_content_item">
-                <Image onClick={() => Taro.previewImage({ urls: ['@/assets/corpDetail/corpDetail17.png'] })} src={require('@/assets/corpDetail/corpDetail17.png')} className="enterprise_graph_content_item_img" />
+                <Image onClick={() => Taro.previewImage({ urls: ['http://36.141.100.123:10013/glks/assets/corpDetail/corpDetail17.png'] })} src="http://36.141.100.123:10013/glks/assets/corpDetail/corpDetail17.png" className="enterprise_graph_content_item_img" />
                 <View className="enterprise_graph_content_item_text">企业图谱</View>
               </View>
               <View className="enterprise_graph_content_item">
-                <Image src={require('@/assets/corpDetail/corpDetail17.png')} className="enterprise_graph_content_item_img" />
+                <Image src="http://36.141.100.123:10013/glks/assets/corpDetail/corpDetail17.png" className="enterprise_graph_content_item_img" />
                 <View className="enterprise_graph_content_item_text">企业图谱</View>
               </View>
               <View className="enterprise_graph_content_item">
-                <Image src={require('@/assets/corpDetail/corpDetail17.png')} className="enterprise_graph_content_item_img" />
+                <Image src="http://36.141.100.123:10013/glks/assets/corpDetail/corpDetail17.png" className="enterprise_graph_content_item_img" />
                 <View className="enterprise_graph_content_item_text">企业图谱</View>
               </View>
             </View>
@@ -502,7 +518,7 @@ function Index() {
         <View className="risk_scan_title">风险扫描</View>
         <View className="risk_scan_content">
           {companyDetail?.enterpriseResponses?.map((item: any, index: any) => (
-            <View className="risk_scan_content_item" key={index}>
+            <View className="risk_scan_content_item" onClick={toAllRisk} key={index}>
               <View className="risk_scan_content_item_title">
                 {item?.name} <Text className="texts">{item?.count}</Text>
               </View>
@@ -516,17 +532,13 @@ function Index() {
       <View className="enterprise_dynamic">
         <View className="enterprise_dynamic_title">企业动态</View>
         <View className="enterprise_dynamic_content">
-          <View className="enterprise_dynamic_content_one">
-            {companyDetail.companyHotResultResponse?.companyHotRequestList?.[0]?.rtm 
-              ? formatTimestamp(companyDetail.companyHotResultResponse.companyHotRequestList[0].rtm)
-              : '--'
-            }
-          </View>
-          <View className="enterprise_dynamic_content_two">
-            {companyDetail.companyHotResultResponse?.companyHotRequestList?.[0]?.title || '--'}
-          </View>
+          <View className="enterprise_dynamic_content_one">{companyDetail.companyHotResultResponse?.companyHotRequestList?.[0]?.rtm ? formatTimestamp(companyDetail.companyHotResultResponse.companyHotRequestList[0].rtm) : '--'}</View>
+          <View className="enterprise_dynamic_content_two">{companyDetail.companyHotResultResponse?.companyHotRequestList?.[0]?.title || '--'}</View>
           <View className="enterprise_dynamic_content_three">
-            该企业存在 <Text style={{ color: '#629EE7' }}>{companyDetail.companyHotResultResponse?.realTotal || 0}条</Text> 相关动态 <Text style={{ color: '#1B5BFF' }}>查看全部</Text>
+            该企业存在 <Text style={{ color: '#629EE7' }}>{companyDetail.companyHotResultResponse?.realTotal || 0}条</Text> 相关动态{' '}
+            <Text style={{ color: '#1B5BFF' }} onClick={toAllDynamic}>
+              查看全部
+            </Text>
           </View>
         </View>
       </View>
@@ -536,15 +548,15 @@ function Index() {
         <View className="enterprise_graph_title">企业图谱</View>
         <View className="enterprise_graph_content">
           <View className="enterprise_graph_content_item">
-            <Image onClick={() => Taro.previewImage({ urls: ['@/assets/corpDetail/corpDetail17.png'] })} src={require('@/assets/corpDetail/corpDetail17.png')} className="enterprise_graph_content_item_img" />
+            <Image onClick={() => Taro.previewImage({ urls: ['http://36.141.100.123:10013/glks/assets/corpDetail/corpDetail17.png'] })} src="http://36.141.100.123:10013/glks/assets/corpDetail/corpDetail17.png" className="enterprise_graph_content_item_img" />
             <View className="enterprise_graph_content_item_text">企业图谱</View>
           </View>
           <View className="enterprise_graph_content_item">
-            <Image src={require('@/assets/corpDetail/corpDetail17.png')} className="enterprise_graph_content_item_img" />
+            <Image src="http://36.141.100.123:10013/glks/assets/corpDetail/corpDetail17.png" className="enterprise_graph_content_item_img" />
             <View className="enterprise_graph_content_item_text">企业图谱</View>
           </View>
           <View className="enterprise_graph_content_item">
-            <Image src={require('@/assets/corpDetail/corpDetail17.png')} className="enterprise_graph_content_item_img" />
+            <Image src="http://36.141.100.123:10013/glks/assets/corpDetail/corpDetail17.png" className="enterprise_graph_content_item_img" />
             <View className="enterprise_graph_content_item_text">企业图谱</View>
           </View>
         </View>
@@ -558,7 +570,7 @@ function Index() {
             <View className="enterprise_info_content_item" onClick={() => Taro.navigateTo({ url: item.router })} key={index}>
               <View className="enterprise_info_content_item_title">{item.title}</View>
               <View className="enterprise_info_content_item_value">{item.value}</View>
-              <Image src={require(`@/assets/corpDetail/corpDetail${index + 1}.png`)} className="info_Img" />
+              <Image src="http://36.141.100.123:10013/glks/assets/corpDetail/corpDetail17.png" className="info_Img" />
             </View>
           ))}
         </View>
@@ -570,7 +582,7 @@ function Index() {
           同行企业
           <View className="peer_title_right" onClick={() => Taro.navigateTo({ url: '/subpackages/company/enterpriseDetail/detail/peerInfo/index?list=' + JSON.stringify(companyDetail.similarCompanies) })}>
             <Text className="peer_title_right_text">查看更多</Text>
-            <Image src={require('@/assets/corpDetail/corpDetail19.png')} className="peer_title_right_img" />
+            <Image src="http://36.141.100.123:10013/glks/assets/corpDetail/corpDetail19.png" className="peer_title_right_img" />
           </View>
         </View>
         <View className="peer_content">
@@ -578,7 +590,7 @@ function Index() {
             return (
               <View className="peer_content_item" key={simIndex}>
                 <View className="peer_content_item_top">
-                  {item.logo ? <Image src={item.logo} className="peer_content_item_img" /> : <Image src={require('@/assets/corpDetail/corpDetail17.png')} className="peer_content_item_img" />}
+                  {item.logo ? <Image src={item.logo} className="peer_content_item_img" /> : <Image src="http://36.141.100.123:10013/glks/assets/corpDetail/corpDetail17.png" className="peer_content_item_img" />}
                   <View className="peer_content_item_text">{item.name}</View>
                 </View>
                 <View className="peer_content_item_bottom">主营：{item.alias}</View>
@@ -591,13 +603,13 @@ function Index() {
           <View className="enterpriseContent_item_bottom_left">
             {!isDisliked && (
               <View onClick={handleLike} className={`enterpriseContent_item_bottom_left_good ${isLiked ? 'liked' : ''} ${showHeartbeat ? 'heartbeat' : ''}`}>
-                <Image src={require(isLiked ? '@/assets/enterprise/enterprise6.png' : '@/assets/enterprise/enterprise8.png')} className="enterpriseContent_item_bottom_left_good_img" />
+                <Image src="http://36.141.100.123:10013/glks/assets/enterprise/enterprise6.png" className="enterpriseContent_item_bottom_left_good_img" />
                 <Text className="enterpriseContent_item_bottom_left_good_text">有效</Text>
               </View>
             )}
             {!isLiked && (
               <View onClick={handleDislike} className={`enterpriseContent_item_bottom_left_bad ${isDisliked ? 'disliked' : ''} ${showShake ? 'shake' : ''}`}>
-                <Image src={require(isDisliked ? '@/assets/enterprise/enterprise7.png' : '@/assets/enterprise/enterprise9.png')} className="enterpriseContent_item_bottom_left_bad_img" />
+                <Image src="http://36.141.100.123:10013/glks/assets/enterprise/enterprise7.png" className="enterpriseContent_item_bottom_left_bad_img" />
                 <Text className="enterpriseContent_item_bottom_left_bad_text">无效线索</Text>
                 {isDisliked && <ArrowDown color="#8E8E8E" style={{ width: '28rpx', height: '28rpx', marginLeft: '6rpx' }} />}
               </View>

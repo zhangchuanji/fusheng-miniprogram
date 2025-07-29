@@ -34,7 +34,7 @@ function Index() {
           </View>
           <View className="item_img">
             {record.image.map((imgSrc, index) => (
-              <Image key={index} src={require(`@/assets/${imgSrc}`)} className="item_img_item" mode="aspectFit" />
+              <Image key={index} src={`http://36.141.100.123:10013/glks/assets/${imgSrc}`} className="item_img_item" mode="aspectFit" />
             ))}
           </View>
           <View onClick={() => Taro.navigateTo({ url: `/pages/setting/feedbackDetail/index?id=${record.id}` })} className="item_time">

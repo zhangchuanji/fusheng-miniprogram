@@ -3,11 +3,12 @@ import { View, Image, Text } from '@tarojs/components'
 import './index.scss'
 import { ArrowDown, ArrowRightSize6, ArrowRightSmall, Checked, TriangleDown } from '@nutui/icons-react-taro'
 import { Collapse, Menu, Tabs } from '@nutui/nutui-react-taro'
-import Taro from '@tarojs/taro'
+import Taro, { useLoad } from '@tarojs/taro'
 
 function Index() {
   const [tabvalue, setTabvalue] = useState(0)
   const [list, setList] = useState([{}, {}, {}, {}, {}, {}])
+  const [company, setCompany] = useState<any>({})
   const [botHeight, setBotHeight] = useState([])
   const [tabHeight, setTabHeight] = useState(0)
 
@@ -43,6 +44,15 @@ function Index() {
     })
   }, [])
 
+  useLoad(options => {
+    let item = JSON.parse(options.item)
+    if (item.company && item.company.name) {
+      item.company.name = item.company.name.replace(/<[^>]+>/g, '')
+    }
+    setList(item?.enterpriseResponses)
+    setCompany(item?.company)
+  })
+
   const getTab = (value: number) => {
     setTabvalue(value as number)
   }
@@ -52,9 +62,9 @@ function Index() {
       <View className="header">
         <View className="header-company">
           <View className="header-company-logo">
-            <Image src={require('@/assets/enterprise/enterprise11.png')} className="header-company-logo-img" />
+            <Image src="http://36.141.100.123:10013/glks/assets/enterprise/enterprise11.png" className="header-company-logo-img" />
           </View>
-          <View className="header-company-name">柳州五萎汽车工业有限公司</View>
+          <View className="header-company-name">{company.name}</View>
           <ArrowRightSize6 color="#333" size={'24rpx'} />
         </View>
         <View className="header-tabs">

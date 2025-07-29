@@ -4,8 +4,8 @@ import { Cell, Popup, Tabs, Input, Calendar } from '@nutui/nutui-react-taro'
 import './index.scss'
 import { SearchBar } from '@nutui/nutui-react-taro'
 import { ArrowRight, Checked } from '@nutui/icons-react-taro'
-import Taro from '@tarojs/taro'
-import { clueListAPI, clueDeleteAPI, clueFollowUpPageAPI } from '@/api/clue'
+import Taro, { useDidShow } from '@tarojs/taro' // 添加useDidShow导入
+import { clueListAPI, clueDeleteAPI, clueFollowUpPageAPI, clueFollowUpHistoryAPI } from '@/api/clue'
 import { useSelector } from 'react-redux'
 import useDebounce from '@/hooks/useDebounce'
 import { aiSessionListAPI } from '@/api/chatMsg'
@@ -104,20 +104,24 @@ function CluePage({ height }: { height: number }) {
     }
   }
 
-  const getSession = () => {
-    aiSessionListAPI({ userId: userInfo?.id }, res => {
-      if (res.success && res.data) {
-        const convertedData = Object.entries(res.data).map(([name, list]) => ({
-          name,
-          list: list as any[]
-        }))
-        setHistorySession(convertedData)
-      }
-    })
-  }
+  // 新增分页状态
+  const [cluePageNum, setCluePageNum] = useState(1)
+  const [clueLoading, setClueLoading] = useState(false)
+  const [clueHasMore, setClueHasMore] = useState(true)
 
-  const getClueList = () => {
-    clueListAPI({ pageNo: 1, pageSize: 10, userId: userInfo?.id, keywords: searchValueClueList }, res => {
+  const [followUpPageNum, setFollowUpPageNum] = useState(1)
+  const [followUpLoading, setFollowUpLoading] = useState(false)
+  const [followUpHasMore, setFollowUpHasMore] = useState(true)
+
+  const [historyPageNum, setHistoryPageNum] = useState(1)
+  const [historyLoading, setHistoryLoading] = useState(false)
+  const [historyHasMore, setHistoryHasMore] = useState(true)
+
+  // 修改getClueList支持分页加载
+  const getClueList = (page = 1, append = false) => {
+    if (clueLoading) return
+    setClueLoading(true)
+    clueListAPI({ pageNo: page, pageSize: 10, userId: userInfo?.id, keywords: searchValueClueList }, res => {
       if (res.success && res.data) {
         res.data.list.forEach((item: any) => {
           if (item.tags && item.tags.length > 0 && typeof item.tags === 'string') {
@@ -127,18 +131,94 @@ function CluePage({ height }: { height: number }) {
               .filter((tag: string) => tag.length > 0)
           }
         })
-        setClueList(res.data.list)
+        if (append) {
+          setClueList(prev => [...prev, ...res.data.list])
+        } else {
+          setClueList(res.data.list)
+        }
+        setClueHasMore(res.data.list.length === 10) // 判断是否还有更多
+        setCluePageNum(page)
       }
+      setClueLoading(false)
     })
   }
 
-  const getFollowUpList = useCallback(async () => {
-    clueFollowUpPageAPI({ pageNum: 1, pageSize: 3, userId: userInfo?.id }, res => {
+  // 修改getFollowUpList支持分页加载
+  const getFollowUpList = (page = 1, append = false) => {
+    if (followUpLoading) return
+    setFollowUpLoading(true)
+    clueFollowUpPageAPI({ pageNum: page, pageSize: 20, userId: userInfo?.id }, res => {
       if (res.success && res.data) {
-        setFollowUpList(res.data.list)
+        if (append) {
+          setFollowUpList(prev => [...prev, ...res.data.list])
+        } else {
+          setFollowUpList(res.data.list)
+        }
+        setFollowUpHasMore(res.data.list.length === 20)
+        setFollowUpPageNum(page)
       }
+      setFollowUpLoading(false)
     })
-  }, [])
+  }
+
+  // 修改getSession支持分页加载
+  const getSession = (page = 1, append = false) => {
+    if (historyLoading) return
+    setHistoryLoading(true)
+    clueFollowUpHistoryAPI({ pageNum: page, pageSize: 20 }, res => {
+      if (res.success && res.data) {
+        res.data.list = res.data.list.map(item => {
+          try {
+            if (item.enterpriseInfo && typeof item.enterpriseInfo === 'string') {
+              const parsedInfo = JSON.parse(item.enterpriseInfo)
+              item.enterpriseInfo = parsedInfo
+              if (parsedInfo && parsedInfo.companyList && parsedInfo.companyList.length > 0) {
+                let locationStr = parsedInfo.companyList[0].location || '未知省份'
+
+                if (locationStr.includes('省')) {
+                  parsedInfo.companyList[0].location = locationStr.split('省')[0] + '省'
+                } else if (locationStr.includes('市')) {
+                  const directMunicipalities = ['北京', '上海', '天津', '重庆']
+                  const found = directMunicipalities.find(city => locationStr.includes(city))
+                  parsedInfo.companyList[0].location = found ? found + '市' : locationStr.split('市')[0] + '市'
+                } else if (locationStr.includes('自治区')) {
+                  parsedInfo.companyList[0].location = locationStr.split('自治区')[0] + '自治区'
+                } else {
+                  parsedInfo.companyList[0].location = '未知省份'
+                }
+
+                if (parsedInfo.companyList[0].tags && Array.isArray(parsedInfo.companyList[0].tags)) {
+                  parsedInfo.companyList[0].tags = parsedInfo.companyList[0].tags.filter((tag: string) => {
+                    return !tag.includes('曾用名') && !tag.includes('原名') && !tag.includes('更名')
+                  })
+                }
+
+                item['companyInfo'] = parsedInfo.companyList[0]
+              } else {
+                item['companyInfo'] = null
+              }
+            } else {
+              item['companyInfo'] = null
+            }
+          } catch (error) {
+            item['companyInfo'] = null
+          }
+          return item
+        })
+
+        const filteredList = res.data.list.filter(item => item.companyInfo !== null)
+
+        if (append) {
+          setHistorySession(prev => [...prev, ...filteredList])
+        } else {
+          setHistorySession(filteredList)
+        }
+        setHistoryHasMore(filteredList.length === 20)
+        setHistoryPageNum(page)
+      }
+      setHistoryLoading(false)
+    })
+  }
 
   useEffect(() => {
     getClueList()
@@ -167,6 +247,24 @@ function CluePage({ height }: { height: number }) {
   const handleSortTypeChange = (type: string) => {
     setSortType(type)
   }
+
+  // 新增：页面显示时刷新数据
+  useDidShow(() => {
+    // 根据当前选中的tab刷新对应的数据
+    if (tabvalue === 0) {
+      console.log(1)
+
+      getClueList() // 刷新线索列表
+    } else if (tabvalue === 1) {
+      console.log(2)
+
+      getFollowUpList() // 刷新跟进记录
+    } else if (tabvalue === 2) {
+      console.log(3)
+
+      getSession() // 刷新历史匹配线索
+    }
+  })
 
   // 处理排序字段选择
   const handleSortFieldChange = (field: string) => {
@@ -210,9 +308,9 @@ function CluePage({ height }: { height: number }) {
     return selectedVisitMethods.includes(method)
   }
 
-  const toFollowPage = (index: number) => {
+  const toFollowPage = (item: any) => {
     Taro.navigateTo({
-      url: `/pages/index/cluePage/follow/index?index=${index}`
+      url: `/subpackages/cluePage/follow/index?item=${item.id}`
     })
   }
 
@@ -254,6 +352,25 @@ function CluePage({ height }: { height: number }) {
     })
   }
 
+  const navigateToCompanyDetail = (company: any) => {
+    Taro.navigateTo({
+      url: `/subpackages/company/enterpriseDetail/index?company=${JSON.stringify(company)}`
+    })
+  }
+
+  // 企业列表
+  const handleEnterpriseList = (item: any) => {
+    console.log(item)
+
+    let res = {
+      companyList: item.companyList,
+      total: item.total
+    }
+    Taro.navigateTo({
+      url: `/subpackages/company/enterpriseSearch/index?res=${JSON.stringify(res)}`
+    })
+  }
+
   const handleSearchClueList = () => {
     getClueList()
   }
@@ -276,13 +393,32 @@ function CluePage({ height }: { height: number }) {
     return `${year}-${month}-${day} ${hour}:${minute}:${second}`
   }
 
+  // 触底加载函数
+  const loadMoreClueList = () => {
+    console.log(clueLoading)
+    console.log(!clueHasMore)
+
+    if (clueLoading || !clueHasMore) return
+    getClueList(cluePageNum + 1, true)
+  }
+
+  const loadMoreFollowUpList = () => {
+    if (followUpLoading || !followUpHasMore) return
+    getFollowUpList(followUpPageNum + 1, true)
+  }
+
+  const loadMoreHistorySession = () => {
+    if (historyLoading || !historyHasMore) return
+    getSession(historyPageNum + 1, true)
+  }
+
   return (
     <View className="cluePage" style={{ height: `calc(100vh - ${height}px)` }}>
       {/* 联系人 */}
       <Popup position="bottom" style={{ maxHeight: '85%', minHeight: '85%' }} visible={isShowPhone} onClose={() => setIsShowPhone(false)}>
         <View className="popup_header" style={{ height: '100rpx' }}>
           <View className="popup_header_title">联系人</View>
-          <Image onClick={() => setIsShowPhone(false)} src={require('@/assets/enterprise/enterprise14.png')} className="popup_header_img" />
+          <Image onClick={() => setIsShowPhone(false)} src="http://36.141.100.123:10013/glks/assets/enterprise/enterprise14.png" className="popup_header_img" />
         </View>
         <Tabs
           value={tabValue}
@@ -304,7 +440,7 @@ function CluePage({ height }: { height: number }) {
                         <View className="name">王紫郡</View>
                         <View className="position">总经理</View>
                         <View className="security">
-                          <Image src={require('@/assets/enterprise/enterprise12.png')} className="security_img" />
+                          <Image src="http://36.141.100.123:10013/glks/assets/enterprise/enterprise12.png" className="security_img" />
                           <View className="security_dot"></View>
                           <View className="security_text">未检测</View>
                         </View>
@@ -313,9 +449,9 @@ function CluePage({ height }: { height: number }) {
                         <Text style={{ color: '#333333' }}>来自：</Text>杭州XX科技有限公司
                       </View>
                       <View className="tab_content_item_four">
-                        <Image src={require('@/assets/enterprise/enterprise13.png')} className="tab_content_item_four_img" />
-                        <Image src={require('@/assets/enterprise/enterprise13.png')} className="tab_content_item_four_img" />
-                        <Image src={require('@/assets/enterprise/enterprise13.png')} className="tab_content_item_four_img" />
+                        <Image src="http://36.141.100.123:10013/glks/assets/enterprise/enterprise13.png" className="tab_content_item_four_img" />
+                        <Image src="http://36.141.100.123:10013/glks/assets/enterprise/enterprise13.png" className="tab_content_item_four_img" />
+                        <Image src="http://36.141.100.123:10013/glks/assets/enterprise/enterprise13.png" className="tab_content_item_four_img" />
                       </View>
                     </View>
                     <View className="tab_content_item">
@@ -327,7 +463,7 @@ function CluePage({ height }: { height: number }) {
                         <View className="name">王紫郡</View>
                         <View className="position">总经理</View>
                         <View className="security">
-                          <Image src={require('@/assets/enterprise/enterprise12.png')} className="security_img" />
+                          <Image src="http://36.141.100.123:10013/glks/assets/enterprise/enterprise12.png" className="security_img" />
                           <View className="security_dot"></View>
                           <View className="security_text">未检测</View>
                         </View>
@@ -336,8 +472,8 @@ function CluePage({ height }: { height: number }) {
                         <Text style={{ color: '#333333' }}>来自：</Text>杭州XX科技有限公司
                       </View>
                       <View className="tab_content_item_four">
-                        <Image src={require('@/assets/enterprise/enterprise13.png')} className="tab_content_item_four_img" />
-                        <Image src={require('@/assets/enterprise/enterprise13.png')} className="tab_content_item_four_img" />
+                        <Image src="http://36.141.100.123:10013/glks/assets/enterprise/enterprise13.png" className="tab_content_item_four_img" />
+                        <Image src="http://36.141.100.123:10013/glks/assets/enterprise/enterprise13.png" className="tab_content_item_four_img" />
                       </View>
                     </View>
                     <View className="tab_content_item">
@@ -349,7 +485,7 @@ function CluePage({ height }: { height: number }) {
                         <View className="name">王紫郡</View>
                         <View className="position">总经理</View>
                         <View className="security">
-                          <Image src={require('@/assets/enterprise/enterprise12.png')} className="security_img" />
+                          <Image src="http://36.141.100.123:10013/glks/assets/enterprise/enterprise12.png" className="security_img" />
                           <View className="security_dot"></View>
                           <View className="security_text">未检测</View>
                         </View>
@@ -358,7 +494,7 @@ function CluePage({ height }: { height: number }) {
                         <Text style={{ color: '#333333' }}>来自：</Text>杭州XX科技有限公司
                       </View>
                       <View className="tab_content_item_four">
-                        <Image src={require('@/assets/enterprise/enterprise13.png')} className="tab_content_item_four_img" />
+                        <Image src="http://36.141.100.123:10013/glks/assets/enterprise/enterprise13.png" className="tab_content_item_four_img" />
                       </View>
                     </View>
                   </View>
@@ -409,7 +545,7 @@ function CluePage({ height }: { height: number }) {
       <Popup position="bottom" style={{ maxHeight: '85%', minHeight: '85%' }} visible={isShowAddress} onClose={() => setIsShowAddress(false)}>
         <View className="popup_header" style={{ height: '100rpx' }}>
           <View className="popup_header_title">工厂地址</View>
-          <Image onClick={() => setIsShowAddress(false)} src={require('@/assets/enterprise/enterprise14.png')} className="popup_header_img" />
+          <Image onClick={() => setIsShowAddress(false)} src="http://36.141.100.123:10013/glks/assets/enterprise/enterprise14.png" className="popup_header_img" />
         </View>
         <View className="address_content">
           <Cell.Group>
@@ -422,7 +558,7 @@ function CluePage({ height }: { height: number }) {
       {/* 排序 */}
       <Popup position="bottom" style={{ maxHeight: '85%', minHeight: '85%' }} visible={isShowFilter} onClose={() => setIsShowFilter(false)}>
         <View className="popup_header">
-          <Image onClick={() => setIsShowFilter(false)} src={require('@/assets/enterprise/enterprise14.png')} className="popup_header_img" />
+          <Image onClick={() => setIsShowFilter(false)} src="http://36.141.100.123:10013/glks/assets/enterprise/enterprise14.png" className="popup_header_img" />
           <Tabs
             value={tabFilterValue}
             onChange={(value: number) => {
@@ -566,6 +702,8 @@ function CluePage({ height }: { height: number }) {
                 height: `calc(100vh - 220rpx - ${height}px)`,
                 flex: 1
               }}
+              onScrollToLower={loadMoreClueList}
+              lowerThreshold={50}
             >
               {clueList &&
                 clueList.length > 0 &&
@@ -631,18 +769,18 @@ function CluePage({ height }: { height: number }) {
                     </View>
                     <View className="cluePage_item_contact">
                       <View className="cluePage_item_contact_item">
-                        <Image onClick={() => handleAiResearchReport(item)} src={require('@/assets/enterprise/enterprise5.png')} className="cluePage_item_contact_item_img" />
+                        <Image onClick={() => handleAiResearchReport(item)} src="http://36.141.100.123:10013/glks/assets/enterprise/enterprise5.png" className="cluePage_item_contact_item_img" />
                       </View>
                       <View onClick={() => handleActiveIndex(3)} className="cluePage_item_contact_item">
-                        <Image src={require('@/assets/enterprise/enterprise15.png')} className="cluePage_item_contact_item_img" />
+                        <Image src="http://36.141.100.123:10013/glks/assets/enterprise/enterprise15.png" className="cluePage_item_contact_item_img" />  
                         跟进
                       </View>
                       <View onClick={() => handleActiveIndex(4)} className="cluePage_item_contact_item">
-                        <Image src={require('@/assets/enterprise/enterprise1.png')} className="cluePage_item_contact_item_img" />
+                        <Image src="http://36.141.100.123:10013/glks/assets/enterprise/enterprise1.png" className="cluePage_item_contact_item_img" />
                         电话(112)
                       </View>
                       <View onClick={() => handleActiveIndex(5)} className="cluePage_item_contact_item">
-                        <Image src={require('@/assets/enterprise/enterprise2.png')} className="cluePage_item_contact_item_img" />
+                        <Image src="http://36.141.100.123:10013/glks/assets/enterprise/enterprise2.png" className="cluePage_item_contact_item_img" />
                         地址(2)
                       </View>
                     </View>
@@ -657,14 +795,14 @@ function CluePage({ height }: { height: number }) {
             {/* <View className="cluePage_filter">
               <View className="filter_item" onClick={() => handleActiveIndex(0)}>
                 <View className="item_textI">
-                  <Image src={require('@/assets/enterprise/enterprise11.png')} className="item_img" />
+                  <Image src="http://36.141.100.123:10013/glks/assets/enterprise/enterprise11.png" className="item_img" />
                   <View className="item_text">排序</View>
                 </View>
                 <TriangleDown color="#426EFF" size="16rpx" />
               </View>
               <View className="filter_item" onClick={() => handleActiveIndex(1)}>
                 <View className="item_textI">
-                  <Image src={require('@/assets/enterprise/enterprise11.png')} className="item_img" />
+                  <Image src="http://36.141.100.123:10013/glks/assets/enterprise/enterprise11.png" className="item_img" />
                   <View className="item_text">筛选</View>
                 </View>
                 <TriangleDown color="#426EFF" size="16rpx" />
@@ -676,13 +814,15 @@ function CluePage({ height }: { height: number }) {
                 height: `calc(100vh - 320rpx - ${height}px)`,
                 flex: 1
               }}
+              onScrollToLower={loadMoreFollowUpList}
+              lowerThreshold={50}
             >
               {followUpList.map((item: any, index: number) => (
-                <View className="clueRecord_item" onClick={() => toFollowPage(index)} key={index}>
-                  <View className="clueRecord_item_left">{item?.avatar ? <Image src={item.avatar} className="avatar" /> : <Image src={require('@/assets/enterprise/enterprise11.png')} className="avatar" />}</View>
+                <View className="clueRecord_item" onClick={() => toFollowPage(item)} key={index}>
+                  <View className="clueRecord_item_left">{item?.avatar ? <Image src={item.avatar} className="avatar" /> : <Image src="http://36.141.100.123:10013/glks/assets/enterprise/enterprise11.png" className="avatar" />}</View>
                   <View className="clueRecord_item_right">
                     <View className="clueRecord_item_right_top">
-                      <View className="name">{item.name || '客户名称'}</View>
+                      <View className="name">{userInfo?.nickname || '客户名称'}</View>
                       <View className="position">{item.position || '客户职位'}</View>
                       <View className="status">
                         {item.type || '跟进类型'}（{item.method || '跟进方式'})
@@ -690,7 +830,7 @@ function CluePage({ height }: { height: number }) {
                     </View>
                     <View className="item_content">{item.content || '跟进内容'}</View>
                     <View className="item_time">
-                      <Image src={require('@/assets/chat/chat1.png')} className="item_time_img"></Image>
+                      <Image src="http://36.141.100.123:10013/glks/assets/chat/chat1.png" className="item_time_img"></Image>
                       {parseDate(item.createTime || '跟进时间')}
                     </View>
                     <View className="item_link">
@@ -710,51 +850,57 @@ function CluePage({ height }: { height: number }) {
               height: `calc(100vh - 120rpx - ${height}px)`,
               flex: 1
             }}
+            onScrollToLower={loadMoreHistorySession}
+            lowerThreshold={50}
           >
             <View className="cluePage_list">
-              {Array.from({ length: 10 }).map((_, index) => (
-                <View className="history_item" key={index}>
+              {historySession.map((item: any, index) => (
+                <View className="history_item" key={index} onClick={() => navigateToCompanyDetail(item.companyInfo)}>
                   <View className="history_top">
                     <View className="dot"></View>
-                    <View className="time">2023-09-09</View>
+                    <View className="time">{parseDate(item.createTime)}</View>
                   </View>
                   <View className="history_content">
-                    <View className="history_msg">问答问题：国内前20的扁线电机的企业有哪些？问答问题：国内前20的扁线电机的企业有哪些？问答问题：国内前20的扁线电机的企业有哪些？</View>
+                    <View className="history_msg">问答问题：{item.userMessage}</View>
                     <View className="history_company">
                       <View className="history_img">
-                        <Image src={require('@/assets/enterprise/enterprise11.png')} className="history_img_img" />
+                        <Image src="http://36.141.100.123:10013/glks/assets/enterprise/enterprise11.png" className="history_img_img" />
                       </View>
                       <View className="history_info">
                         <View className="info_top">
-                          <View className="info_top_title">浙江盘毂动力科技有限公司</View>
+                          <View className="info_top_title">{item.companyInfo?.name || '- -'}</View>
                           <ArrowRight color="#2B2B2B" size="30rpx" />
                         </View>
                         <View className="info_msgs">
-                          <View className="msgs_item">上海</View>
+                          <View className="msgs_item">{item.companyInfo?.location || '- -'}</View>
                           <View className="msgs_tag">
-                            <Image src={require('@/assets/corpDetail/corpDetail21.png')} className="msgs_tag_img" />
+                            <Image src="http://36.141.100.123:10013/glks/assets/corpDetail/corpDetail21.png" className="msgs_tag_img" />
                             <View className="msgs_tag_text">官网</View>
                           </View>
                         </View>
                       </View>
                     </View>
                     <View className="history_tag">
-                      <View className="tag_item">存续</View>
-                      <View className="tag_item">高新企业</View>
-                      <View className="tag_item">省级制造业单项冠军企业</View>
+                      <View className="tag_item">{item.companyInfo?.regStatus || '未知状态'}</View>
+                      {(item.companyInfo?.tags || []).map((tagItem: any, tagIndex: number) => {
+                        return (
+                          <View className="tag_item" key={tagIndex}>
+                            {tagItem}
+                          </View>
+                        )
+                      })}
                     </View>
                     <View className="history_tags">
                       <View className="tags_item">最匹配</View>
                       <View className="tags_item">最新</View>
                     </View>
                   </View>
+                  <View className="company_total" onClick={() => handleEnterpriseList(item.enterpriseInfo)}>
+                    <View style={{ marginRight: '16rpx' }}>查看{item.enterpriseInfo?.total || 0}企业信息</View>
+                    <ArrowRight color="#1B5BFF" size="24rpx" />
+                  </View>
                 </View>
               ))}
-
-              <View className="company_total">
-                <View style={{ marginRight: '16rpx' }}>查看15000企业信息</View>
-                <ArrowRight color="#1B5BFF" size="24rpx" />
-              </View>
             </View>
           </ScrollView>
         </Tabs.TabPane>

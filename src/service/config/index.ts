@@ -1,6 +1,9 @@
 export const TIME_OUT = 120000
 export const BASE_URL = 'http://192.168.110.35:10017'
 
+// 上传文件
+export const uploadFileURL = '/infra/file/upload'
+
 // 用户认证相关API
 export const loginByPhoneURL = '/member/auth/weixin-mini-app-login'
 export const loginByCodeURL = '/member/auth/sms-login'
@@ -52,5 +55,11 @@ export const clueDeleteURL = '/fs/lead/delete'
 export const clueFollowUpCreateURL = '/fs/follow-up/create'
 // 获得线索跟进分页
 export const clueFollowUpPageURL = '/fs/follow-up/page'
+// 获取线索跟进详情
+export const clueFollowUpDetailURL = '/fs/follow-up/get'
 // 更新线索跟进
 export const clueFollowUpUpdateURL = '/fs/follow-up/update'
+// 删除线索跟进
+export const clueFollowUpDeleteURL = '/fs/follow-up/delete'
+// 获取历史记录
+export const clueFollowUpHistoryURL = '/fs/ai-message/page'

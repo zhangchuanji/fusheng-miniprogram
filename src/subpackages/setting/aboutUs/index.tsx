@@ -6,7 +6,7 @@ import { ArrowRight } from '@nutui/icons-react-taro'
 function Index() {
   return (
     <View className="detailPage">
-      <Image src={require('@/assets/setting/aboutLogo.png')} className="item_logo" />
+      <Image src="http://36.141.100.123:10013/glks/assets/setting/aboutLogo.png" className="item_logo" />
       <View className="item">
         <View className="item_title">用户协议</View>
         <ArrowRight color="#B6B6B6" size={'28rpx'} />

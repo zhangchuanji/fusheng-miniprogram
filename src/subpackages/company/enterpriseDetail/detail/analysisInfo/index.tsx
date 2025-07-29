@@ -88,7 +88,7 @@ function Index() {
     <View className="detailPage">
       {/* 顶部 */}
       <View className="top">
-        <Image src={require('@/assets/corpDetail/corpDetail25.png')} className="top_left_Img" />
+        <Image src="http://36.141.100.123:10013/glks/assets/corpDetail/corpDetail25.png" className="top_left_Img" />
         <View className="top_right">
           <Text>匹配度：</Text>
           <Text className="top_right_item_text">90%</Text>

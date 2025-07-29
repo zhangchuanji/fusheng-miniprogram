@@ -76,7 +76,7 @@ const AiMessageComponent: React.FC<AiMessageComponentProps> = ({ msg }) => {
             <View key={valIdx}>
               <View className="chat_ai_company" onClick={() => navigateToCompanyDetail(val)}>
                 <View className="company_left">
-                  <Image src={require('@/assets/enterprise/enterprise11.png')} className="company_left_img" />
+                  <Image src="http://36.141.100.123:10013/glks/assets/enterprise/enterprise11.png" className="company_left_img" />
                 </View>
                 <View className="company_right">
                   <View className="company_right_top">
@@ -92,7 +92,7 @@ const AiMessageComponent: React.FC<AiMessageComponentProps> = ({ msg }) => {
                     <Text className="legal-person">法人:{val.legalPerson}</Text>
                     <Text className="address">广东</Text>
                     <View className="website">
-                      <Image src={require('@/assets/enterprise/enterprise3.png')} className="website_img" />
+                      <Image src="http://36.141.100.123:10013/glks/assets/enterprise/enterprise3.png" className="website_img" />
                       官网
                     </View>
                   </View>

@@ -14,7 +14,7 @@ function Index() {
       <View className="enterprise-card-list">
         {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((item, idx) => (
           <View className="enterprise-card" key={idx}>
-            <Image src={require('@/assets/enterprise/enterprise11.png')} className="enterprise-card-left" />
+            <Image src="http://36.141.100.123:10013/glks/assets/enterprise/enterprise11.png" className="enterprise-card-left" />
             <View className="enterprise-card-right">
               <View className="right-title">杭州XX科技有限公司</View>
               <View className="right-text">

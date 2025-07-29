@@ -81,24 +81,26 @@
         padding: 0 24rpx;
         box-sizing: border-box;
 
-        .company_total {
-            width: 100%;
-            height: 86rpx;
-            border-radius: 16rpx;
-            border: 3rpx solid rgba(27, 91, 255, 0.16);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-family: PingFang SC, PingFang SC;
-            font-weight: 500;
-            font-size: 32rpx;
-            color: #1B5BFF;
-        }
+
 
         .history_item {
             width: 100%;
             margin-bottom: 24rpx;
 
+            .company_total {
+                width: 100%;
+                height: 86rpx;
+                border-radius: 16rpx;
+                border: 3rpx solid rgba(27, 91, 255, 0.16);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-family: PingFang SC, PingFang SC;
+                font-weight: 500;
+                font-size: 32rpx;
+                color: #1B5BFF;
+                margin-top: 24rpx;
+            }
 
             .history_top {
                 display: flex;
@@ -223,8 +225,10 @@
 
                 .history_tag {
                     width: 100%;
+                    min-height: 10rpx;
                     display: flex;
                     align-items: center;
+                    flex-wrap: wrap;
                     gap: 12rpx;
                     margin-top: 18rpx;
 

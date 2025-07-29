@@ -11,7 +11,7 @@ function Index() {
   return (
     <View className="detailPage">
       <View className="avatar">
-        <Image className="avatar_img" src={require('@/assets/enterprise/enterprise11.png')} />
+        <Image className="avatar_img" src="http://36.141.100.123:10013/glks/assets/enterprise/enterprise11.png" />
       </View>
 
       <View className="info_list">

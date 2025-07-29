@@ -178,7 +178,7 @@ function Index() {
     return (
       <View className="aiResearchReportPage_loading">
         <View className="loading_container">
-          <Image src={require('@/assets/corpDetail/corpDetail28.png')} className="loading_robot" />
+          <Image src="http://36.141.100.123:10013/glks/assets/corpDetail/corpDetail28.png" className="loading_robot" />
           <View className="progress_container">
             <View className="progress_bar">
               <View className="progress_fill" style={{ width: `${Math.min(progress, 100)}%` }} />
@@ -194,7 +194,7 @@ function Index() {
   return (
     <View className="aiResearchReportPage">
       <View className="aiResearchReportPage_header">
-        <Image src={require('@/assets/corpDetail/corpDetail27.png')} className="aiResearchReportPage_header_bg" />
+        <Image src="http://36.141.100.123:10013/glks/assets/corpDetail/corpDetail27.png" className="aiResearchReportPage_header_bg" />
         <View className="aiResearchReportPage_header_title">AI研究报告</View>
       </View>
 

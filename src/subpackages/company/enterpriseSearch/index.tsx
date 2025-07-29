@@ -256,6 +256,7 @@ function Index() {
     })
   }
 
+
   // 处理地区选择
   const handleRegionSelect = (province: string, city: string) => {
     // 检查当前城市是否已被选中
@@ -512,7 +513,7 @@ function Index() {
       <Popup position="bottom" style={{ height: '50%' }} visible={isShowActionSheet} onClose={() => setIsShowActionSheet(false)}>
         <View className="popup_header">
           <View className="popup_header_title"></View>
-          <Image onClick={() => setIsShowActionSheet(false)} src={require('@/assets/enterprise/enterprise14.png')} className="popup_header_img" />
+          <Image onClick={() => setIsShowActionSheet(false)} src="http://36.141.100.123:10013/glks/assets/enterprise/enterprise14.png" className="popup_header_img" />
         </View>
         <View className="popup_content">
           <Radio.Group value={selectedId} onChange={setSelectedId} labelPosition="left" style={{ width: '100%' }}>
@@ -534,7 +535,7 @@ function Index() {
       <Popup position="bottom" style={{ height: '50%' }} visible={isShowInvalid} onClose={() => setIsShowInvalid(false)}>
         <View className="popup_header">
           <View className="popup_header_title">无效线索原因</View>
-          <Image onClick={() => setIsShowInvalid(false)} src={require('@/assets/enterprise/enterprise14.png')} className="popup_header_img" />
+          <Image onClick={() => setIsShowInvalid(false)} src="http://36.141.100.123:10013/glks/assets/enterprise/enterprise14.png" className="popup_header_img" />
         </View>
         <View className="invalid_content">不匹配原因不匹配原因不匹配原因不匹配原因不匹配原因不匹配原因不匹配原因不匹配原因不匹配原因不匹配原因不匹配原因</View>
         <View onClick={() => setShowRestoreDialog(true)} className="invalid_content_button">
@@ -546,7 +547,7 @@ function Index() {
       <Popup position="bottom" style={{ maxHeight: '95%', minHeight: '95%' }} visible={isShowPhone} onClose={() => setIsShowPhone(false)}>
         <View className="popup_header">
           <View className="popup_header_title">联系人</View>
-          <Image onClick={() => setIsShowPhone(false)} src={require('@/assets/enterprise/enterprise14.png')} className="popup_header_img" />
+          <Image onClick={() => setIsShowPhone(false)} src="http://36.141.100.123:10013/glks/assets/enterprise/enterprise14.png" className="popup_header_img" />
         </View>
         <Tabs
           value={tabValue}
@@ -568,7 +569,7 @@ function Index() {
                         <View className="name">王紫郡</View>
                         <View className="position">总经理</View>
                         <View className="security">
-                          <Image src={require('@/assets/enterprise/enterprise12.png')} className="security_img" />
+                          <Image src="http://36.141.100.123:10013/glks/assets/enterprise/enterprise12.png" className="security_img" />
                           <View className="security_dot"></View>
                           <View className="security_text">未检测</View>
                         </View>
@@ -577,9 +578,9 @@ function Index() {
                         <Text style={{ color: '#333333' }}>来自：</Text>杭州XX科技有限公司
                       </View>
                       <View className="tab_content_item_four">
-                        <Image src={require('@/assets/enterprise/enterprise13.png')} className="tab_content_item_four_img" />
-                        <Image src={require('@/assets/enterprise/enterprise13.png')} className="tab_content_item_four_img" />
-                        <Image src={require('@/assets/enterprise/enterprise13.png')} className="tab_content_item_four_img" />
+                        <Image src="http://36.141.100.123:10013/glks/assets/enterprise/enterprise13.png" className="tab_content_item_four_img" />
+                        <Image src="http://36.141.100.123:10013/glks/assets/enterprise/enterprise13.png" className="tab_content_item_four_img" />
+                        <Image src="http://36.141.100.123:10013/glks/assets/enterprise/enterprise13.png" className="tab_content_item_four_img" />
                       </View>
                     </View>
                     <View className="tab_content_item">
@@ -591,7 +592,7 @@ function Index() {
                         <View className="name">王紫郡</View>
                         <View className="position">总经理</View>
                         <View className="security">
-                          <Image src={require('@/assets/enterprise/enterprise12.png')} className="security_img" />
+                          <Image src="http://36.141.100.123:10013/glks/assets/enterprise/enterprise12.png" className="security_img" />
                           <View className="security_dot"></View>
                           <View className="security_text">未检测</View>
                         </View>
@@ -600,8 +601,8 @@ function Index() {
                         <Text style={{ color: '#333333' }}>来自：</Text>杭州XX科技有限公司
                       </View>
                       <View className="tab_content_item_four">
-                        <Image src={require('@/assets/enterprise/enterprise13.png')} className="tab_content_item_four_img" />
-                        <Image src={require('@/assets/enterprise/enterprise13.png')} className="tab_content_item_four_img" />
+                        <Image src="http://36.141.100.123:10013/glks/assets/enterprise/enterprise13.png" className="tab_content_item_four_img" />
+                        <Image src="http://36.141.100.123:10013/glks/assets/enterprise/enterprise13.png" className="tab_content_item_four_img" />
                       </View>
                     </View>
                     <View className="tab_content_item">
@@ -613,7 +614,7 @@ function Index() {
                         <View className="name">王紫郡</View>
                         <View className="position">总经理</View>
                         <View className="security">
-                          <Image src={require('@/assets/enterprise/enterprise12.png')} className="security_img" />
+                          <Image src="http://36.141.100.123:10013/glks/assets/enterprise/enterprise12.png" className="security_img" />
                           <View className="security_dot"></View>
                           <View className="security_text">未检测</View>
                         </View>
@@ -622,7 +623,7 @@ function Index() {
                         <Text style={{ color: '#333333' }}>来自：</Text>杭州XX科技有限公司
                       </View>
                       <View className="tab_content_item_four">
-                        <Image src={require('@/assets/enterprise/enterprise13.png')} className="tab_content_item_four_img" />
+                        <Image src="http://36.141.100.123:10013/glks/assets/enterprise/enterprise13.png" className="tab_content_item_four_img" />
                       </View>
                     </View>
                   </View>
@@ -673,7 +674,7 @@ function Index() {
       <Popup position="bottom" style={{ maxHeight: '95%', minHeight: '95%' }} visible={isShowAddress} onClose={() => setIsShowAddress(false)}>
         <View className="popup_header">
           <View className="popup_header_title">工厂地址</View>
-          <Image onClick={() => setIsShowAddress(false)} src={require('@/assets/enterprise/enterprise14.png')} className="popup_header_img" />
+          <Image onClick={() => setIsShowAddress(false)} src="http://36.141.100.123:10013/glks/assets/enterprise/enterprise14.png" className="popup_header_img" />
         </View>
         <View className="address_content">
           <Cell.Group>
@@ -689,7 +690,7 @@ function Index() {
           <View className="popup_header_title" style={{ fontSize: '40rpx', color: '#333333', textAlign: 'left', paddingLeft: '24rpx' }}>
             反馈-不匹配/不合适
           </View>
-          <Image onClick={() => setIsShowFeedback(false)} src={require('@/assets/enterprise/enterprise14.png')} className="popup_header_img" />
+          <Image onClick={() => setIsShowFeedback(false)} src="http://36.141.100.123:10013/glks/assets/enterprise/enterprise14.png" className="popup_header_img" />
         </View>
         <View className="feedBack_content">
           <Checkbox.Group defaultValue={['1']} style={{ width: '100%', padding: '24rpx', boxSizing: 'border-box' }}>
@@ -721,7 +722,7 @@ function Index() {
       <Popup className="region-popup" position="bottom" style={{ maxHeight: '95%', minHeight: '95%' }} visible={isShowRegion} onClose={() => setIsShowRegion(false)}>
         <View className="popup_header">
           <View className="popup_header_title">选择地区</View>
-          <Image onClick={() => setIsShowRegion(false)} src={require('@/assets/enterprise/enterprise14.png')} className="popup_header_img" />
+          <Image onClick={() => setIsShowRegion(false)} src="http://36.141.100.123:10013/glks/assets/enterprise/enterprise14.png" className="popup_header_img" />
         </View>
         <View className="region_content" style={{ height: `calc(${regionPopupHeight}px - 100rpx)`, overflow: 'hidden' }}>
           <Tabs
@@ -791,7 +792,7 @@ function Index() {
             <SearchBar disabled={true} placeholder="搜企业、搜索内容" value={searchValue} onChange={setSearchValue} onSearch={handleSearch} />
           </View>
           <View className="searchContent_right">
-            <Image src={require('@/assets/enterprise/enterprise11.png')} className="searchContent_right_img" />
+            <Image src="http://36.141.100.123:10013/glks/assets/enterprise/enterprise11.png" className="searchContent_right_img" />
             <View>共有{total}条搜索结果</View>
           </View>
         </View>
@@ -804,7 +805,7 @@ function Index() {
           loadingText={
             <>
               <View className="loadingText">
-                <Image src={require('@/assets/enterprise/enterprise11.png')} className="loadingImg" />
+                <Image src="http://36.141.100.123:10013/glks/assets/enterprise/enterprise11.png" className="loadingImg" />
                 <Text className="loading-char">l</Text>
                 <Text className="loading-char">o</Text>
                 <Text className="loading-char">a</Text>
@@ -826,12 +827,12 @@ function Index() {
             <View key={index} onClick={() => handleEnterpriseDetail(item)}>
               <View className="enterpriseContent_item">
                 <View className="enterpriseContent_item_top">
-                  <Image src={require('@/assets/enterprise/enterprise11.png')} className="enterpriseContent_item_Img" />
+                  <Image src="http://36.141.100.123:10013/glks/assets/enterprise/enterprise11.png" className="enterpriseContent_item_Img" />
                   <View className="enterpriseContent_item_Text">
                     <View className="title">{item.name}</View>
                     <View className="description">
                       <View className="certification">
-                        <Image src={require('@/assets/enterprise/enterprise3.png')} className="certification_img" />
+                        <Image src="http://36.141.100.123:10013/glks/assets/enterprise/enterprise3.png" className="certification_img" />
                         <View className="certification_text">官网</View>
                       </View>
                       <View className="match">匹配{item.score}%</View>
@@ -868,7 +869,7 @@ function Index() {
                 </View>
                 <View className="enterpriseContent_item_contact">
                   <View className="enterpriseContent_item_contact_item">
-                    <Image onClick={() => handleAiResearchReport(item)} src={require('@/assets/enterprise/enterprise5.png')} className="enterpriseContent_item_contact_item_img" />
+                    <Image onClick={() => handleAiResearchReport(item)} src="http://36.141.100.123:10013/glks/assets/enterprise/enterprise5.png" className="enterpriseContent_item_contact_item_img" />
                   </View>
                   <View
                     onClick={e => {
@@ -877,7 +878,7 @@ function Index() {
                     }}
                     className="enterpriseContent_item_contact_item"
                   >
-                    <Image src={require('@/assets/enterprise/enterprise1.png')} className="enterpriseContent_item_contact_item_img" />
+                    <Image src="http://36.141.100.123:10013/glks/assets/enterprise/enterprise1.png" className="enterpriseContent_item_contact_item_img" />
                     电话(112)
                   </View>
                   <View
@@ -887,7 +888,7 @@ function Index() {
                     }}
                     className="enterpriseContent_item_contact_item"
                   >
-                    <Image src={require('@/assets/enterprise/enterprise2.png')} className="enterpriseContent_item_contact_item_img" />
+                    <Image src="http://36.141.100.123:10013/glks/assets/enterprise/enterprise2.png" className="enterpriseContent_item_contact_item_img" />
                     地址(2)
                   </View>
                 </View>
@@ -895,13 +896,13 @@ function Index() {
                   <View className="enterpriseContent_item_bottom_left">
                     {!isDisliked && (
                       <View onClick={handleLike} className={`enterpriseContent_item_bottom_left_good ${isLiked ? 'liked' : ''} ${showHeartbeat ? 'heartbeat' : ''}`}>
-                        <Image src={require(isLiked ? '@/assets/enterprise/enterprise6.png' : '@/assets/enterprise/enterprise8.png')} className="enterpriseContent_item_bottom_left_good_img" />
+                        <Image src="http://36.141.100.123:10013/glks/assets/enterprise/enterprise6.png" className="enterpriseContent_item_bottom_left_good_img" />
                         <Text className="enterpriseContent_item_bottom_left_good_text">有效</Text>
                       </View>
                     )}
                     {!isLiked && (
                       <View onClick={handleDislike} className={`enterpriseContent_item_bottom_left_bad ${isDisliked ? 'disliked' : ''} ${showShake ? 'shake' : ''}`}>
-                        <Image src={require(isDisliked ? '@/assets/enterprise/enterprise7.png' : '@/assets/enterprise/enterprise9.png')} className="enterpriseContent_item_bottom_left_bad_img" />
+                        <Image src="http://36.141.100.123:10013/glks/assets/enterprise/enterprise7.png" className="enterpriseContent_item_bottom_left_bad_img" />
                         <Text className="enterpriseContent_item_bottom_left_bad_text">无效线索</Text>
                         {isDisliked && <ArrowDown color="#8E8E8E" style={{ width: '28rpx', height: '28rpx', marginLeft: '6rpx' }} />}
                       </View>

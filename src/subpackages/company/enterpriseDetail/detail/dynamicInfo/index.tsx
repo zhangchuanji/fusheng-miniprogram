@@ -3,13 +3,15 @@ import { View, Image, Text } from '@tarojs/components'
 import './index.scss'
 import { ArrowRightSize6 } from '@nutui/icons-react-taro'
 import { Tabs } from '@nutui/nutui-react-taro'
-import Taro from '@tarojs/taro'
+import Taro, { useLoad } from '@tarojs/taro'
 
 function Index() {
   const [tabvalue, setTabvalue] = useState(0)
   const [list, setList] = useState([{}, {}, {}, {}, {}, {}])
   const [botHeight, setBotHeight] = useState([])
   const [tabHeight, setTabHeight] = useState(0)
+  const [company, setCompany] = useState({ name: '' })
+  const [companyList, setCompanyList] = useState([])
 
   useEffect(() => {
     Taro.nextTick(() => {
@@ -29,6 +31,32 @@ function Index() {
       })
     })
   }, [])
+
+  useLoad(options => {
+    let item = JSON.parse(options.item)
+    if (item.company && item.company.name) {
+      item.company.name = item.company.name.replace(/<[^>]+>/g, '')
+    }
+    setCompany(item?.company)
+    setCompanyList(item?.companyHotResultResponse?.companyHotRequestList)
+  })
+
+  // 更安全的时间戳转换函数，包含错误处理
+  const formatTimestamp = (timestamp: number | string) => {
+    try {
+      if (!timestamp) return '--'
+      const date = new Date(Number(timestamp))
+      if (isNaN(date.getTime())) return '--'
+
+      const year = date.getFullYear()
+      const month = String(date.getMonth() + 1).padStart(2, '0')
+      const day = String(date.getDate()).padStart(2, '0')
+      return `${year}-${month}-${day}`
+    } catch (error) {
+      console.error('时间戳转换错误:', error)
+      return '--'
+    }
+  }
 
   const getTagClass = (index: number) => {
     if (index === 0) return 'tag-active'
@@ -59,9 +87,9 @@ function Index() {
       <View className="header">
         <View className="header-company">
           <View className="header-company-logo">
-            <Image src={require('@/assets/enterprise/enterprise11.png')} className="header-company-logo-img" />
+            <Image src="http://36.141.100.123:10013/glks/assets/enterprise/enterprise11.png" className="header-company-logo-img" />
           </View>
-          <View className="header-company-name">柳州五萎汽车工业有限公司</View>
+          <View className="header-company-name">{company.name}</View>
           <ArrowRightSize6 color="#333" size={'24rpx'} />
         </View>
         <View className="header-tabs">
@@ -94,17 +122,17 @@ function Index() {
                     ))}
                   </View>
                   <View className="content-list">
-                    {list.map((item, index) => {
+                    {companyList.map((item: any, index: any) => {
                       return (
                         <View className="content-item" key={index}>
                           <View className="content-item__header">
                             <View className="content-item__dot"></View>
                             <View className={`tag ${getTagClass(index)} tagone`}>积极</View>
                             <View className="tag-news">新闻</View>
-                            <View className="date">2024-09-09</View>
+                            <View className="date">{formatTimestamp(item.rtm)}</View>
                           </View>
                           <View className="content-item__card">
-                            <View className="title">实力拉满！多家新能源汽车斩获中国专利奖</View>
+                            <View className="title">{item.title}</View>
                             <View className="source">来源财经网</View>
                             <View className="arrow"></View>
                           </View>

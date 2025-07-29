@@ -54,14 +54,14 @@ function Index() {
           <View className="feedback_image_box">
             {image.map((item: any, index: number) => (
               <View className="feedback_image_box_item">
-                <Image src={require('@/assets/setting/feedback_close.png')} className="feedback_image_box_item_close" onClick={() => handleClose(index)} />
+                <Image src="http://36.141.100.123:10013/glks/assets/setting/feedback_close.png" className="feedback_image_box_item_close" onClick={() => handleClose(index)} />
                 <Image src={item} className="feedback_image" />
               </View>
             ))}
           </View>
         )}
         <View className="feedback_image_box_add">
-          <Image onClick={() => getImage()} src={require('@/assets/setting/feedback_icon.png')} className="feedback_icon" />
+          <Image onClick={() => getImage()} src="http://36.141.100.123:10013/glks/assets/setting/feedback_icon.png" className="feedback_icon" />
           <View className="feedback_image_box_add_text">0/500</View>
         </View>
       </View>

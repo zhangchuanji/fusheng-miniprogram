@@ -6,8 +6,14 @@ import { useState } from 'react'
 import Taro from '@tarojs/taro'
 
 function Index() {
+  // 资本相关变量
   const [minCapital, setMinCapital] = useState('')
   const [maxCapital, setMaxCapital] = useState('')
+
+  // 成立年限日期相关变量（新增）
+  const [startDate, setStartDate] = useState('')
+  const [endDate, setEndDate] = useState('')
+
   const [minPeople, setMinPeople] = useState('')
   const [maxPeople, setMaxPeople] = useState('')
   const [showPopup, setShowPopup] = useState(false)
@@ -147,6 +153,11 @@ function Index() {
     setShowPopup(false)
   }
 
+  const closeCustomYearInput = () => {
+    setShowCustomYearInput(false)
+    setShowPopup(false)
+  }
+
   const handleMinPeople = (e: any) => {
     setMinPeople(e.detail.value)
   }
@@ -155,11 +166,12 @@ function Index() {
     setMaxPeople(e.detail.value)
   }
 
+  // 修改日期选择函数
   const setChooseValue = (e: any) => {
     const formatDate = (date: any) => (date ? `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}` : '')
     const [start, end] = e
-    setMinCapital(formatDate(start))
-    setMaxCapital(formatDate(end))
+    setStartDate(formatDate(start))
+    setEndDate(formatDate(end))
   }
 
   // 选中处理
@@ -185,13 +197,14 @@ function Index() {
   // 判断输入框有值
   const isCapitalInputActive = !!(minCapital || maxCapital)
   const isPeopleInputActive = !!(minPeople || maxPeople)
+  const isDateInputActive = !!(startDate || endDate) // 新增日期判断
 
   return (
     <View className="advancedFilterPage" style={{ overflow: showPopup ? 'hidden' : 'auto', height: showPopup ? '100vh' : 'auto' }}>
-      <Popup className="advancedPopup" position="bottom" style={{ maxHeight: '80%', minHeight: '80%' }} visible={showCustomYearInput} onClose={closeSwitch}>
+      <Popup className="advancedPopup" position="bottom" style={{ maxHeight: '80%', minHeight: '80%' }} visible={showCustomYearInput} onClose={closeCustomYearInput}>
         <View className="popup_header">
           <View className="popup_header_title">成立年限</View>
-          <Image onClick={() => closeAdvancedPopup()} src={require('@/assets/enterprise/enterprise14.png')} className="popup_header_img" />
+          <Image onClick={() => closeAdvancedPopup()} src="http://36.141.100.123:10013/glks/assets/enterprise/enterprise14.png" className="popup_header_img" />
         </View>
         <View style={{ height: `calc(${popUpHeight}px - 380rpx)` }}>
           <CalendarCard type="range" startDate={new Date('1900-01-01')} onChange={setChooseValue} />
@@ -200,15 +213,17 @@ function Index() {
           <View className="popup_bottom_date">
             <View className="popup_bottom_date_text">
               <View className="popup_bottom_date_text_title">开始</View>
-              <View style={{ color: minCapital ? '#333333' : '#B9B9B9' }}>{minCapital ? minCapital : '请选择'}</View>
+              <View style={{ color: startDate ? '#333333' : '#B9B9B9' }}>{startDate ? startDate : '请选择'}</View>
             </View>
             <View className="popup_bottom_date_text">
               <View className="popup_bottom_date_text_title">结束</View>
-              <View style={{ color: maxCapital ? '#333333' : '#B9B9B9' }}>{maxCapital ? maxCapital : '请选择'}</View>
+              <View style={{ color: endDate ? '#333333' : '#B9B9B9' }}>{endDate ? endDate : '请选择'}</View>
             </View>
           </View>
-          <View className="popup_bottom_btn">取消</View>
-          <View className="popup_bottom_btn" style={{ background: '#2156FE', color: '#fff' }}>
+          <View onClick={() => closeCustomYearInput()} className="popup_bottom_btn">
+            取消
+          </View>
+          <View onClick={() => closeCustomYearInput()} className="popup_bottom_btn" style={{ background: '#2156FE', color: '#fff' }}>
             确定
           </View>
         </View>
@@ -217,7 +232,7 @@ function Index() {
       <Popup className="advancedPopup" position="bottom" style={{ maxHeight: '80%', minHeight: '80%' }} visible={showIndustry} onClose={closeSwitch}>
         <View className="popup_header">
           <View className="popup_header_title">所属行业</View>
-          <Image onClick={() => closeIndustryPopup()} src={require('@/assets/enterprise/enterprise14.png')} className="popup_header_img" />
+          <Image onClick={() => closeIndustryPopup()} src="http://36.141.100.123:10013/glks/assets/enterprise/enterprise14.png" className="popup_header_img" />
         </View>
         <Cascader
           optionKey={{

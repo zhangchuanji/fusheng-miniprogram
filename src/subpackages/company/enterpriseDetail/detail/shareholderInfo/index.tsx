@@ -13,7 +13,7 @@ function Index() {
         </Text>
         <View className="header-link">
           股权结构
-          <Image className="relationImg" src={require('@/assets/corpDetail/corpDetail26.png')} />
+          <Image className="relationImg" src="http://36.141.100.123:10013/glks/assets/corpDetail/corpDetail26.png" />
         </View>
       </View>
 

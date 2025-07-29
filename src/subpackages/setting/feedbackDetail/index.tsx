@@ -21,7 +21,7 @@ function Index() {
         <Text className="content_text">{feedbackRecords.content}</Text>
         <View className="item_img">
           {feedbackRecords.image.map((imgSrc, index) => (
-            <Image key={index} src={require(`@/assets/${imgSrc}`)} className="item_img_item" mode="aspectFit" />
+            <Image key={index} src={`http://36.141.100.123:10013/glks/assets/${imgSrc}`} className="item_img_item" mode="aspectFit" />
           ))}
         </View>
         <View className="item_time">

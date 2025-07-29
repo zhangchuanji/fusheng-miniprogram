@@ -2,16 +2,17 @@ import React, { useState, useEffect } from 'react'
 import { View, Text, Image, ScrollView, Input, Textarea, Button } from '@tarojs/components'
 import { ArrowDownSize6, Close, Checked, Search, Success, CheckClose } from '@nutui/icons-react-taro'
 import { searchCompaniesAPI } from '@/api/company'
-import { clueFollowUpCreateAPI } from '@/api/clue'
+import { clueFollowUpCreateAPI } from '@/api/clue' // 移除uploadFileAPI
 import { Calendar, Popup } from '@nutui/nutui-react-taro'
 import Taro from '@tarojs/taro'
 import './index.scss'
 import { useSelector } from 'react-redux'
 import { clueListAPI } from '@/api/clue'
+import { BASE_URL } from '@/service/config' // 新增导入
 
 // 文件类型定义
 interface FileItem {
-  id: number
+  fileId: number
   name: string
   size: string
   sizeInBytes: number
@@ -20,10 +21,12 @@ interface FileItem {
   filePath?: string
   tempFilePath?: string
   errorMessage?: string
+  url?: string // 新增：服务器返回的文件URL
 }
 
 function AddFollowPage() {
   const [formData, setFormData] = useState({
+    userId: Taro.getStorageSync('token').userId,
     associateLead: '',
     leadId: '',
     associateLeadContact: '',
@@ -31,8 +34,8 @@ function AddFollowPage() {
     type: '',
     method: '',
     followUpTime: new Date().toISOString().split('T')[0],
-    followUpContent: '',
-    attachment: [] as FileItem[]
+    content: '',
+    followUpFileList: [] as FileItem[]
   })
 
   const userInfo = useSelector((state: any) => state.login.userInfo)
@@ -82,7 +85,7 @@ function AddFollowPage() {
     associateLeadContact: ''
   })
 
-  const [attachment, setAttachment] = useState<FileItem[]>([])
+  const [followUpFileList, setFollowUpFileList] = useState<FileItem[]>([])
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({
@@ -271,7 +274,7 @@ function AddFollowPage() {
 
         // 创建文件项
         const newFile: FileItem = {
-          id: generateId(),
+          fileId: generateId(),
           name: `文件_${Date.now()}`,
           size: formatFileSize(file.size),
           sizeInBytes: file.size,
@@ -281,7 +284,7 @@ function AddFollowPage() {
         }
 
         // 添加到文件列表
-        setAttachment(prev => [...prev, newFile])
+        setFollowUpFileList(prev => [...prev, newFile])
 
         // 开始上传
         await uploadFile(newFile)
@@ -298,64 +301,91 @@ function AddFollowPage() {
   // 上传文件到服务器
   const uploadFile = async (fileItem: FileItem) => {
     try {
+      let progressInterval: NodeJS.Timeout | null = null
+
       // 模拟上传进度
       const simulateProgress = () => {
         let progress = 0
-        const interval = setInterval(() => {
+        progressInterval = setInterval(() => {
           progress += Math.random() * 10 + 5
-          if (progress >= 100) {
-            progress = 100
-            clearInterval(interval)
-
-            // 更新文件状态为完成
-            setAttachment(prev => prev.map(file => (file.id === fileItem.id ? { ...file, progress: 100, status: 'completed' as const } : file)))
-          } else {
-            // 更新上传进度
-            setAttachment(prev => prev.map(file => (file.id === fileItem.id ? { ...file, progress: Math.round(progress) } : file)))
+          if (progress >= 95) {
+            progress = 95
+            if (progressInterval) {
+              clearInterval(progressInterval)
+            }
           }
+          setFollowUpFileList(prev => prev.map(file => (file.fileId === fileItem.fileId ? { ...file, progress: Math.round(progress) } : file)))
         }, 200)
       }
 
       simulateProgress()
 
-      // 这里可以替换为实际的上传API调用
-      // const uploadRes = await Taro.uploadFile({
-      //   url: 'YOUR_UPLOAD_API_URL',
-      //   filePath: fileItem.tempFilePath!,
-      //   name: 'file',
-      //   formData: {
-      //     fileName: fileItem.name
-      //   },
-      //   success: (res) => {
-      //     console.log('上传成功:', res)
-      //     setAttachment(prev =>
-      //       prev.map(file =>
-      //         file.id === fileItem.id
-      //           ? { ...file, progress: 100, status: 'completed' }
-      //           : file
-      //       )
-      //     )
-      //   },
-      //   fail: (error) => {
-      //     console.error('上传失败:', error)
-      //     setAttachment(prev =>
-      //       prev.map(file =>
-      //         file.id === fileItem.id
-      //           ? { ...file, status: 'failed', errorMessage: '上传失败' }
-      //           : file
-      //       )
-      //     )
-      //   }
-      // })
+      // 获取token
+      const tokenData = Taro.getStorageSync('token')
+      const token = tokenData?.accessToken
+
+      // 使用Taro.uploadFile，它会自动处理FormData格式
+      const uploadRes = await Taro.uploadFile({
+        url: `${BASE_URL}/app-api/infra/file/upload`,
+        filePath: fileItem.tempFilePath!,
+        name: 'file', // 这是FormData中的字段名
+        header: {
+          Authorization: `Bearer ${token}`,
+          'tenant-id': '1'
+        },
+        formData: {
+          // 这里的数据会自动转换为FormData格式
+          fileName: fileItem.name
+        },
+        success: res => {
+          console.log('上传成功:', res)
+          if (progressInterval) {
+            clearInterval(progressInterval)
+          }
+
+          // 解析服务器返回的数据
+          let responseData
+          try {
+            responseData = JSON.parse(res.data)
+          } catch (error) {
+            console.error('解析响应数据失败:', error)
+            responseData = res.data
+          }
+
+          // 获取服务器返回的文件URL
+          const fileUrl = responseData?.data
+
+          // 更新文件状态，添加URL
+          setFollowUpFileList(prev =>
+            prev.map(file =>
+              file.fileId === fileItem.fileId
+                ? {
+                    ...file,
+                    progress: 100,
+                    status: 'completed',
+                    url: fileUrl // 添加服务器返回的URL
+                  }
+                : file
+            )
+          )
+        },
+        fail: error => {
+          console.error('上传失败:', error)
+          if (progressInterval) {
+            clearInterval(progressInterval)
+          }
+          setFollowUpFileList(prev => prev.map(file => (file.fileId === fileItem.fileId ? { ...file, status: 'failed', errorMessage: '上传失败' } : file)))
+        }
+      })
     } catch (error) {
       console.error('上传文件失败:', error)
-      setAttachment(prev => prev.map(file => (file.id === fileItem.id ? { ...file, status: 'failed' as const, errorMessage: '上传失败' } : file)))
+      setFollowUpFileList(prev => prev.map(file => (file.fileId === fileItem.fileId ? { ...file, status: 'failed' as const, errorMessage: '上传失败' } : file)))
     }
   }
 
   // 删除文件
   const removeFile = (fileId: number) => {
-    setAttachment(prev => prev.filter(file => file.id !== fileId))
+    setFollowUpFileList(prev => prev.filter(file => file.fileId !== fileId))
   }
 
   const closeSelect = (e: any) => {
@@ -531,18 +561,26 @@ function AddFollowPage() {
       })
       return
     }
-    if (!formData.followUpContent) {
+    if (!formData.content) {
       Taro.showToast({
         title: '请输入跟进内容',
         icon: 'none'
       })
       return
     }
-    if (attachment && attachment.length > 0) {
-      formData.attachment = attachment
+    if (followUpFileList && followUpFileList.length > 0) {
+      formData.followUpFileList = followUpFileList
     }
 
-    clueFollowUpCreateAPI(formData, res => {})
+    clueFollowUpCreateAPI(formData, res => {
+      if (res.success) {
+        Taro.showToast({
+          title: '添加成功',
+          icon: 'none'
+        })
+        Taro.navigateBack()
+      }
+    })
   }
 
   return (
@@ -570,7 +608,7 @@ function AddFollowPage() {
             <Text className="label-text">跟进内容</Text>
           </View>
           <View className="field-input-container">
-            <Textarea className="content-textarea" placeholder="请输入内容" value={formData.followUpContent} onInput={e => handleInputChange('followUpContent', e.detail.value)} />
+            <Textarea className="content-textarea" placeholder="请输入内容" value={formData.content} onInput={e => handleInputChange('content', e.detail.value)} />
           </View>
         </View>
 
@@ -579,7 +617,7 @@ function AddFollowPage() {
           <View className="upload-title">上传附件</View>
           <View className="upload-area" onClick={handleFileUpload}>
             <View className="upload-icon">
-              <Image src={require('@/assets/chat/chat4.png')} className="upload-icon-image" />
+              <Image src="http://36.141.100.123:10013/glks/assets/chat/chat4.png" className="upload-icon-image" />
             </View>
             <Text className="upload-text">点击上传文件</Text>
             <Text className="upload-tips">支持.png .jpg .jpeg .gif .svg .dsg</Text>
@@ -587,10 +625,10 @@ function AddFollowPage() {
 
           {/* 已上传文件列表 */}
           <View className="uploaded-files">
-            {attachment &&
-              attachment.length > 0 &&
-              attachment.map(file => (
-                <View key={file.id} className="file-item">
+            {followUpFileList &&
+              followUpFileList.length > 0 &&
+              followUpFileList.map(file => (
+                <View key={file.fileId} className="file-item">
                   <View className="file-info">
                     <View className="file-name">{file.name}</View>
                     <View className="file-size">{file.size}</View>
@@ -601,7 +639,7 @@ function AddFollowPage() {
                     </View>
                     <Text className="progress-text">{file.progress}%</Text>
                   </View>
-                  <View className="file-action" onClick={() => removeFile(file.id)}>
+                  <View className="file-action" onClick={() => removeFile(file.fileId)}>
                     {file.status === 'completed' ? <Success size="30rpx" color="#2156FE" /> : <CheckClose size="30rpx" color="#333" />}
                   </View>
                 </View>

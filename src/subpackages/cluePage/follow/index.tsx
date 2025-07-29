@@ -1,7 +1,80 @@
 import React, { useState, useCallback, useEffect } from 'react'
 import { View, Text, Image, ScrollView } from '@tarojs/components'
+import { clueFollowUpDetailAPI, clueFollowUpDeleteAPI } from '@/api/clue'
+import Taro, { useLoad, useDidShow } from '@tarojs/taro'
+import { useSelector } from 'react-redux'
+
 import './index.scss'
 function FollowPage() {
+  const [followUpDetail, setFollowUpDetail] = useState<any>({})
+  const [followUpId, setFollowUpId] = useState<string>('') // 新增：保存跟进ID
+  const userInfo = useSelector((state: any) => state.login.userInfo)
+
+  const navigateToEditPage = () => {
+    Taro.navigateTo({
+      url: `/subpackages/cluePage/editFollow/index?item=${followUpDetail.id}`
+    })
+  }
+
+  const deleteFollowUp = () => {
+    Taro.showModal({
+      title: '删除跟进',
+      content: '确定删除跟进吗？',
+      success: res => {
+        if (res.confirm) {
+          clueFollowUpDeleteAPI({ id: followUpDetail.id }, res => {
+            if (res.success) {
+              Taro.showToast({
+                title: '删除成功',
+                icon: 'none'
+              })
+              Taro.navigateBack()
+            }
+          })
+        }
+      }
+    })
+  }
+
+  function parseDate(createTime: any): React.ReactNode {
+    let time = new Date(createTime)
+    // 转为2025-01-01 12:00:00
+    let year = time.getFullYear()
+    let month = time.getMonth() + 1
+    let day = time.getDate()
+    let hour = time.getHours()
+    let minute = time.getMinutes()
+    let second = time.getSeconds()
+    return `${year}-${month}-${day} ${hour}:${minute}:${second}`
+  }
+
+  // 获取跟进详情的函数
+  const fetchFollowUpDetail = useCallback((id: string) => {
+    clueFollowUpDetailAPI(
+      {
+        id: id
+      },
+      res => {
+        if (res.success) {
+          setFollowUpDetail(res.data)
+        }
+      }
+    )
+  }, [])
+
+  useLoad(options => {
+    const item = options.item
+    setFollowUpId(item) // 保存ID
+    fetchFollowUpDetail(item)
+  })
+
+  // 新增：页面显示时刷新数据
+  useDidShow(() => {
+    if (followUpId) {
+      fetchFollowUpDetail(followUpId)
+    }
+  })
+
   return (
     <View className="followPage">
       <ScrollView className="follow-container">
@@ -9,28 +82,28 @@ function FollowPage() {
         <View className="follow-summary">
           <View className="user-info">
             <View className="avatar-section">
-              <Image className="avatar" src="/assets/avatar.png" />
+              <Image className="avatar" src="http://36.141.100.123:10013/glks/assets/enterprise/enterprise11.png" />
               <View className="user-details">
-                <Text className="user-name">张经理</Text>
-                <Text className="user-role">销售经理</Text>
+                <Text className="user-name">{userInfo?.nickname}</Text>
+                <Text className="user-role">{userInfo?.role || '职位'}</Text>
               </View>
             </View>
             <View className="status-section">
-              <Text className="status-text">跟进 (到访)</Text>
+              {followUpDetail.type || '跟进类型'}（{followUpDetail.method || '跟进方式'})
             </View>
           </View>
 
           <View className="feedback-box">
-            <Text className="feedback-text">客户对产品意向很高,但是希望有优惠</Text>
+            <Text className="feedback-text">{followUpDetail?.content || '跟进内容'}</Text>
           </View>
 
           <View className="timestamp-section">
-            <Image src={require('@/assets/chat/chat1.png')} className="timestamp-img" />
-            <Text className="timestamp">2023-09-09 14:09</Text>
+            <Image src="http://36.141.100.123:10013/glks/assets/chat/chat1.png" className="timestamp-img" />
+            <Text className="timestamp">{parseDate(followUpDetail?.createTime) || '跟进时间'}</Text>
           </View>
 
           <View className="lead-source">
-            <Text className="lead-text">来自线索:郑州空气锚有限公司</Text>
+            <Text className="lead-text">来自线索:{followUpDetail?.followUpCompany?.name || '线索名称'}</Text>
           </View>
         </View>
 
@@ -43,52 +116,55 @@ function FollowPage() {
           <View className="detail-list">
             <View className="detail-item">
               <Text className="item-label">跟进类型</Text>
-              <Text className="item-value">客户跟进</Text>
+              <Text className="item-value"> {followUpDetail.type || '跟进类型'}</Text>
             </View>
 
             <View className="detail-item">
               <Text className="item-label">跟进方式</Text>
-              <Text className="item-value">到访</Text>
+              <Text className="item-value">{followUpDetail.method || '跟进方式'}</Text>
             </View>
 
             <View className="detail-item">
               <Text className="item-label">跟进时间</Text>
-              <Text className="item-value">2024-09-09 19:00</Text>
+              <Text className="item-value">{followUpDetail?.followUpTime}天</Text>
             </View>
 
             <View className="detail-item">
               <Text className="item-label">跟进内容</Text>
-              <Text className="item-value">跟进描述</Text>
+              <Text className="item-value">{followUpDetail?.content || '跟进描述'}</Text>
             </View>
 
             <View className="detail-item">
               <Text className="item-label">线索名称</Text>
-              <Text className="item-value link">郑州空气猫有限公司</Text>
+              <Text className="item-value link">{followUpDetail?.followUpCompany?.name || '线索名称'}</Text>
             </View>
 
             <View className="detail-item">
               <Text className="item-label">联系人</Text>
-              <Text className="item-value link">狮子</Text>
+              <Text className="item-value link">{followUpDetail?.followUpCompany?.contact || '联系人'}</Text>
             </View>
 
             <View className="detail-item">
               <Text className="item-label">相关附件</Text>
-              <Text className="item-value link">附件.doc</Text>
+              {followUpDetail?.followUpFileList?.length > 0 &&
+                followUpDetail?.followUpFileList.map(item => {
+                  return <Text className="item-value link">{item?.name || '附件'}</Text>
+                })}
             </View>
 
-            <View className="detail-item">
+            {/* <View className="detail-item">
               <Text className="item-label">评论数量</Text>
-              <Text className="item-value">10条</Text>
-            </View>
+              <Text className="item-value">- -</Text>
+            </View> */}
 
             <View className="detail-item">
               <Text className="item-label">跟进人员</Text>
-              <Text className="item-value">包子</Text>
+              <Text className="item-value">{userInfo?.nickname}</Text>
             </View>
 
             <View className="detail-item">
               <Text className="item-label">创建时间</Text>
-              <Text className="item-value">2024-09-09 19:00</Text>
+              <Text className="item-value">{parseDate(followUpDetail?.createTime) || '创建时间'}</Text>
             </View>
           </View>
         </View>
@@ -96,12 +172,12 @@ function FollowPage() {
 
       {/* 底部操作按钮 */}
       <View className="action-buttons">
-        <View className="edit-btn">
-          <Image src={require('@/assets/chat/chat3.png')} className="btn-icon" />
+        <View className="edit-btn" onClick={() => navigateToEditPage()}>
+          <Image src="http://36.141.100.123:10013/glks/assets/chat/chat3.png" className="btn-icon" />
           <Text className="btn-text">编辑记录</Text>
         </View>
-        <View className="delete-btn">
-          <Image src={require('@/assets/chat/chat2.png')} className="btn-icon" />
+        <View className="delete-btn" onClick={() => deleteFollowUp()}>
+          <Image src="http://36.141.100.123:10013/glks/assets/chat/chat2.png" className="btn-icon" />
           <Text className="btn-text">删除任务</Text>
         </View>
       </View>

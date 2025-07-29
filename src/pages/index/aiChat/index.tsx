@@ -542,17 +542,17 @@ const Index = forwardRef<{ getAiSession: () => void }, { height: number }>(({ he
     <View className="chatPage" style={{ height: `calc(100vh - ${height}px)` }}>
       {messages.length === 0 ? (
         <View className="chatPage_default" ref={contentRef} style={{ height: `calc(100% - 314rpx)` }}>
-          <Image src={require('@/assets/home/home4.png')} className="chatPage_img" />
+          <Image src="http://36.141.100.123:10013/glks/assets/home/home4.png" className="chatPage_img" />
           {loadFailed ? (
             <View className="chatPage_recommend">
               <View className="chatPage_recommend_title">
                 <View className="recommend_left">
-                  <Image src={require('@/assets/home/home5.png')} className="recommend_left_img" />
+                  <Image src="http://36.141.100.123:10013/glks/assets/home/home5.png" className="recommend_left_img" />
                   <Text className="recommend_left_text">您可以试着问我：</Text>
                 </View>
                 <View className="recommend_right" onClick={handleChangeBatch} style={{ cursor: 'pointer' }}>
                   <Text className="recommend_right_text">换一批</Text>
-                  <Image src={require('@/assets/home/home6.png')} className="recommend_right_img" />
+                  <Image src="http://36.141.100.123:10013/glks/assets/home/home6.png" className="recommend_right_img" />
                 </View>
               </View>
               <View className={`chatPage_recommend_content${recommendAnim ? ' ' + recommendAnim : ''}`} ref={recommendRef}>
@@ -591,10 +591,10 @@ const Index = forwardRef<{ getAiSession: () => void }, { height: number }>(({ he
                   {/* 保留功能按钮部分 */}
                   {msg.content && msg.apiStatus.textComplete && msg.apiStatus.companyComplete ? (
                     <View className="chatMsg_ai_fun">
-                      <Image src={require('@/assets/home/home10.png')} className={`chatMsg_ai_fun_img ${buttonStates[msg.messageId]?.[0] ? 'button-active' : ''}`} onClick={() => handleButtonClick(msg.messageId, 0)} data-message-id={msg.messageId} data-button-index={0} />
-                      <Image src={require('@/assets/home/home11.png')} className={`chatMsg_ai_fun_img ${buttonStates[msg.messageId]?.[1] ? 'button-active' : ''}`} onClick={() => handleButtonClick(msg.messageId, 1)} data-message-id={msg.messageId} data-button-index={1} />
-                      <Image src={require('@/assets/home/home12.png')} className={`chatMsg_ai_fun_img ${buttonStates[msg.messageId]?.[2] ? 'button-active' : ''}`} onClick={() => handleButtonClick(msg.messageId, 2)} data-message-id={msg.messageId} data-button-index={2} />
-                      <Image src={require('@/assets/home/home13.png')} className={`chatMsg_ai_fun_img ${buttonStates[msg.messageId]?.[3] ? 'button-active' : ''}`} onClick={() => handleButtonClick(msg.messageId, 3)} data-message-id={msg.messageId} data-button-index={3} />
+                      <Image src="http://36.141.100.123:10013/glks/assets/home/home10.png" className={`chatMsg_ai_fun_img ${buttonStates[msg.messageId]?.[0] ? 'button-active' : ''}`} onClick={() => handleButtonClick(msg.messageId, 0)} data-message-id={msg.messageId} data-button-index={0} />
+                      <Image src="http://36.141.100.123:10013/glks/assets/home/home11.png" className={`chatMsg_ai_fun_img ${buttonStates[msg.messageId]?.[1] ? 'button-active' : ''}`} onClick={() => handleButtonClick(msg.messageId, 1)} data-message-id={msg.messageId} data-button-index={1} />
+                      <Image src="http://36.141.100.123:10013/glks/assets/home/home12.png" className={`chatMsg_ai_fun_img ${buttonStates[msg.messageId]?.[2] ? 'button-active' : ''}`} onClick={() => handleButtonClick(msg.messageId, 2)} data-message-id={msg.messageId} data-button-index={2} />
+                      <Image src="http://36.141.100.123:10013/glks/assets/home/home13.png" className={`chatMsg_ai_fun_img ${buttonStates[msg.messageId]?.[3] ? 'button-active' : ''}`} onClick={() => handleButtonClick(msg.messageId, 3)} data-message-id={msg.messageId} data-button-index={3} />
                     </View>
                   ) : null}
                 </View>
@@ -620,16 +620,16 @@ const Index = forwardRef<{ getAiSession: () => void }, { height: number }>(({ he
                 onClick={() => {
                   speechToText()
                 }}
-                src={require('@/assets/home/home7.png')}
+                src="http://36.141.100.123:10013/glks/assets/home/home7.png"
                 className="chatPage_fun_left1"
               />
               <View className="chatPage_fun_left2">
-                <Image src={require('@/assets/home/home8.png')} className="chatPage_fun_left2Img" />
+                <Image src="http://36.141.100.123:10013/glks/assets/home/home8.png" className="chatPage_fun_left2Img" />
                 <Text>深度思考</Text>
               </View>
             </View>
             <Image
-              src={require('@/assets/home/home9.png')}
+              src="http://36.141.100.123:10013/glks/assets/home/home9.png"
               onClick={() => {
                 send()
               }}

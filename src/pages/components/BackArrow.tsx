@@ -26,7 +26,7 @@ const BackArrow: React.FC = () => {
       }}
       onClick={() => Taro.navigateBack()}
     >
-      <Image src={require('@/assets/login/login3.png')} style={{ width: '44rpx', height: '44rpx', display: 'block' }} mode="aspectFit" />
+      <Image src="http://36.141.100.123:10013/glks/assets/login/login3.png" style={{ width: '44rpx', height: '44rpx', display: 'block' }} mode="aspectFit" />
     </View>
   )
 }
