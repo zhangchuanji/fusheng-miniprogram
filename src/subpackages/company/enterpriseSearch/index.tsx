@@ -6,6 +6,7 @@ import Taro, { useLoad } from '@tarojs/taro'
 import './index.scss'
 import CustomDialog from '@/components/CustomDialog'
 import { clueCreateAPI, clueDeleteAPI } from '@/api/clue'
+import { useAppSelector } from '@/hooks/useAppStore'
 
 function Index() {
   // ==================== 搜索相关状态 ====================
@@ -19,6 +20,7 @@ function Index() {
   const [customList, setCustomList] = useState<any[]>([]) // 企业列表数据
   const [total, setTotal] = useState(0) // 企业列表数据
   const companyInfo = Taro.getStorageSync('companyInfo') || {}
+  const userInfo = useAppSelector(state => state.login.userInfo)
 
   // ==================== 筛选器相关状态 ====================
   const [sheetList, setSheetList] = useState<any[]>([
@@ -227,6 +229,12 @@ function Index() {
     }
   }
 
+  const handleAiResearchReport = (company: any) => {
+    Taro.navigateTo({
+      url: `/subpackages/company/aiResearchReport/index?creditCode=${company.creditCode}`
+    })
+  }
+
   // 处理搜索页跳转
   const toSearchPage = () => {
     Taro.navigateTo({
@@ -244,7 +252,7 @@ function Index() {
   // 企业详情
   const handleEnterpriseDetail = (item: any) => {
     Taro.navigateTo({
-      url: '/subpackages/company/enterpriseDetail/index?company=' + item.gid
+      url: '/subpackages/company/enterpriseDetail/index?company=' + JSON.stringify(item)
     })
   }
 
@@ -365,7 +373,7 @@ function Index() {
       const itemId = currentOperatingItem.gid || currentOperatingItem.id || currentOperatingItem.name
       if (dialogType === 'add') {
         setLeadStatus(prev => ({ ...prev, [itemId]: false })) // false 表示已加入线索，不显示"加入线索"按钮
-        clueCreateAPI({ creditCode: currentOperatingItem.creditCode }, res => {
+        clueCreateAPI({ unifiedSocialCreditCode: currentOperatingItem.creditCode }, res => {
           if (res.success) {
             Taro.showToast({
               title: '已添加线索',
@@ -376,7 +384,7 @@ function Index() {
         })
       } else {
         setLeadStatus(prev => ({ ...prev, [itemId]: true })) // true 表示未加入线索，显示"加入线索"按钮
-        clueDeleteAPI({ creditCode: currentOperatingItem.creditCode }, res => {
+        clueDeleteAPI({ unifiedSocialCreditCode: currentOperatingItem.creditCode }, res => {
           if (res.success) {
             Taro.showToast({
               title: '已移除线索',
@@ -860,7 +868,7 @@ function Index() {
                 </View>
                 <View className="enterpriseContent_item_contact">
                   <View className="enterpriseContent_item_contact_item">
-                    <Image src={require('@/assets/enterprise/enterprise5.png')} className="enterpriseContent_item_contact_item_img" />
+                    <Image onClick={() => handleAiResearchReport(item)} src={require('@/assets/enterprise/enterprise5.png')} className="enterpriseContent_item_contact_item_img" />
                   </View>
                   <View
                     onClick={e => {

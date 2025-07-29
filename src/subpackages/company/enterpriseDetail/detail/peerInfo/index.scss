@@ -330,6 +330,13 @@
           padding-left: 0;
         }
       }
+
+      .avsd {
+        max-width: 140rpx;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
     }
 
     .enterpriseContent_item_product {

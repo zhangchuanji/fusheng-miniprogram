@@ -29,6 +29,11 @@ function Index() {
     { title: '同业分析', value: 1, router: '/subpackages/company/enterpriseDetail/detail/industryAnalysis/index' }
   ])
   const [company, setCompany] = useState<any>({})
+  const [companyDetail, setCompanyDetail] = useState<any>({
+    similarCompanies: [],
+    enterpriseResponses: [],
+    companyHotResultResponse: []
+  })
   // ==================== 弹窗显示状态 ====================
   const [isShowFeedback, setIsShowFeedback] = useState(false) // 反馈弹窗
   const [isShowInvalid, setIsShowInvalid] = useState(false) // 无效线索原因弹窗
@@ -48,7 +53,8 @@ function Index() {
   const [showShake, setShowShake] = useState(false) // 抖动动画状态
 
   // ==================== 内容展开状态 ====================
-  const [expandedProducts, setExpandedProducts] = useState(false) // 产品信息展开状态
+  const [expandedCompanyScale, setExpandedCompanyScale] = useState(false) // 企业规模展开状态
+  const [expandedCompanyIntro, setExpandedCompanyIntro] = useState(false) // 企业简介展开状态
 
   // ==================== 反馈相关状态 ====================
   const [feedBackValue, setFeedBackValue] = useState('') // 反馈内容
@@ -113,6 +119,23 @@ function Index() {
     e.stopPropagation()
     setDialogType('remove')
     setShowCustomDialog(true)
+  }
+
+  // 更安全的时间戳转换函数，包含错误处理
+  const formatTimestamp = (timestamp: number | string) => {
+    try {
+      if (!timestamp) return '--'
+      const date = new Date(Number(timestamp))
+      if (isNaN(date.getTime())) return '--'
+
+      const year = date.getFullYear()
+      const month = String(date.getMonth() + 1).padStart(2, '0')
+      const day = String(date.getDate()).padStart(2, '0')
+      return `${year}-${month}-${day}`
+    } catch (error) {
+      console.error('时间戳转换错误:', error)
+      return '--'
+    }
   }
 
   // 处理确认弹窗
@@ -188,15 +211,18 @@ function Index() {
 
   function toAiResearchReport(): void {
     Taro.navigateTo({
-      url: `/subpackages/company/aiResearchReport/index?creditCode=${company}`
+      url: `/subpackages/company/aiResearchReport/index?creditCode=${company.creditCode}`
     })
   }
 
   useLoad(options => {
-    enterpriseDetailAPI({ gid: options.company, pageNum: 1, pageSize: 3 }, res => {
-      console.log(res)
+    let res = JSON.parse(options.company)
+    enterpriseDetailAPI({ gid: res.gid, pageNum: 1, pageSize: 3 }, res => {
+      if (res.success) {
+        setCompanyDetail(res.data)
+      }
     })
-    setCompany(options.company)
+    setCompany(res)
   })
 
   return (
@@ -257,12 +283,18 @@ function Index() {
         <View className="enterpriseContent_item_top">
           <Image src={require('@/assets/enterprise/enterprise11.png')} className="enterpriseContent_item_Img" />
           <View className="enterpriseContent_item_Text">
-            <View className="title">杭州XX科技有限公司杭州XX科技有限公司杭州XX科技有限公司杭州XX科技有限公司杭州XX科技有限公司</View>
+            <View className="title">{company.name}</View>
             <View className="enterpriseContent_item_tag">
-              <View className="enterpriseContent_item_tag_item">存续</View>
-              <View className="enterpriseContent_item_tag_item">省级制造业单项冠军企业</View>
-              <View className="enterpriseContent_item_tag_item">高新企业</View>
-              <View className="enterpriseContent_item_tag_item">展开</View>
+              <View className="enterpriseContent_item_tag_item">{company.regStatus}</View>
+              {company.tags?.map((item: any, index: number) => {
+                // 过滤掉"曾用名"标签
+                if (item === '曾用名') return null
+                return (
+                  <View key={index} className="enterpriseContent_item_tag_item">
+                    {item}
+                  </View>
+                )
+              })}
             </View>
           </View>
         </View>
@@ -272,38 +304,38 @@ function Index() {
               法定代表人
             </View>
             <View style={{ color: '#3094FF', justifyContent: 'flex-start' }} className="enterpriseContent_item_info_item_value">
-              郭雄
+              {company.legalPerson}
             </View>
           </View>
           <View className="enterpriseContent_item_info_item">
             <View className="enterpriseContent_item_info_item_title">注册资本</View>
-            <View className="enterpriseContent_item_info_item_value">10000万人民币</View>
+            <View className="enterpriseContent_item_info_item_value">{company.regCapital}</View>
           </View>
           <View className="enterpriseContent_item_info_item">
             <View style={{ justifyContent: 'flex-end' }} className="enterpriseContent_item_info_item_title">
               成立日期
             </View>
             <View style={{ justifyContent: 'flex-end' }} className="enterpriseContent_item_info_item_value">
-              2003-11-10
+              {company.establishTime}
             </View>
           </View>
         </View>
 
         <View className="enterpriseContent_item_product">
-          <View className={`enterpriseContent_item_product_left${expandedProducts ? ' expanded' : ''}`}>
-            企业规模：<Text style={{ color: '#7B7B7B' }}>年营收2.5亿元，员工300员工300员工300员工员工300员工300员工300员工</Text>
+          <View className={`enterpriseContent_item_product_left${expandedCompanyScale ? ' expanded' : ''}`}>
+            企业规模：<Text style={{ color: '#7B7B7B' }}>{company.companyScaleInfo}</Text>
           </View>
-          <View className="enterpriseContent_item_product_right" onClick={() => setExpandedProducts(!expandedProducts)}>
-            {expandedProducts ? '收起' : '展开'}
+          <View className="enterpriseContent_item_product_right" onClick={() => setExpandedCompanyScale(!expandedCompanyScale)}>
+            {expandedCompanyScale ? '收起' : '展开'}
           </View>
         </View>
 
         <View className="enterpriseContent_item_product">
-          <View className={`enterpriseContent_item_product_left${expandedProducts ? ' expanded' : ''}`}>
-            企业简介：<Text style={{ color: '#7B7B7B' }}>柳州五菱汽车工业有限公司，成立于2006-10-30成立于2006-10-30</Text>
+          <View className={`enterpriseContent_item_product_left${expandedCompanyIntro ? ' expanded' : ''}`}>
+            企业简介：<Text style={{ color: '#7B7B7B' }}>{company.businessScope}</Text>
           </View>
-          <View className="enterpriseContent_item_product_right" onClick={() => setExpandedProducts(!expandedProducts)}>
-            {expandedProducts ? '收起' : '展开'}
+          <View className="enterpriseContent_item_product_right" onClick={() => setExpandedCompanyIntro(!expandedCompanyIntro)}>
+            {expandedCompanyIntro ? '收起' : '展开'}
           </View>
         </View>
 
@@ -332,7 +364,7 @@ function Index() {
         <View className="enterpriseContent_item_product_phone">
           <View className="phone_left">
             <Image src={require('@/assets/corpDetail/corpDetail24.png')} className="phone_left_img" />
-            <View className="phone_more">柳州市河西路18号</View>
+            <View className="phone_more">{company.location}</View>
           </View>
         </View>
 
@@ -345,22 +377,19 @@ function Index() {
           <View className="analysis_top">
             <Image src={require('@/assets/corpDetail/corpDetail25.png')} className="analysis_top_Img" />
             <View className="analysis_top_left">
-              匹配度：<Text className="analysis_top_left_text">90%</Text>
+              匹配度：<Text className="analysis_top_left_text">{Math.floor(company.score)}%</Text>
             </View>
             <Image src={require('@/assets/corpDetail/corpDetail19.png')} className="analysis_top_leftImg" />
           </View>
           <View className="analysis_bottom">
             <View className="analysis_bottom_item">
-              行业匹配：<Text style={{ color: '#629EE7' }}>20%</Text>
+              产品匹配度：<Text style={{ color: '#629EE7' }}>{company.productMatch}%</Text>
             </View>
             <View className="analysis_bottom_item">
-              需求匹配：<Text style={{ color: '#629EE7' }}>30%</Text>
+              合作风险：<Text style={{ color: '#629EE7' }}>{company.riskLevel}%</Text>
             </View>
             <View className="analysis_bottom_item">
-              规模匹配：<Text style={{ color: '#629EE7' }}>30%</Text>
-            </View>
-            <View className="analysis_bottom_item">
-              资质匹配：<Text style={{ color: '#629EE7' }}>40%</Text>
+              市场潜力：<Text style={{ color: '#629EE7' }}>{company.marketPotential}%</Text>
             </View>
           </View>
         </View>
@@ -472,24 +501,14 @@ function Index() {
       <View className="risk_scan">
         <View className="risk_scan_title">风险扫描</View>
         <View className="risk_scan_content">
-          <View className="risk_scan_content_item">
-            <View className="risk_scan_content_item_title">
-              自身风险 <Text className="texts">49</Text>
+          {companyDetail?.enterpriseResponses?.map((item: any, index: any) => (
+            <View className="risk_scan_content_item" key={index}>
+              <View className="risk_scan_content_item_title">
+                {item?.name} <Text className="texts">{item?.count}</Text>
+              </View>
+              <View className="risk_scan_content_item_content">{item?.details?.[0]?.title}</View>
             </View>
-            <View className="risk_scan_content_item_content">有司法拍卖，违规事件等风险</View>
-          </View>
-          <View className="risk_scan_content_item">
-            <View className="risk_scan_content_item_title">
-              自身风险 <Text className="texts">49</Text>
-            </View>
-            <View className="risk_scan_content_item_content">有司法拍卖，违规事件等风险</View>
-          </View>
-          <View className="risk_scan_content_item">
-            <View className="risk_scan_content_item_title">
-              自身风险 <Text className="texts">49</Text>
-            </View>
-            <View className="risk_scan_content_item_content">有司法拍卖，违规事件等风险</View>
-          </View>
+          ))}
         </View>
       </View>
 
@@ -497,10 +516,17 @@ function Index() {
       <View className="enterprise_dynamic">
         <View className="enterprise_dynamic_title">企业动态</View>
         <View className="enterprise_dynamic_content">
-          <View className="enterprise_dynamic_content_one">2025-09-09</View>
-          <View className="enterprise_dynamic_content_two">中山大洋电子股份有限公司工商信息发生变更风险</View>
+          <View className="enterprise_dynamic_content_one">
+            {companyDetail.companyHotResultResponse?.companyHotRequestList?.[0]?.rtm 
+              ? formatTimestamp(companyDetail.companyHotResultResponse.companyHotRequestList[0].rtm)
+              : '--'
+            }
+          </View>
+          <View className="enterprise_dynamic_content_two">
+            {companyDetail.companyHotResultResponse?.companyHotRequestList?.[0]?.title || '--'}
+          </View>
           <View className="enterprise_dynamic_content_three">
-            该企业存在 <Text style={{ color: '#629EE7' }}>1322条</Text> 相关动态 <Text style={{ color: '#1B5BFF' }}>查看全部</Text>
+            该企业存在 <Text style={{ color: '#629EE7' }}>{companyDetail.companyHotResultResponse?.realTotal || 0}条</Text> 相关动态 <Text style={{ color: '#1B5BFF' }}>查看全部</Text>
           </View>
         </View>
       </View>
@@ -539,66 +565,56 @@ function Index() {
       </View>
 
       {/* 同行企业 */}
-      <View className="enterprise_peer" onClick={() => Taro.navigateTo({ url: '/subpackages/company/enterpriseDetail/detail/peerInfo/index' })}>
+      <View className="enterprise_peer">
         <View className="peer_title">
           同行企业
-          <View className="peer_title_right">
+          <View className="peer_title_right" onClick={() => Taro.navigateTo({ url: '/subpackages/company/enterpriseDetail/detail/peerInfo/index?list=' + JSON.stringify(companyDetail.similarCompanies) })}>
             <Text className="peer_title_right_text">查看更多</Text>
             <Image src={require('@/assets/corpDetail/corpDetail19.png')} className="peer_title_right_img" />
           </View>
         </View>
         <View className="peer_content">
-          <View className="peer_content_item">
-            <View className="peer_content_item_top">
-              <Image src={require('@/assets/corpDetail/corpDetail17.png')} className="peer_content_item_img" />
-              <View className="peer_content_item_text">湖北中电华通电气科技有限公司</View>
-            </View>
-            <View className="peer_content_item_bottom">主营：高低压成套电气</View>
-          </View>
-          <View className="peer_content_item">
-            <View className="peer_content_item_top">
-              <Image src={require('@/assets/corpDetail/corpDetail17.png')} className="peer_content_item_img" />
-              <View className="peer_content_item_text">湖北中电华通电气科技有限公司</View>
-            </View>
-            <View className="peer_content_item_bottom">主营：高低压成套电气</View>
-          </View>
-          <View className="peer_content_item">
-            <View className="peer_content_item_top">
-              <Image src={require('@/assets/corpDetail/corpDetail17.png')} className="peer_content_item_img" />
-              <View className="peer_content_item_text">湖北中电华通电气科技有限公司</View>
-            </View>
-            <View className="peer_content_item_bottom">主营：高低压成套电气</View>
-          </View>
+          {companyDetail.similarCompanies.slice(0, 3).map((item: any, simIndex: number) => {
+            return (
+              <View className="peer_content_item" key={simIndex}>
+                <View className="peer_content_item_top">
+                  {item.logo ? <Image src={item.logo} className="peer_content_item_img" /> : <Image src={require('@/assets/corpDetail/corpDetail17.png')} className="peer_content_item_img" />}
+                  <View className="peer_content_item_text">{item.name}</View>
+                </View>
+                <View className="peer_content_item_bottom">主营：{item.alias}</View>
+              </View>
+            )
+          })}
         </View>
-      </View>
 
-      <View className="enterpriseContent_item_bottom">
-        <View className="enterpriseContent_item_bottom_left">
-          {!isDisliked && (
-            <View onClick={handleLike} className={`enterpriseContent_item_bottom_left_good ${isLiked ? 'liked' : ''} ${showHeartbeat ? 'heartbeat' : ''}`}>
-              <Image src={require(isLiked ? '@/assets/enterprise/enterprise6.png' : '@/assets/enterprise/enterprise8.png')} className="enterpriseContent_item_bottom_left_good_img" />
-              <Text className="enterpriseContent_item_bottom_left_good_text">有效</Text>
+        <View className="enterpriseContent_item_bottom">
+          <View className="enterpriseContent_item_bottom_left">
+            {!isDisliked && (
+              <View onClick={handleLike} className={`enterpriseContent_item_bottom_left_good ${isLiked ? 'liked' : ''} ${showHeartbeat ? 'heartbeat' : ''}`}>
+                <Image src={require(isLiked ? '@/assets/enterprise/enterprise6.png' : '@/assets/enterprise/enterprise8.png')} className="enterpriseContent_item_bottom_left_good_img" />
+                <Text className="enterpriseContent_item_bottom_left_good_text">有效</Text>
+              </View>
+            )}
+            {!isLiked && (
+              <View onClick={handleDislike} className={`enterpriseContent_item_bottom_left_bad ${isDisliked ? 'disliked' : ''} ${showShake ? 'shake' : ''}`}>
+                <Image src={require(isDisliked ? '@/assets/enterprise/enterprise7.png' : '@/assets/enterprise/enterprise9.png')} className="enterpriseContent_item_bottom_left_bad_img" />
+                <Text className="enterpriseContent_item_bottom_left_bad_text">无效线索</Text>
+                {isDisliked && <ArrowDown color="#8E8E8E" style={{ width: '28rpx', height: '28rpx', marginLeft: '6rpx' }} />}
+              </View>
+            )}
+          </View>
+          {isShowAdd ? (
+            <View onClick={handleAddToLeads} className="enterpriseContent_item_bottom_right">
+              <Add color="#fff" style={{ marginRight: '12rpx', width: '32rpx', height: '32rpx' }} />
+              <Text className="enterpriseContent_item_bottom_right_add_text">加入线索</Text>
             </View>
-          )}
-          {!isLiked && (
-            <View onClick={handleDislike} className={`enterpriseContent_item_bottom_left_bad ${isDisliked ? 'disliked' : ''} ${showShake ? 'shake' : ''}`}>
-              <Image src={require(isDisliked ? '@/assets/enterprise/enterprise7.png' : '@/assets/enterprise/enterprise9.png')} className="enterpriseContent_item_bottom_left_bad_img" />
-              <Text className="enterpriseContent_item_bottom_left_bad_text">无效线索</Text>
-              {isDisliked && <ArrowDown color="#8E8E8E" style={{ width: '28rpx', height: '28rpx', marginLeft: '6rpx' }} />}
+          ) : (
+            <View onClick={handleRemoveFromLeads} className="remove">
+              <Text className="remove_text">移除</Text>
+              <View className="remove_icon"></View>
             </View>
           )}
         </View>
-        {isShowAdd ? (
-          <View onClick={handleAddToLeads} className="enterpriseContent_item_bottom_right">
-            <Add color="#fff" style={{ marginRight: '12rpx', width: '32rpx', height: '32rpx' }} />
-            <Text className="enterpriseContent_item_bottom_right_add_text">加入线索</Text>
-          </View>
-        ) : (
-          <View onClick={handleRemoveFromLeads} className="remove">
-            <Text className="remove_text">移除</Text>
-            <View className="remove_icon"></View>
-          </View>
-        )}
       </View>
     </View>
   )

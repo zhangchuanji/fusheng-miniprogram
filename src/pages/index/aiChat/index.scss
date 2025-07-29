@@ -322,6 +322,10 @@
             margin-bottom: 10rpx;
 
             .legal-person {
+              max-width: 310rpx;
+              overflow: hidden;
+              text-overflow: ellipsis;
+              white-space: nowrap;
               font-family: PingFang SC, PingFang SC;
               font-weight: 400;
               font-size: 24rpx;

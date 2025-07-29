@@ -87,7 +87,9 @@ const Index = forwardRef<{ getAiSession: () => void }, { height: number }>(({ he
     } else if (buttonIndex === 3) {
       let contentSummary = JSON.stringify({
         content: msg.filter(item => item.role === 'ai')[0].content,
-        companyList: msg.filter(item => item.role === 'ai')[0].companyList
+        companyList: msg.filter(item => item.role === 'ai')[0].companyList,
+        splitNum: msg.filter(item => item.role === 'ai')[0].splitNum,
+        total: msg.filter(item => item.role === 'ai')[0].total
       })
       let queryParams = {
         title: msg.filter(item => item.role === 'user')[0].content,

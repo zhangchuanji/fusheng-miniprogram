@@ -59,7 +59,7 @@ interface AiMessageComponentProps {
 
 const navigateToCompanyDetail = (company: any) => {
   Taro.navigateTo({
-    url: `/subpackages/company/enterpriseDetail/index?company=${company.gid}`
+    url: `/subpackages/company/enterpriseDetail/index?company=${JSON.stringify(company)}`
   })
 }
 

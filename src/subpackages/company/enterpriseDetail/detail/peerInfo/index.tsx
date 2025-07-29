@@ -2,7 +2,7 @@ import React, { useEffect, useState, useCallback } from 'react'
 import { Checkbox, InfiniteLoading, Radio, Popup, Cell, Button, Tabs, TextArea, SearchBar } from '@nutui/nutui-react-taro'
 import { View, Image, Text } from '@tarojs/components'
 import { Add, ArrowDown } from '@nutui/icons-react-taro'
-import Taro, { options } from '@tarojs/taro'
+import Taro, { useLoad } from '@tarojs/taro'
 import './index.scss'
 import CustomDialog from '@/components/CustomDialog'
 
@@ -11,7 +11,7 @@ function Index() {
   const [headerHeight, setHeaderHeight] = useState(0) // 头部高度
 
   // ==================== 列表数据状态 ====================
-  const [customList, setCustomList] = useState<any[]>([{}, {}]) // 企业列表数据
+  const [customList, setCustomList] = useState<any[]>([]) // 企业列表数据
 
   // ==================== 弹窗显示状态 ====================
   const [isShowPhone, setIsShowPhone] = useState(false) // 联系人弹窗
@@ -70,6 +70,11 @@ function Index() {
     })
     query.exec()
   }, [])
+
+  useLoad(options => {
+    console.log(JSON.parse(options.list))
+    setCustomList(JSON.parse(options.list))
+  })
 
   return (
     <View className="searchEnterprisePage">
@@ -216,57 +221,58 @@ function Index() {
 
       {/* 筛选内容区域 */}
       <View className="enterpriseContent" style={{ height: `calc(100vh - ${headerHeight}px)` }}>
-        {customList.map((item, index) => (
-          <View key={index}>
-            <View className="enterpriseContent_item">
-              <View className="enterpriseContent_item_top">
-                <Image src={require('@/assets/enterprise/enterprise11.png')} className="enterpriseContent_item_Img" />
-                <View className="enterpriseContent_item_Text">
-                  <View className="title">杭州XX科技有限公司杭州XX科技有限公司杭州XX科技有限公司杭州XX科技有限公司杭州XX科技有限公司</View>
-                  <View className="description">
-                    <View className="certification">
-                      <Image src={require('@/assets/enterprise/enterprise3.png')} className="certification_img" />
-                      <View className="certification_text">认证</View>
+        {customList.length > 0 &&
+          customList?.map((item, index) => (
+            <View key={index}>
+              <View className="enterpriseContent_item">
+                <View className="enterpriseContent_item_top">
+                  {item.logo ? <Image src={item.logo} className="enterpriseContent_item_Img" /> : <Image src={require('@/assets/corpDetail/corpDetail17.png')} className="enterpriseContent_item_Img" />}
+                  <View className="enterpriseContent_item_Text">
+                    <View className="title">{item.name}</View>
+                    <View className="description">
+                      <View className="certification">
+                        <Image src={require('@/assets/enterprise/enterprise3.png')} className="certification_img" />
+                        <View className="certification_text">认证</View>
+                      </View>
+                      <View className="match">匹配80%</View>
                     </View>
-                    <View className="match">匹配80%</View>
+                  </View>
+                </View>
+                <View className="enterpriseContent_item_tag">
+                  <View className="enterpriseContent_item_tag_item">存续</View>
+                  <View className="enterpriseContent_item_tag_item">省级制造业单项冠军企业</View>
+                  <View className="enterpriseContent_item_tag_item">高新企业</View>
+                  <View className="enterpriseContent_item_tag_item">展开</View>
+                </View>
+                <View className="enterpriseContent_item_info">
+                  <View className="enterpriseContent_item_info_item avsd">{item.legalPersonName}</View>
+                  <View className="enterpriseContent_item_info_item">{item.regCapital}</View>
+                  <View className="enterpriseContent_item_info_item">{item.estiblishTime}</View>
+                  <View className="enterpriseContent_item_info_item">深圳</View>
+                </View>
+                <View className="enterpriseContent_item_product">
+                  <View className={`enterpriseContent_item_product_left${expandedProducts[index] ? ' expanded' : ''}`}>{highlightKeyword('产品与服务：柴油发电机组、驱动电机、新能源发电机、高新能源发电机、驱动电机、新能源发电机、高新能源发电机、驱动电机、新能源发电机、高新能源发电机、驱动电机、新能源发电机、高新能源发电机、驱动电机、新能源发电机、高新能源发电机', '电机')}</View>
+                  <View className="enterpriseContent_item_product_right" onClick={() => setExpandedProducts(prev => ({ ...prev, [index]: !prev[index] }))}>
+                    {expandedProducts[index] ? '收起' : '展开'}
+                  </View>
+                </View>
+                <View className="enterpriseContent_item_contact">
+                  <View className="enterpriseContent_item_contact_item">
+                    <Image src={require('@/assets/enterprise/enterprise5.png')} className="enterpriseContent_item_contact_item_img" />
+                  </View>
+                  <View onClick={() => handleActiveIndex(4)} className="enterpriseContent_item_contact_item">
+                    <Image src={require('@/assets/enterprise/enterprise1.png')} className="enterpriseContent_item_contact_item_img" />
+                    电话(112)
+                  </View>
+                  <View onClick={() => handleActiveIndex(5)} className="enterpriseContent_item_contact_item">
+                    <Image src={require('@/assets/enterprise/enterprise2.png')} className="enterpriseContent_item_contact_item_img" />
+                    地址(2)
                   </View>
                 </View>
               </View>
-              <View className="enterpriseContent_item_tag">
-                <View className="enterpriseContent_item_tag_item">存续</View>
-                <View className="enterpriseContent_item_tag_item">省级制造业单项冠军企业</View>
-                <View className="enterpriseContent_item_tag_item">高新企业</View>
-                <View className="enterpriseContent_item_tag_item">展开</View>
-              </View>
-              <View className="enterpriseContent_item_info">
-                <View className="enterpriseContent_item_info_item">郭雄</View>
-                <View className="enterpriseContent_item_info_item">10000万人民币</View>
-                <View className="enterpriseContent_item_info_item">2003-11-10</View>
-                <View className="enterpriseContent_item_info_item">深圳</View>
-              </View>
-              <View className="enterpriseContent_item_product">
-                <View className={`enterpriseContent_item_product_left${expandedProducts[index] ? ' expanded' : ''}`}>{highlightKeyword('产品与服务：柴油发电机组、驱动电机、新能源发电机、高新能源发电机、驱动电机、新能源发电机、高新能源发电机、驱动电机、新能源发电机、高新能源发电机、驱动电机、新能源发电机、高新能源发电机、驱动电机、新能源发电机、高新能源发电机', '电机')}</View>
-                <View className="enterpriseContent_item_product_right" onClick={() => setExpandedProducts(prev => ({ ...prev, [index]: !prev[index] }))}>
-                  {expandedProducts[index] ? '收起' : '展开'}
-                </View>
-              </View>
-              <View className="enterpriseContent_item_contact">
-                <View className="enterpriseContent_item_contact_item">
-                  <Image src={require('@/assets/enterprise/enterprise5.png')} className="enterpriseContent_item_contact_item_img" />
-                </View>
-                <View onClick={() => handleActiveIndex(4)} className="enterpriseContent_item_contact_item">
-                  <Image src={require('@/assets/enterprise/enterprise1.png')} className="enterpriseContent_item_contact_item_img" />
-                  电话(112)
-                </View>
-                <View onClick={() => handleActiveIndex(5)} className="enterpriseContent_item_contact_item">
-                  <Image src={require('@/assets/enterprise/enterprise2.png')} className="enterpriseContent_item_contact_item_img" />
-                  地址(2)
-                </View>
-              </View>
+              <View className="enterpriseContent_divider" />
             </View>
-            <View className="enterpriseContent_divider" />
-          </View>
-        ))}
+          ))}
       </View>
     </View>
   )

@@ -3,7 +3,7 @@ import { View, Text, Image, ScrollView } from '@tarojs/components'
 import { Cell, Popup, Tabs, Input, Calendar } from '@nutui/nutui-react-taro'
 import './index.scss'
 import { SearchBar } from '@nutui/nutui-react-taro'
-import { ArrowRight, Checked, Failure, TriangleDown } from '@nutui/icons-react-taro'
+import { ArrowRight, Checked } from '@nutui/icons-react-taro'
 import Taro from '@tarojs/taro'
 import { clueListAPI, clueDeleteAPI, clueFollowUpPageAPI } from '@/api/clue'
 import { useSelector } from 'react-redux'
@@ -120,7 +120,7 @@ function CluePage({ height }: { height: number }) {
     clueListAPI({ pageNo: 1, pageSize: 10, userId: userInfo?.id, keywords: searchValueClueList }, res => {
       if (res.success && res.data) {
         res.data.list.forEach((item: any) => {
-          if (item.tags && typeof item.tags === 'string') {
+          if (item.tags && item.tags.length > 0 && typeof item.tags === 'string') {
             item.tags = item.tags
               .split(',')
               .map((tag: string) => tag.trim())
@@ -248,6 +248,12 @@ function CluePage({ height }: { height: number }) {
     setSearchValueClueList(e)
   }
 
+  const handleAiResearchReport = (company: any) => {
+    Taro.navigateTo({
+      url: `/subpackages/company/aiResearchReport/index?creditCode=${company.unifiedSocialCreditCode}`
+    })
+  }
+
   const handleSearchClueList = () => {
     getClueList()
   }
@@ -255,7 +261,6 @@ function CluePage({ height }: { height: number }) {
   const debouncedSearchValue = useDebounce<any>(searchValueFollowRecord, 500)
 
   useEffect(() => {
-    console.log(debouncedSearchValue)
     // 执行搜索逻辑
   }, [debouncedSearchValue])
 
@@ -571,7 +576,7 @@ function CluePage({ height }: { height: number }) {
                         <Image src={item.logo} className="cluePage_item_Img" />
                       ) : (
                         <View className="cluePage_item_Img company-avatar">
-                          <Text className="company-avatar-text">{item.name ? item.name.substring(0, 2) : '未知'}</Text>
+                          <Text className="company-avatar-text">{item.name ? item.name.substring(0, 2) : '暂无'}</Text>
                         </View>
                       )}
                       <View className="cluePage_item_Text">
@@ -619,14 +624,14 @@ function CluePage({ height }: { height: number }) {
                         ))}
                     </View>
                     <View className="cluePage_item_product">
-                      <View className={`cluePage_item_product_left${expandedProducts[index] ? ' expanded' : ''}`}>{highlightKeyword(item.businessScope, searchValueClueList || '')}</View>
+                      <View className={`cluePage_item_product_left${expandedProducts[index] ? ' expanded' : ''}`}>{item.businessScope ? highlightKeyword(item.businessScope, searchValueClueList || '') : '- -'}</View>
                       <View className="cluePage_item_product_right" onClick={() => setExpandedProducts(prev => ({ ...prev, [index]: !prev[index] }))}>
                         {expandedProducts[index] ? '收起' : '展开'}
                       </View>
                     </View>
                     <View className="cluePage_item_contact">
                       <View className="cluePage_item_contact_item">
-                        <Image src={require('@/assets/enterprise/enterprise5.png')} className="cluePage_item_contact_item_img" />
+                        <Image onClick={() => handleAiResearchReport(item)} src={require('@/assets/enterprise/enterprise5.png')} className="cluePage_item_contact_item_img" />
                       </View>
                       <View onClick={() => handleActiveIndex(3)} className="cluePage_item_contact_item">
                         <Image src={require('@/assets/enterprise/enterprise15.png')} className="cluePage_item_contact_item_img" />

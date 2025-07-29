@@ -33,7 +33,7 @@
 
     .enterpriseContent_item_top {
       width: 100%;
-      height: 94rpx;
+      min-height: 94rpx;
       display: flex;
 
       .enterpriseContent_item_Img {
@@ -45,6 +45,7 @@
 
       .enterpriseContent_item_Text {
         display: flex;
+        flex: 1;
         flex-direction: column;
         justify-content: space-between;
         height: 100%;
@@ -64,11 +65,10 @@
 
         .enterpriseContent_item_tag {
           width: 100%;
-          height: 44rpx;
           margin-top: 16rpx;
           display: flex;
           align-items: center;
-          flex-wrap: nowrap;
+          flex-wrap: wrap;
           overflow-x: auto;
           gap: 12rpx;
 
@@ -107,14 +107,15 @@
       width: 100%;
       display: flex;
       margin-top: 24rpx;
-      height: 124rpx;
+      min-height: 124rpx;
       background: #F8F8F8;
       border-radius: 12rpx;
       margin-bottom: 6rpx;
+      padding: 18rpx 40rpx;
+      box-sizing: border-box;
 
       .enterpriseContent_item_info_item {
         width: 100%;
-        height: 100%;
         text-align: center;
         font-family: PingFang SC, PingFang SC;
         font-weight: 400;
@@ -123,7 +124,6 @@
         display: flex;
         flex-direction: column;
         justify-content: space-between;
-        padding: 18rpx 40rpx;
         box-sizing: border-box;
 
         .enterpriseContent_item_info_item_title {
@@ -326,7 +326,8 @@
       .analysis_bottom {
         width: 100%;
         height: 50%;
-        display: flex;
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
         align-items: center;
         overflow-x: auto;
         text-overflow: ellipsis;
@@ -338,7 +339,7 @@
         }
 
         .analysis_bottom_item {
-          width: 180rpx;
+          width: 100%;
           height: 20rpx;
           background: #F8F8F8;
           display: flex;
@@ -349,15 +350,10 @@
           font-size: 24rpx;
           color: #333333;
           flex-shrink: 0;
-          border-right: 2rpx solid #333;
-          padding: 0 10rpx;
-
-          &:last-child {
-            border-right: none;
-          }
+          border-left: 2rpx solid #333;
 
           &:first-child {
-            padding-left: 0;
+            border-left: none;
           }
         }
       }
@@ -460,6 +456,7 @@
           font-size: 28rpx;
           color: #333333;
           line-height: 44rpx;
+          display: contents;
 
           .texts {
             color: #EC4D51;

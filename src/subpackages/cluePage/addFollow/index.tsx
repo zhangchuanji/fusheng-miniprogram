@@ -1,11 +1,13 @@
-import React, { useState, useCallback } from 'react'
+import React, { useState, useEffect } from 'react'
 import { View, Text, Image, ScrollView, Input, Textarea, Button } from '@tarojs/components'
 import { ArrowDownSize6, Close, Checked, Search, Success, CheckClose } from '@nutui/icons-react-taro'
 import { searchCompaniesAPI } from '@/api/company'
 import { clueFollowUpCreateAPI } from '@/api/clue'
-import { Popup } from '@nutui/nutui-react-taro'
+import { Calendar, Popup } from '@nutui/nutui-react-taro'
 import Taro from '@tarojs/taro'
 import './index.scss'
+import { useSelector } from 'react-redux'
+import { clueListAPI } from '@/api/clue'
 
 // 文件类型定义
 interface FileItem {
@@ -23,20 +25,24 @@ interface FileItem {
 function AddFollowPage() {
   const [formData, setFormData] = useState({
     associateLead: '',
+    leadId: '',
     associateLeadContact: '',
-    followUpType: '',
-    followUpMethod: '',
-    followUpTime: '',
-    followUpContent: ''
+    contactId: '',
+    type: '',
+    method: '',
+    followUpTime: new Date().toISOString().split('T')[0],
+    followUpContent: '',
+    attachment: [] as FileItem[]
   })
 
+  const userInfo = useSelector((state: any) => state.login.userInfo)
   const [showFollowUpType, setShowFollowUpType] = useState(false)
   const [showFollowUpMethod, setShowFollowUpMethod] = useState(false)
   const [showFollowUpTime, setShowFollowUpTime] = useState(false)
 
   // 跟进类型选项
   const [followUpTypeOptions, setFollowUpTypeOptions] = useState([
-    { id: 1, name: '线索', selected: true },
+    { id: 1, name: '线索', selected: false },
     { id: 2, name: '客户', selected: false },
     { id: 3, name: '联系人', selected: false },
     { id: 4, name: '商机', selected: false }
@@ -53,19 +59,14 @@ function AddFollowPage() {
 
   // 下拉选项数据
   const [dropdownData, setDropdownData] = useState({
-    associateLead: [
-      { id: 1, name: '阿里巴巴集团', contact: '张三' },
-      { id: 2, name: '腾讯科技有限公司', contact: '李四' },
-      { id: 3, name: '百度在线网络技术有限公司', contact: '王五' },
-      { id: 4, name: '字节跳动科技有限公司', contact: '赵六' },
-      { id: 5, name: '美团点评集团', contact: '钱七' }
-    ],
+    associateLead: [],
+
     associateLeadContact: [
-      { id: 1, name: '张三', company: '阿里巴巴集团', phone: '13800138001' },
-      { id: 2, name: '李四', company: '腾讯科技有限公司', phone: '13800138002' },
-      { id: 3, name: '王五', company: '百度在线网络技术有限公司', phone: '13800138003' },
-      { id: 4, name: '赵六', company: '字节跳动科技有限公司', phone: '13800138004' },
-      { id: 5, name: '钱七', company: '美团点评集团', phone: '13800138005' }
+      { id: 1, name: '张三', phone: '13800138001' },
+      { id: 2, name: '李四', phone: '13800138002' },
+      { id: 3, name: '王五', phone: '13800138003' },
+      { id: 4, name: '赵六', phone: '13800138004' },
+      { id: 5, name: '钱七', phone: '13800138005' }
     ]
   })
 
@@ -90,13 +91,41 @@ function AddFollowPage() {
     }))
   }
 
-  // 处理搜索输入
-  const handleSearchInput = (field: string, value: string) => {
-    searchCompaniesAPI({ name: value }, res => {
-      if (res.success) {
+  useEffect(() => {
+    clueListAPI({ pageNo: 1, pageSize: 10, userId: userInfo?.id }, res => {
+      if (res.success && res.data) {
+        // 将 API 返回的数据转换为正确的数组格式
+        // 添加HTML清理函数
+        const stripHtml = (html: string): string => {
+          return html.replace(/<[^>]*>/g, '').trim()
+        }
+
+        // 修改第95-98行
+        const newOptions = res.data.list.map((item: any) => ({
+          id: item.id,
+          name: stripHtml(item.name || '- -')
+        }))
         setDropdownData(prev => ({
           ...prev,
-          [field]: res.data
+          associateLead: newOptions // 设置为数组而不是单个字符串
+        }))
+      }
+    })
+  }, [])
+
+  // 处理搜索输入
+  const handleSearchInput = (field: string, value: string) => {
+    clueListAPI({ pageNo: 1, pageSize: 10, userId: userInfo?.id, keywords: value }, res => {
+      if (res.success && res.data) {
+        // 将 API 返回的数据转换为正确的数组格式
+        const newOptions = res.data.list.map((item: any) => ({
+          id: item.id,
+          name: item.name
+        }))
+
+        setDropdownData(prev => ({
+          ...prev,
+          [field]: newOptions // 设置为数组而不是单个字符串
         }))
       }
     })
@@ -156,7 +185,14 @@ function AddFollowPage() {
         ...prev,
         [field]: optionName
       }
-      console.log('更新后的formData:', newData)
+
+      // 根据字段类型设置对应的ID
+      if (field === 'associateLead') {
+        newData.leadId = option.id
+      } else if (field === 'associateLeadContact') {
+        newData.contactId = option.id
+      }
+
       return newData
     })
 
@@ -333,18 +369,27 @@ function AddFollowPage() {
   }
 
   const onInputClick = (field: any) => {
+    console.log(field, 'onInputClick')
+
     // 先关闭所有下拉选项
     setDropdownVisible({
       associateLead: false,
       associateLeadContact: false
     })
-    if (field === 'followUpType') {
+    if (field === 'type') {
       setShowFollowUpType(true)
-    } else if (field === 'followUpMethod') {
+    } else if (field === 'method') {
       setShowFollowUpMethod(true)
     } else if (field === 'followUpTime') {
       setShowFollowUpTime(true)
     }
+  }
+
+  const setChooseValue = (value: string) => {
+    setFormData(prev => ({
+      ...prev,
+      followUpTime: `${value[0]}-${value[1]}-${value[2]}`
+    }))
   }
 
   const closePopup = (field: string) => {
@@ -354,10 +399,12 @@ function AddFollowPage() {
       associateLeadContact: false
     })
 
-    if (field === 'followUpType') {
+    if (field === 'type') {
       setShowFollowUpType(false)
-    } else if (field === 'followUpMethod') {
+    } else if (field === 'method') {
       setShowFollowUpMethod(false)
+    } else if (field === 'followUpTime') {
+      setShowFollowUpTime(false)
     }
   }
 
@@ -372,7 +419,7 @@ function AddFollowPage() {
     if (selectedOption) {
       setFormData(prev => ({
         ...prev,
-        followUpType: selectedOption.name
+        type: selectedOption.name
       }))
     }
     setShowFollowUpType(false)
@@ -389,7 +436,7 @@ function AddFollowPage() {
     if (selectedOption) {
       setFormData(prev => ({
         ...prev,
-        followUpMethod: selectedOption.name
+        method: selectedOption.name
       }))
     }
     setShowFollowUpMethod(false)
@@ -447,12 +494,12 @@ function AddFollowPage() {
                   <View key={typeof option === 'string' ? index : option.id} className="dropdown-option" onClick={() => selectOption(field, option)}>
                     {field === 'associateLead' ? (
                       <View className="option-content">
-                        <Text className="option-name">{option}</Text>
+                        <Text className="option-name" dangerouslySetInnerHTML={{ __html: option.name }}></Text>
                       </View>
                     ) : (
                       <View className="option-content">
                         <Text className="option-name">{option.name}</Text>
-                        <Text className="option-company">{option.company}</Text>
+                        <Text className="option-company">{option.phone}</Text>
                       </View>
                     )}
                   </View>
@@ -470,6 +517,31 @@ function AddFollowPage() {
   }
 
   function handleSubmit(): void {
+    if (!formData.type) {
+      Taro.showToast({
+        title: '请选择跟进类型',
+        icon: 'none'
+      })
+      return
+    }
+    if (!formData.method) {
+      Taro.showToast({
+        title: '请选择跟进方式',
+        icon: 'none'
+      })
+      return
+    }
+    if (!formData.followUpContent) {
+      Taro.showToast({
+        title: '请输入跟进内容',
+        icon: 'none'
+      })
+      return
+    }
+    if (attachment && attachment.length > 0) {
+      formData.attachment = attachment
+    }
+
     clueFollowUpCreateAPI(formData, res => {})
   }
 
@@ -542,7 +614,7 @@ function AddFollowPage() {
         </View>
       </ScrollView>
 
-      <Popup zIndex={99999} closeIcon={<Close size="32rpx" color="#333333" />} onClose={() => closePopup('followUpType')} closeable style={{ height: '90%' }} visible={showFollowUpType} title="选择跟进类型" position="bottom">
+      <Popup zIndex={99999} closeIcon={<Close size="32rpx" color="#333333" />} onClose={() => closePopup('type')} closeable style={{ height: '90%' }} visible={showFollowUpType} title="选择跟进类型" position="bottom">
         <View className="followUpType">
           <View className="followUpTypeHeader">
             <View className="link" />
@@ -558,7 +630,7 @@ function AddFollowPage() {
             ))}
         </View>
       </Popup>
-      <Popup zIndex={99999} closeIcon={<Close size="32rpx" color="#333333" />} onClose={() => closePopup('followUpMethod')} closeable style={{ height: '90%' }} visible={showFollowUpMethod} title="选择跟进方式" position="bottom">
+      <Popup zIndex={99999} closeIcon={<Close size="32rpx" color="#333333" />} onClose={() => closePopup('method')} closeable style={{ height: '90%' }} visible={showFollowUpMethod} title="选择跟进方式" position="bottom">
         <View className="followUpType">
           <View className="followUpTypeHeader">
             <View className="link" />
@@ -574,7 +646,7 @@ function AddFollowPage() {
             ))}
         </View>
       </Popup>
-      <Popup closeable style={{ height: '90%' }} visible={showFollowUpTime} title="选择跟进时间" position="bottom" />
+      <Calendar visible={showFollowUpTime} defaultValue={formData.followUpTime} startDate={'1900-01-01'} onClose={() => closePopup('followUpTime')} onConfirm={setChooseValue} />
     </View>
   )
 }
