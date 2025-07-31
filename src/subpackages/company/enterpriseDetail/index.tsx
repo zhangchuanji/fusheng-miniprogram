@@ -6,6 +6,7 @@ import Taro, { useLoad } from '@tarojs/taro'
 import './index.scss'
 import CustomDialog from '@/components/CustomDialog'
 import { enterpriseDetailAPI } from '@/api/company'
+import { clueCreateAPI, clueDeleteAPI } from '@/api/clue'
 
 function Index() {
   // 企业信息数据，提取自图片（无children）
@@ -143,17 +144,25 @@ function Index() {
     setShowCustomDialog(false)
     if (dialogType === 'add') {
       setIsShowAdd(false)
-      Taro.showToast({
-        title: '已添加线索',
-        icon: 'none',
-        duration: 500
+      clueCreateAPI({ unifiedSocialCreditCode: company.creditCode }, res => {
+        if (res.success) {
+          Taro.showToast({
+            title: '已添加线索',
+            icon: 'none',
+            duration: 500
+          })
+        }
       })
     } else {
       setIsShowAdd(true)
-      Taro.showToast({
-        title: '已移除线索',
-        icon: 'none',
-        duration: 500
+      clueDeleteAPI({ unifiedSocialCreditCode: company.creditCode }, res => {
+        if (res.success) {
+          Taro.showToast({
+            title: '已移除线索',
+            icon: 'none',
+            duration: 500
+          })
+        }
       })
     }
   }
@@ -384,7 +393,7 @@ function Index() {
           </View>
         </View>
 
-        <Image onClick={() => toAiResearchReport()} src="http://36.141.100.123:10013/glks/assets/corpDetail/corpDetail18.png" className="enterpriseContent_Img" />  
+        <Image onClick={() => toAiResearchReport()} src="http://36.141.100.123:10013/glks/assets/corpDetail/corpDetail18.png" className="enterpriseContent_Img" />
       </View>
 
       {/* 智能分析结果 */}
@@ -603,13 +612,13 @@ function Index() {
           <View className="enterpriseContent_item_bottom_left">
             {!isDisliked && (
               <View onClick={handleLike} className={`enterpriseContent_item_bottom_left_good ${isLiked ? 'liked' : ''} ${showHeartbeat ? 'heartbeat' : ''}`}>
-                <Image src="http://36.141.100.123:10013/glks/assets/enterprise/enterprise6.png" className="enterpriseContent_item_bottom_left_good_img" />
+                <Image src={!isLiked ? 'http://36.141.100.123:10013/glks/assets/enterprise/enterprise8.png' : 'http://36.141.100.123:10013/glks/assets/enterprise/enterprise6.png'} className="enterpriseContent_item_bottom_left_good_img" />
                 <Text className="enterpriseContent_item_bottom_left_good_text">有效</Text>
               </View>
             )}
             {!isLiked && (
               <View onClick={handleDislike} className={`enterpriseContent_item_bottom_left_bad ${isDisliked ? 'disliked' : ''} ${showShake ? 'shake' : ''}`}>
-                <Image src="http://36.141.100.123:10013/glks/assets/enterprise/enterprise7.png" className="enterpriseContent_item_bottom_left_bad_img" />
+                <Image src={!isDisliked ? 'http://36.141.100.123:10013/glks/assets/enterprise/enterprise9.png' : 'http://36.141.100.123:10013/glks/assets/enterprise/enterprise7.png'} className="enterpriseContent_item_bottom_left_bad_img" />
                 <Text className="enterpriseContent_item_bottom_left_bad_text">无效线索</Text>
                 {isDisliked && <ArrowDown color="#8E8E8E" style={{ width: '28rpx', height: '28rpx', marginLeft: '6rpx' }} />}
               </View>

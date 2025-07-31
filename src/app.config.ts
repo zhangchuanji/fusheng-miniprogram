@@ -1,43 +1,20 @@
 export default defineAppConfig({
-  pages: [
-    'pages/login/index',
-    'pages/index/index'
-  ],
+  pages: ['pages/login/index', 'pages/index/index'],
   subPackages: [
     {
       root: 'subpackages/login',
       name: 'login',
-      pages: [
-        'loginCode/index',
-        'loginPhone/index',
-        'companyProfile/index',
-        'businessProfile/index'
-      ]
+      pages: ['loginCode/index', 'loginPhone/index', 'companyProfile/index', 'businessProfile/index']
     },
     {
       root: 'subpackages/cluePage',
       name: 'clue',
-      pages: [
-        'follow/index',
-        'editFollow/index',
-        'addFollow/index'
-      ]
+      pages: ['follow/index', 'editFollow/index', 'addFollow/index']
     },
     {
       root: 'subpackages/setting',
       name: 'setting',
-      pages: [
-        'index',
-        'account/index',
-        'changePhone/index',
-        'aboutUs/index',
-        'contactUs/index',
-        'personal/index',
-        'feedback/index',
-        'feedbackRecords/index',
-        'feedbackDetail/index',
-        'enterprise/index'
-      ]
+      pages: ['index', 'account/index', 'changePhone/index', 'aboutUs/index', 'contactUs/index', 'personal/index', 'feedback/index', 'feedbackRecords/index', 'feedbackDetail/index', 'enterprise/index', 'userAgreement/index', 'privacyPolicy/index']
     },
     {
       root: 'subpackages/company',
@@ -81,4 +58,5 @@ export default defineAppConfig({
     navigationBarTitleText: 'WeChat',
     navigationBarTextStyle: 'black'
   }
+  // lazyCodeLoading: 'requiredComponents'
 })

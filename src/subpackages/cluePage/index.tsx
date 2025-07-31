@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useEffect } from 'react'
 import { View, Text, Image, ScrollView } from '@tarojs/components'
-import { Cell, Popup, Tabs, Input, Calendar } from '@nutui/nutui-react-taro'
+import { Cell, Popup, Tabs, Input, Calendar, Drag } from '@nutui/nutui-react-taro'
 import './index.scss'
 import { SearchBar } from '@nutui/nutui-react-taro'
 import { ArrowRight, Checked } from '@nutui/icons-react-taro'
@@ -236,9 +236,17 @@ function CluePage({ height }: { height: number }) {
   }
 
   const handleRemove = (id: number) => {
-    clueDeleteAPI({ id }, res => {
-      if (res.success) {
-        getClueList()
+    Taro.showModal({
+      title: '提示',
+      content: '确定删除吗？',
+      success: res => {
+        if (res.confirm) {
+          clueDeleteAPI({ id }, res => {
+            if (res.success) {
+              getClueList()
+            }
+          })
+        }
       }
     })
   }
@@ -678,15 +686,18 @@ function CluePage({ height }: { height: number }) {
       </Popup>
 
       <Calendar visible={isVisible} type="range" onClose={() => setIsVisible(false)} onConfirm={handleCalendarConfirm} />
-      <View
-        className="floating-add-btn"
-        onClick={() => {
-          Taro.navigateTo({ url: '/subpackages/cluePage/addFollow/index' })
-        }}
-      >
-        <View className="add-icon-row"></View>
-        <View className="add-icon-col"></View>
-      </View>
+
+      <Drag attract>
+        <View
+          className="floating-add-btn"
+          onClick={() => {
+            Taro.navigateTo({ url: '/subpackages/cluePage/addFollow/index' })
+          }}
+        >
+          <View className="add-icon-row"></View>
+          <View className="add-icon-col"></View>
+        </View>
+      </Drag>
       <Tabs
         value={tabvalue}
         onChange={value => {
@@ -772,7 +783,7 @@ function CluePage({ height }: { height: number }) {
                         <Image onClick={() => handleAiResearchReport(item)} src="http://36.141.100.123:10013/glks/assets/enterprise/enterprise5.png" className="cluePage_item_contact_item_img" />
                       </View>
                       <View onClick={() => handleActiveIndex(3)} className="cluePage_item_contact_item">
-                        <Image src="http://36.141.100.123:10013/glks/assets/enterprise/enterprise15.png" className="cluePage_item_contact_item_img" />  
+                        <Image src="http://36.141.100.123:10013/glks/assets/enterprise/enterprise15.png" className="cluePage_item_contact_item_img" />
                         跟进
                       </View>
                       <View onClick={() => handleActiveIndex(4)} className="cluePage_item_contact_item">
@@ -823,7 +834,7 @@ function CluePage({ height }: { height: number }) {
                   <View className="clueRecord_item_right">
                     <View className="clueRecord_item_right_top">
                       <View className="name">{userInfo?.nickname || '客户名称'}</View>
-                      <View className="position">{item.position || '客户职位'}</View>
+                      <View className="position">{userInfo?.position || '客户职位'}</View>
                       <View className="status">
                         {item.type || '跟进类型'}（{item.method || '跟进方式'})
                       </View>

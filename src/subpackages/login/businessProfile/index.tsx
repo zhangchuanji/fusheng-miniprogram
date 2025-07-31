@@ -4,6 +4,7 @@ import Taro from '@tarojs/taro'
 import { Button, Input } from '@nutui/nutui-react-taro'
 import './index.scss'
 import { getProductSellingPointsAPI } from '@/api/company'
+import { loginInfoUpdateAPI } from '@/api/setting'
 import { useAppSelector } from '@/hooks/useAppStore'
 
 function BusinessProfile() {
@@ -29,6 +30,20 @@ function BusinessProfile() {
       expansionDomainKeywordsSelected: selectedTags.length === 0 ? tags : selectedTags,
       customInput: customInput
     })
+    loginInfoUpdateAPI(
+      {
+        ...userInfo,
+        name: existingUserInfo?.userName,
+        companyName: existingUserInfo?.companyName,
+        targetCompanyServe: JSON.stringify({
+          coreSellingPoints: coreSellingPoints,
+          expansionDomainKeywords: tags,
+          expansionDomainKeywordsSelected: selectedTags.length === 0 ? tags : selectedTags,
+          customInput: customInput
+        })
+      },
+      res => {}
+    )
     Taro.navigateTo({ url: '/pages/index/index' })
   }
 

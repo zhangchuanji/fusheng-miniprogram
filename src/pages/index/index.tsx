@@ -36,7 +36,7 @@ function Index() {
     // 获取系统信息
     const systemInfo = Taro.getSystemInfoSync()
 
-    if (!Taro.getStorageSync('companyInfo')) {
+    if (!Taro.getStorageSync('companyInfo') || !Taro.getStorageSync('companyInfo').expansionDomainKeywords) {
       setCompanyShow(true)
     }
 
@@ -63,19 +63,14 @@ function Index() {
   }
 
   const getSession = () => {
-    console.log('getSession called, userInfo:', userInfo)
     aiSessionListAPI({ userId: userInfo?.id }, res => {
-      console.log('aiSessionListAPI response:', res)
-
       if (res.success && res.data) {
         const convertedData = Object.entries(res.data).map(([name, list]) => ({
           name,
           list: list as any[]
         }))
-        console.log('convertedData:', convertedData)
         setHistorySession(convertedData)
       } else {
-        console.log('API call failed or no data:', res)
       }
     })
   }
@@ -91,8 +86,11 @@ function Index() {
             companyComplete: true
           },
           content: item.contentSummary,
-          companyList: JSON.parse(item.enterpriseInfo)
+          companyList: JSON.parse(item.enterpriseInfo).companyList,
+          splitNum: JSON.parse(item.enterpriseInfo).splitNum,
+          total: JSON.parse(item.enterpriseInfo).total
         }))
+        console.log(favoriteList)
 
         setFavoriteSession(favoriteList)
       } else {
@@ -204,14 +202,14 @@ function Index() {
       </View>
       <Popup visible={showSetting} position="left" style={{ width: '84%', height: '100%' }} onClose={() => setShowSetting(false)}>
         <View className="setting_content">
-          <View className="setting_content_title">
-            <Image src="http://36.141.100.123:10013/glks/assets/enterprise/enterprise11.png" className="title_img" />
+          <View className="setting_content_title" onClick={() => Taro.navigateTo({ url: '/subpackages/setting/index' })}>
+            <Image src={userInfo?.avatar || 'http://36.141.100.123:10013/glks/assets/enterprise/enterprise11.png'} className="title_img" />
             <View className="title_info">
               <View className="title_info_name">{userInfo?.nickname}</View>
               <View className="title_info_phone">{userInfo?.mobile}</View>
             </View>
-            <View className="settingIcon" onClick={() => Taro.navigateTo({ url: '/pages/setting/index' })}>
-              <Setting color="#333333" size={'26rpx'} />
+            <View className="settingIcon">
+              <Setting color="#333333" size={'32rpx'} />
             </View>
           </View>
           <View className="setting_content_list">

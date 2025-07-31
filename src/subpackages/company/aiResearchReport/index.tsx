@@ -5,7 +5,7 @@ import Taro, { useLoad } from '@tarojs/taro'
 import './index.scss'
 
 function Index() {
-  const userCompany = Taro.getStorageSync('userInfo')
+  const companyInfo = Taro.getStorageSync('companyInfo')
   const [report, setReport] = useState({})
   const [creditCode, setCreditCode] = useState('')
   const [loading, setLoading] = useState(true)
@@ -135,13 +135,15 @@ function Index() {
     generateReportAPI(
       {
         creditCode: options.creditCode,
-        targetCompanyName: userCompany.companyName,
-        targetCompanyServe: JSON.stringify(userCompany.expansionDomainKeywordsSelected)
+        targetCompanyName: companyInfo.companyName,
+        targetCompanyServe: JSON.stringify(companyInfo.expansionDomainKeywordsSelected)
       },
       res => {
         if (res.success) {
-          Taro.setStorageSync('report', res.data)
-          setReport(res.data)
+          console.log('res', JSON.parse(res.data));
+          
+          Taro.setStorageSync('report', JSON.parse(res.data))
+          setReport(JSON.parse(res.data))
           setApiCompleted(true)
         }
       }

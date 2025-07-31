@@ -1,11 +1,15 @@
 import React, { useState, useRef, useEffect } from 'react'
 import { View, Text, Input } from '@tarojs/components'
 import Taro from '@tarojs/taro'
+import { loginInfoUpdateAPI } from '@/api/setting'
+import { useAppSelector } from '@/hooks/useAppStore'
+import { sendSmsCodeAPI } from '@/api/login'
 import './index.scss'
 
 function Index() {
   // 控制显示注销说明还是安全校验
   const [showVerify, setShowVerify] = useState(false)
+  const userInfo = useAppSelector(state => state.login.userInfo)
   // 验证码相关状态
   const [codeValues, setCodeValues] = useState(['', '', '', '', '', ''])
   const [currentIndex, setCurrentIndex] = useState(0)
@@ -13,8 +17,19 @@ function Index() {
   const inputRefs = useRef<any[]>([])
   const focusTimeoutRef = useRef<any>(null)
   const countdownRef = useRef<any>(null)
-  const phone = '176****4324'
-
+  // 手机号脱敏函数
+  const maskPhone = (phone: string | undefined) => {
+    if (!phone) return ''
+    // 保留前3位和后4位，中间用****替换
+    if (phone.length === 11) {
+      return phone.replace(/(\d{3})\d{4}(\d{4})/, '$1****$2')
+    }
+    // 如果不是11位，简单处理
+    if (phone.length > 6) {
+      return phone.substring(0, 3) + '****' + phone.substring(phone.length - 4)
+    }
+    return phone
+  }
   // 清理定时器
   useEffect(() => {
     return () => {
@@ -99,6 +114,21 @@ function Index() {
 
   // 切换到安全校验界面
   const handleConfirm = () => {
+    sendSmsCodeAPI(
+      {
+        mobile: userInfo?.mobile,
+        scene: 1
+      },
+      res => {
+        if (res.success) {
+          Taro.showToast({
+            title: '短信验证码发送成功',
+            icon: 'success',
+            duration: 2000
+          })
+        }
+      }
+    )
     setShowVerify(true)
   }
 
@@ -123,7 +153,7 @@ function Index() {
         <View style={{ margin: '0 32rpx 0 32rpx' }}>
           <Text style={{ color: '#333', fontSize: '28rpx', display: 'block', marginBottom: '8rpx' }}>验证码已发送至</Text>
           <View style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <Text style={{ color: '#333', fontSize: '32rpx', fontWeight: 600 }}>{phone}</Text>
+            <Text style={{ color: '#333', fontSize: '32rpx', fontWeight: 600 }}>{maskPhone(userInfo?.mobile)}</Text>
             <Text style={{ color: '#2156FE', fontSize: '28rpx' }} onClick={handleResendCode}>
               {countdown > 0 ? `${countdown}s后重新获取` : '发送验证码'}
             </Text>

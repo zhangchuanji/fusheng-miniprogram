@@ -6,6 +6,9 @@ export interface IUserInfo {
   avatar?: string
   routineOpenid?: string
   mobile?: string
+  companyName?: string
+  name?: string
+  targetCompanyServe?: string
 }
 
 export interface ILoginState {

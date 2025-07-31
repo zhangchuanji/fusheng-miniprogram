@@ -20,6 +20,8 @@
   background: #F2F2F2;
   overflow-x: hidden;
   overflow-y: auto;
+  position: relative;
+  padding-bottom: 150rpx;
 
   &::-webkit-scrollbar {
     display: none !important;
@@ -485,7 +487,7 @@
     margin-top: 8rpx;
     padding: 24rpx;
     box-sizing: border-box;
-    
+
     .enterprise_dynamic_title {
       font-family: PingFang SC, PingFang SC;
       font-weight: 500;
@@ -747,6 +749,10 @@
     background: #fff;
     margin-top: 8rpx;
     box-sizing: border-box;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    box-shadow: 0 -2rpx 10rpx rgba(0, 0, 0, 0.1);
 
     .enterpriseContent_item_bottom_left {
       display: flex;

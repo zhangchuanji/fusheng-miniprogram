@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState, forwardRef, useImperativeHandle } from 'react'
 import { View, Image, Input, Text, ScrollView } from '@tarojs/components'
-import Taro from '@tarojs/taro'
+import Taro, { useDidShow, useDidHide } from '@tarojs/taro'
 import './index.scss'
 import { textStageAPI, companyStageAPI, guessYouWantAPI, aiSessionCreateAPI, aiMessageCreateAPI, aiSessionUpdateAPI, aiMessageEvaluationCreateAPI, userFavoriteCreateAPI } from '@/api/chatMsg'
 import { useAppSelector } from '@/hooks/useAppStore'
@@ -45,6 +45,7 @@ const Index = forwardRef<{ getAiSession: () => void }, { height: number }>(({ he
   const userInfo = useAppSelector(state => state.login.userInfo)
   const [recommendBatches, setRecommendBatches] = useState<any[]>([])
   const [aiSessionId, setAiSessionId] = useState('')
+  const [questionTime, setQuestionTime] = useState('')
   const [answerContent, setAnswerContent] = useState({
     content: '',
     companyList: [] as any[],
@@ -109,10 +110,25 @@ const Index = forwardRef<{ getAiSession: () => void }, { height: number }>(({ he
   useEffect(() => {
     if (process.env.TARO_ENV === 'weapp') {
       Taro.onKeyboardHeightChange(res => {
+        console.log('键盘高度变化:', res.height)
         setKeyboardHeight(res.height)
+        // 强制重新渲染
+        setTimeout(() => {
+          setScrollToBottomTrigger(prev => prev + 1)
+        }, 100)
       })
     }
   }, [])
+
+  // 页面显示时重置键盘高度
+  useDidShow(() => {
+    setKeyboardHeight(0)
+  })
+
+  // 页面隐藏时重置键盘高度
+  useDidHide(() => {
+    setKeyboardHeight(0)
+  })
 
   // 键盘弹起时调整底部高度
   useEffect(() => {
@@ -206,7 +222,60 @@ const Index = forwardRef<{ getAiSession: () => void }, { height: number }>(({ he
     })
   }, [])
 
-  useEffect(() => {}, [messages])
+  useEffect(() => {
+    if (isStreaming) return
+
+    // 获取最后两条消息（用户消息和AI回复）
+    const lastTwoMessages = messages.slice(-2)
+    const aiMessage = lastTwoMessages.find(msg => msg.role === 'ai' && msg.messageId === '')
+
+    // 如果没有找到未保存的AI消息，直接返回
+    if (!aiMessage) return
+
+    // 检查AI消息是否已完成（文本和公司信息都已完成）
+    if (!aiMessage.apiStatus?.textComplete || !aiMessage.apiStatus?.companyComplete) return
+
+    const answerTime = formatTime(new Date())
+    const userMessage = lastTwoMessages.find(msg => msg.role === 'user' && msg.messageId === '')
+    console.log(userMessage)
+
+    if (aiMessage) {
+      const questionTimestamp = new Date(questionTime).getTime()
+      const answerTimestamp = new Date(answerTime).getTime()
+      const responseDurationMs = answerTimestamp - questionTimestamp
+      let responseDuration: number = Number((responseDurationMs / 1000).toFixed(1))
+
+      aiMessageCreateAPI(
+        {
+          sessionId: aiSessionId,
+          userMessage: userMessage?.content,
+          aiResponse: aiMessage.content,
+          questionTime,
+          answerTime,
+          responseDuration,
+          enterpriseInfo: JSON.stringify({ companyList: aiMessage.companyList, splitNum: aiMessage.splitNum, total: aiMessage.total })
+        },
+        res => {
+          if (res.success && res.data) {
+            setMessages(msgs => {
+              const newMsgs = [...msgs]
+              if (newMsgs.length >= 2) {
+                newMsgs[newMsgs.length - 2].messageId = res.data
+                newMsgs[newMsgs.length - 1].messageId = res.data
+              }
+              return newMsgs
+            })
+          }
+        }
+      )
+    }
+
+    setTimeout(() => {
+      if (shouldAutoScroll) {
+        getChatMsgHeight()
+      }
+    }, 200)
+  }, [isStreaming, messages]) // 添加messages作为依赖
 
   // 获取聊天消息高度
   const getChatMsgHeight = () => {
@@ -281,6 +350,17 @@ const Index = forwardRef<{ getAiSession: () => void }, { height: number }>(({ he
     }, 100)
   }
 
+  // 格式化时间为 YYYY-M-D HH:mm:ss
+  const formatTime = (date: Date) => {
+    const year = date.getFullYear()
+    const month = date.getMonth() + 1
+    const day = date.getDate()
+    const hours = date.getHours().toString().padStart(2, '0')
+    const minutes = date.getMinutes().toString().padStart(2, '0')
+    const seconds = date.getSeconds().toString().padStart(2, '0')
+    return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`
+  }
+
   // 发送消息
   const send = () => {
     if (!Taro.getStorageSync('companyInfo')) {
@@ -288,201 +368,141 @@ const Index = forwardRef<{ getAiSession: () => void }, { height: number }>(({ he
     }
     if (!input.trim() || isStreaming) return
     aiSessionUpdateAPI({ userId: userInfo?.id, id: aiSessionId, title: input }, res => {})
-    // 格式化时间为 YYYY-M-D HH:mm:ss
-    const formatTime = (date: Date) => {
-      const year = date.getFullYear()
-      const month = date.getMonth() + 1
-      const day = date.getDate()
-      const hours = date.getHours().toString().padStart(2, '0')
-      const minutes = date.getMinutes().toString().padStart(2, '0')
-      const seconds = date.getSeconds().toString().padStart(2, '0')
-      return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`
-    }
 
-    const questionTime = formatTime(new Date()) // 用户发送消息的时间
+    setQuestionTime(formatTime(new Date())) // 用户发送消息的时间
     setMessages(msgs => [...msgs, { splitNum: 0, total: 0, role: 'user', content: input, companyList: [], apiStatus: { textComplete: false, companyComplete: false }, messageId: '' }, { splitNum: 0, total: 0, role: 'ai', content: '', companyList: [], apiStatus: { textComplete: false, companyComplete: false }, messageId: '' }])
     if (companyInfo?.customInput) {
       companyInfo.expansionDomainKeywordsSelected = [...companyInfo.expansionDomainKeywordsSelected, companyInfo.customInput]
     }
-    // 这里全部执行完毕在执行一个1
-    const doAll = async () => {
+    const doAll = () => {
       try {
-        // 包装textStageAPI为Promise
-        const textStagePromise = new Promise<void>((resolve, reject) => {
-          // 找出最后一个有值的companyList
-          let lastCompanyList: any[] = []
-          for (let i = messages.length - 1; i >= 0; i--) {
-            if (messages[i].companyList && messages[i].companyList.length > 0) {
-              lastCompanyList = messages[i].companyList
-              break
-            }
+        // 找出最后一个有值的companyList
+        let lastCompanyList: any[] = []
+        for (let i = messages.length - 1; i >= 0; i--) {
+          if (messages[i].companyList && messages[i].companyList.length > 0) {
+            lastCompanyList = messages[i].companyList
+            break
           }
+        }
 
-          textStageAPI(
-            {
-              targetCompanyName: companyInfo.companyName,
-              query: input,
-              questionKeyword: companyInfo.expansionDomainKeywordsSelected.join(','),
-              aiSessionId: aiSessionId,
-              productSellingPointsRespDTO: {
-                coreSellingPoints: {
-                  coreBusiness: companyInfo.coreSellingPoints.coreBusiness,
-                  productDescription: companyInfo.coreSellingPoints.productDescription,
-                  productFeatures: companyInfo.coreSellingPoints.productFeatures
-                },
-                expansionDomainKeywords: companyInfo.expansionDomainKeywordsSelected
+        // 直接调用textStageAPI
+        textStageAPI(
+          {
+            targetCompanyName: companyInfo.companyName,
+            query: input,
+            questionKeyword: companyInfo.expansionDomainKeywordsSelected.join(','),
+            aiSessionId: aiSessionId,
+            productSellingPointsRespDTO: {
+              coreSellingPoints: {
+                coreBusiness: companyInfo.coreSellingPoints.coreBusiness,
+                productDescription: companyInfo.coreSellingPoints.productDescription,
+                productFeatures: companyInfo.coreSellingPoints.productFeatures
               },
-              extendContextInfo: JSON.stringify(lastCompanyList)
+              expansionDomainKeywords: companyInfo.expansionDomainKeywordsSelected
             },
-            res => {
-              if (res && res.success && res.data) {
-                let responseText = ''
-                if (typeof res.data === 'string') {
-                  responseText = res.data
-                } else if (typeof res.data === 'object') {
-                  if (res.data.text) {
-                    responseText = res.data.text
-                  } else if (res.data.content) {
-                    responseText = res.data.content
-                  } else if (res.data.message) {
-                    responseText = res.data.message
-                  } else {
-                    responseText = JSON.stringify(res.data, null, 2)
-                  }
+            extendContextInfo: JSON.stringify(lastCompanyList.length > 5 ? lastCompanyList.slice(0, 5) : lastCompanyList)
+          },
+          res => {
+            if (res && res.success && res.data) {
+              let responseText = ''
+              if (typeof res.data === 'string') {
+                responseText = res.data
+              } else if (typeof res.data === 'object') {
+                if (res.data.text) {
+                  responseText = res.data.text
+                } else if (res.data.content) {
+                  responseText = res.data.content
+                } else if (res.data.message) {
+                  responseText = res.data.message
                 } else {
-                  responseText = String(res.data)
+                  responseText = JSON.stringify(res.data, null, 2)
                 }
-                console.log(responseText)
-
-                // 开始流式输出，不等待公司接口
-                streamAIReply(responseText)
               } else {
-                setMessages((msgs: any) => {
-                  if (msgs.length > 0 && msgs[msgs.length - 1].role === 'ai' && !msgs[msgs.length - 1].content) {
-                    const newMsgs = [...msgs]
-                    const targetMsg = newMsgs.find(msg => msg.role === 'ai' && msg.messageId === '')
-                    if (targetMsg) {
-                      targetMsg.content = '抱歉，我暂时无法回答您的问题，请稍后再试。'
-                      targetMsg.apiStatus.textComplete = true
-                      targetMsg.apiStatus.companyComplete = true
-                    }
-                    return newMsgs
-                  }
-                  return [...msgs, { role: 'ai', content: '抱歉，我暂时无法回答您的问题，请稍后再试。', companyList: [], apiStatus: { textComplete: true, companyComplete: true }, messageId: '' }]
-                })
+                responseText = String(res.data)
               }
-              resolve()
-            }
-          )
-        })
-
-        // 包装companyStageAPI为Promise - 独立执行，不影响文本输出
-        const companyStagePromise = new Promise<void>(resolve => {
-          companyStageAPI(
-            {
-              targetCompanyName: companyInfo.companyName,
-              query: input,
-              questionKeyword: companyInfo.expansionDomainKeywordsSelected.join(','),
-              aiSessionId: aiSessionId,
-              productSellingPointsRespDTO: {
-                coreSellingPoints: {
-                  coreBusiness: companyInfo.coreSellingPoints.coreBusiness,
-                  productDescription: companyInfo.coreSellingPoints.productDescription,
-                  productFeatures: companyInfo.coreSellingPoints.productFeatures
-                },
-                expansionDomainKeywords: companyInfo.expansionDomainKeywordsSelected
-              }
-            },
-            res => {
-              if (res.success && res.data) {
-                setMessages(msgs => {
+              // 开始流式输出
+              streamAIReply(responseText)
+            } else {
+              setMessages((msgs: any) => {
+                if (msgs.length > 0 && msgs[msgs.length - 1].role === 'ai' && !msgs[msgs.length - 1].content) {
                   const newMsgs = [...msgs]
-                  if (newMsgs.length > 0 && newMsgs[newMsgs.length - 1].role === 'ai') {
-                    res.data.companyInfoResponseList.forEach((item: any) => {
-                      // 移除英文名，只保留中文名
-                      if (item.legalPerson) {
-                        // 使用正则表达式移除括号及其内容（英文名部分）
-                        item.legalPerson = item.legalPerson.replace(/\s*\([^)]*\)\s*/g, '').trim() || '- -'
-                      } else {
-                        item.legalPerson = '- -'
-                      }
-                    })
-                    newMsgs[newMsgs.length - 1].companyList = res.data.companyInfoResponseList
-                    newMsgs[newMsgs.length - 1].total = res.data.total
-                    newMsgs[newMsgs.length - 1].splitNum = res.data.splitNum
+                  const targetMsg = newMsgs.find(msg => msg.role === 'ai' && msg.messageId === '')
+                  if (targetMsg) {
+                    targetMsg.content = '抱歉，我暂时无法回答您的问题，请稍后再试。'
+                    targetMsg.apiStatus.textComplete = true
+                    targetMsg.apiStatus.companyComplete = true
                   }
                   return newMsgs
-                })
-              }
-              // 更新公司API状态
+                }
+                return [...msgs, { role: 'ai', content: '抱歉，我暂时无法回答您的问题，请稍后再试。', companyList: [], apiStatus: { textComplete: true, companyComplete: true }, messageId: '' }]
+              })
+            }
+          }
+        )
+
+        // 直接调用companyStageAPI
+        companyStageAPI(
+          {
+            targetCompanyName: companyInfo.companyName,
+            query: input,
+            questionKeyword: companyInfo.expansionDomainKeywordsSelected.join(','),
+            aiSessionId: aiSessionId,
+            productSellingPointsRespDTO: {
+              coreSellingPoints: {
+                coreBusiness: companyInfo.coreSellingPoints.coreBusiness,
+                productDescription: companyInfo.coreSellingPoints.productDescription,
+                productFeatures: companyInfo.coreSellingPoints.productFeatures
+              },
+              expansionDomainKeywords: companyInfo.expansionDomainKeywordsSelected
+            }
+          },
+          res => {
+            if (res.success && res.data) {
               setMessages(msgs => {
                 const newMsgs = [...msgs]
-                const targetMsg = newMsgs.find(msg => msg.role === 'ai' && msg.messageId === '')
-                if (targetMsg) {
-                  targetMsg.apiStatus.companyComplete = true
+                if (newMsgs.length > 0 && newMsgs[newMsgs.length - 1].role === 'ai') {
+                  res.data.companyInfoResponseList.forEach((item: any) => {
+                    let locationStr = item.province || item.address || item.location || '未知省份'
+                    if (locationStr.includes('省')) {
+                      item.location = locationStr.split('省')[0] + '省'
+                    } else if (locationStr.includes('市')) {
+                      const directMunicipalities = ['北京', '上海', '天津', '重庆']
+                      const found = directMunicipalities.find(city => locationStr.includes(city))
+                      item.location = found ? found + '市' : locationStr.split('市')[0] + '市'
+                    } else if (locationStr.includes('自治区')) {
+                      item.location = locationStr.split('自治区')[0] + '自治区'
+                    } else {
+                      item.location = '未知省份'
+                    }
+                    // 移除英文名，只保留中文名
+                    if (item.legalPerson) {
+                      // 使用正则表达式移除括号及其内容（英文名部分）
+                      item.legalPerson = item.legalPerson.replace(/\s*\([^)]*\)\s*/g, '').trim() || '- -'
+                    } else {
+                      item.legalPerson = '- -'
+                    }
+                  })
+                  newMsgs[newMsgs.length - 1].companyList = res.data.companyInfoResponseList
+                  newMsgs[newMsgs.length - 1].total = res.data.total
+                  newMsgs[newMsgs.length - 1].splitNum = res.data.splitNum
                 }
                 return newMsgs
               })
-              resolve()
             }
-          )
-        })
-
-        // 先启动文本接口，立即开始流式输出
-        textStagePromise
-
-        // 公司接口并行执行，但不阻塞文本输出
-        companyStagePromise
-
-        // 等待两个API都完成后再保存消息
-        await Promise.all([textStagePromise, companyStagePromise])
-        const answerTime = formatTime(new Date())
-
-        // 确保流式输出完成后再保存
-        setTimeout(() => {
-          setMessages(currentMessages => {
-            const lastTwoMessages = currentMessages.slice(-2)
-            const aiMessage = lastTwoMessages.find(msg => msg.role === 'ai' && msg.messageId === '')
-
-            if (aiMessage) {
-              const questionTimestamp = new Date(questionTime).getTime()
-              const answerTimestamp = new Date(answerTime).getTime()
-              const responseDurationMs = answerTimestamp - questionTimestamp
-              let responseDuration: number = Number((responseDurationMs / 1000).toFixed(1))
-
-              aiMessageCreateAPI(
-                {
-                  sessionId: aiSessionId,
-                  userMessage: input,
-                  aiResponse: aiMessage.content,
-                  questionTime,
-                  answerTime,
-                  responseDuration,
-                  enterpriseInfo: JSON.stringify({ companyList: aiMessage.companyList, splitNum: aiMessage.splitNum, total: aiMessage.total })
-                },
-                res => {
-                  if (res.success && res.data) {
-                    setMessages(msgs => {
-                      const newMsgs = [...msgs]
-                      if (newMsgs.length >= 2) {
-                        newMsgs[newMsgs.length - 2].messageId = res.data
-                        newMsgs[newMsgs.length - 1].messageId = res.data
-                      }
-                      return newMsgs
-                    })
-                  }
+            // 更新公司API状态
+            setMessages(msgs => {
+              const newMsgs = [...msgs]
+              const targetMsg = newMsgs.find(msg => msg.role === 'ai' && msg.messageId === '')
+              if (targetMsg) {
+                targetMsg.apiStatus = {
+                  ...targetMsg.apiStatus,
+                  companyComplete: true
                 }
-              )
-            }
-            return currentMessages
-          })
-
-          setTimeout(() => {
-            if (shouldAutoScroll) {
-              getChatMsgHeight()
-            }
-          }, 200)
-        }, 500) // 增加延迟，确保流式输出完成
+              }
+              return newMsgs
+            })
+          }
+        )
       } catch (error) {
         console.log(error)
       }

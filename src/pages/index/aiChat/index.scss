@@ -62,9 +62,14 @@
     .chatPage_recommend {
       width: 100%;
       min-height: 10rpx;
+      max-height: 630rpx;
+      overflow: hidden;
       background: #fff;
       border-radius: 32rpx;
       box-sizing: border-box;
+      display: flex;
+      flex-wrap: wrap;
+      flex-direction: column;
 
       .chatPage_recommend_title {
         width: 100%;
@@ -114,9 +119,16 @@
 
       .chatPage_recommend_content {
         width: 100%;
-        height: 100%;
+        flex: 1;
+        overflow-y: auto;
         box-sizing: border-box;
         margin-top: 26rpx;
+
+        &::-webkit-scrollbar {
+          width: 0;
+          height: 0;
+          background-color: transparent;
+        }
 
         .chatPage_recommend_content_item {
           display: inline-block;
@@ -580,7 +592,7 @@
     width: 100%;
     height: 314rpx;
     background: linear-gradient(180deg, rgba(240, 243, 255, 0) 0%, #F0F3FF 100%);
-    position: absolute;
+    position: fixed; /* 改为 fixed 定位 */
     bottom: 0;
     left: 0;
     right: 0;
@@ -588,7 +600,9 @@
     padding: 0 24rpx;
     padding-top: 60rpx;
     box-sizing: border-box;
-
+    /* 添加过渡动画 */
+    transition: bottom 0.25s ease-in-out, height 0.25s ease-in-out;
+    
     .chatPage_bottom_input {
       width: 100%;
       height: 170rpx;

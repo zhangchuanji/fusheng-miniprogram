@@ -158,6 +158,7 @@
       padding: 24rpx;
       box-sizing: border-box;
       text-align: left; // 确保容器左对齐
+      overflow: hidden;
 
       .scrollView {
         height: 69vh;

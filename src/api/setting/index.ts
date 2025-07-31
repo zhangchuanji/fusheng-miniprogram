@@ -1,11 +1,10 @@
 import { taroPost, taroGet, taroPut, taroDelete } from '@/service'
-import { loginByPhoneURL, loginByCodeURL, loginInfoURL, loginSocialURL, refreshTokenURL, sendSmsCodeURL, validateSmsCodeURL, logoutURL } from '@/service/config'
+import { userAgreementURL, getAreaURL, loginInfoURL, loginInfoUpdateURL, updateMobileURL, configCompanyUpdateURL, configCompanyPostURL, configCompanyGetURL, configCompanySectorURL } from '@/service/config'
 import type { IResponse } from '../types'
 
-// 手机号登录
-export const loginByPhoneAPI = (data: any, callback: (res: IResponse<any>) => void) => {
-  taroPost({
-    url: loginByPhoneURL,
+export const userAgreementAPI = (data: any, callback: (res: IResponse<any>) => void) => {
+  taroGet({
+    url: userAgreementURL,
     data,
     success: (res: any) => {
       callback({
@@ -31,38 +30,37 @@ export const loginByPhoneAPI = (data: any, callback: (res: IResponse<any>) => vo
   }).catch(() => {})
 }
 
-// 获取登录信息
-export const loginByInfoAPI = (callback: (res: IResponse<any>) => void) => {
+export const getAreaAPI = (data: any, callback: (res: IResponse<any>) => void) => {
+  taroGet({
+    url: getAreaURL,
+    data,
+    success: (res: any) => {
+      callback({
+        success: true,
+        data: res.data
+      })
+    },
+    fail: (err: any) => {
+      if (err instanceof Promise) {
+        err.catch(errMsg => {
+          callback({
+            success: false,
+            data: errMsg
+          })
+        })
+      } else {
+        callback({
+          success: false,
+          data: err
+        })
+      }
+    }
+  }).catch(() => {})
+}
+
+export const loginInfoAPI = (data: any, callback: (res: IResponse<any>) => void) => {
   taroGet({
     url: loginInfoURL,
-    success: (res: any) => {
-      callback({
-        success: true,
-        data: res.data
-      })
-    },
-    fail: (err: any) => {
-      if (err instanceof Promise) {
-        err.catch(errMsg => {
-          callback({
-            success: false,
-            data: errMsg
-          })
-        })
-      } else {
-        callback({
-          success: false,
-          data: err
-        })
-      }
-    }
-  }).catch(() => {})
-}
-
-// 社交登录
-export const loginSocialAPI = (data: any, callback: (res: IResponse<any>) => void) => {
-  taroPost({
-    url: loginSocialURL,
     data,
     success: (res: any) => {
       callback({
@@ -88,10 +86,9 @@ export const loginSocialAPI = (data: any, callback: (res: IResponse<any>) => voi
   }).catch(() => {})
 }
 
-// 验证码登录
-export const loginByCodeAPI = (data: any, callback: (res: IResponse<any>) => void) => {
-  taroPost({
-    url: loginByCodeURL,
+export const loginInfoUpdateAPI = (data: any, callback: (res: IResponse<any>) => void) => {
+  taroPut({
+    url: loginInfoUpdateURL,
     data,
     success: (res: any) => {
       callback({
@@ -117,10 +114,9 @@ export const loginByCodeAPI = (data: any, callback: (res: IResponse<any>) => voi
   }).catch(() => {})
 }
 
-// 验证短信验证码
-export const validateSmsCodeAPI = (data: any, callback: (res: IResponse<any>) => void) => {
-  taroPost({
-    url: validateSmsCodeURL,
+export const updateMobileAPI = (data: any, callback: (res: IResponse<any>) => void) => {
+  taroPut({
+    url: updateMobileURL,
     data,
     success: (res: any) => {
       callback({
@@ -146,10 +142,9 @@ export const validateSmsCodeAPI = (data: any, callback: (res: IResponse<any>) =>
   }).catch(() => {})
 }
 
-// 发送短信验证码
-export const sendSmsCodeAPI = (data: any, callback: (res: IResponse<any>) => void) => {
-  taroPost({
-    url: sendSmsCodeURL,
+export const configCompanyGetAPI = (data: any, callback: (res: IResponse<any>) => void) => {
+  taroGet({
+    url: configCompanyGetURL,
     data,
     success: (res: any) => {
       callback({
@@ -175,10 +170,10 @@ export const sendSmsCodeAPI = (data: any, callback: (res: IResponse<any>) => voi
   }).catch(() => {})
 }
 
-// 刷新token
-export const refreshTokenAPI = (data: any, callback: (res: IResponse<any>) => void) => {
+export const configCompanyPostAPI = (data: any, callback: (res: IResponse<any>) => void) => {
   taroPost({
-    url: refreshTokenURL + '?refreshToken=' + data.refreshToken,
+    url: configCompanyPostURL,
+    data,
     success: (res: any) => {
       callback({
         success: true,
@@ -203,10 +198,38 @@ export const refreshTokenAPI = (data: any, callback: (res: IResponse<any>) => vo
   }).catch(() => {})
 }
 
-// 退出登录
-export const logoutAPI = (data: any, callback: (res: IResponse<any>) => void) => {
-  taroPost({
-    url: logoutURL,
+export const configCompanyUpdateAPI = (data: any, callback: (res: IResponse<any>) => void) => {
+  taroPut({
+    url: configCompanyUpdateURL,
+    data,
+    success: (res: any) => {
+      callback({
+        success: true,
+        data: res.data
+      })
+    },
+    fail: (err: any) => {
+      if (err instanceof Promise) {
+        err.catch(errMsg => {
+          callback({
+            success: false,
+            data: errMsg
+          })
+        })
+      } else {
+        callback({
+          success: false,
+          data: err
+        })
+      }
+    }
+  }).catch(() => {})
+}
+
+export const configCompanySectorAPI = (data: any, callback: (res: IResponse<any>) => void) => {
+  taroGet({
+    url: configCompanySectorURL,
+    data,
     success: (res: any) => {
       callback({
         success: true,

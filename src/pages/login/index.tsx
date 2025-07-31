@@ -9,7 +9,7 @@ import { useExampleActions } from '@/hooks/useExampleActions'
 import { loginByPhoneAPI, loginByCodeAPI, loginByInfoAPI, loginSocialAPI, refreshTokenAPI } from '@/api/login'
 import { IResponse } from '@/api/types'
 import { IUserInfo } from '@/redux/types/login'
-import { useAppDispatch, useAppSelector } from '@/hooks/useAppStore'
+import { useAppDispatch } from '@/hooks/useAppStore'
 import { setLoginStatus, userInfoAction } from '@/redux/modules/login'
 
 function Index() {
@@ -96,7 +96,15 @@ function Index() {
   const setInfoCode = (apiResponse: IResponse<IUserInfo>) => {
     if (apiResponse.success) {
       dispatch(userInfoAction({ type: 'set', data: apiResponse.data }))
-      // Taro.navigateTo({ url: '/subpackages/login/companyProfile/index' })
+      let targetCompanyServe = JSON.parse(apiResponse?.data?.targetCompanyServe || '{}')
+      Taro.setStorageSync('companyInfo', {
+        companyName: apiResponse?.data?.companyName || '',
+        userName: apiResponse?.data?.name || '',
+        coreSellingPoints: targetCompanyServe.coreSellingPoints,
+        expansionDomainKeywords: targetCompanyServe.expansionDomainKeywords,
+        expansionDomainKeywordsSelected: targetCompanyServe.expansionDomainKeywordsSelected,
+        customInput: targetCompanyServe.customInput
+      })
       Taro.navigateTo({ url: '/pages/index/index' })
       Taro.hideLoading()
     } else {
@@ -109,15 +117,17 @@ function Index() {
     }
   }
 
+  const tips = () => {
+    Taro.showToast({
+      title: '请先同意用户协议和隐私政策',
+      icon: 'none',
+      duration: 2000
+    })
+  }
+
   // 处理一键登录点击事件
   const handleOneClickLogin = async (e: any) => {
-    // 检查是否同意协议
-    if (!agreed) {
-      Taro.showToast({
-        title: '请先同意用户协议和隐私政策',
-        icon: 'none',
-        duration: 2000
-      })
+    if (e.detail.errMsg != 'getPhoneNumber:ok') {
       return
     }
 
@@ -140,7 +150,7 @@ function Index() {
       })
 
       if (loginResult.code) {
-        loginByCodeAPI({ loginCode: loginResult.code, phoneCode: e.detail.code, state: 'STATE' }, setLoginInfo)
+        loginByPhoneAPI({ loginCode: loginResult.code, phoneCode: e.detail.code, state: 'STATE' }, setLoginInfo)
       } else {
         Taro.showToast({
           title: '获取登录凭证失败',
@@ -166,9 +176,16 @@ function Index() {
       <View className="login_back"></View>
       <Image src="http://36.141.100.123:10013/glks/assets/login/login2.png" className="login_logo" />
       <Image src="http://36.141.100.123:10013/glks/assets/login/login1.png" className="login_text" />
-      <NutButton className="login_btn" openType="getPhoneNumber|agreePrivacyAuthorization" onGetPhoneNumber={e => handleOneClickLogin(e)}>
-        用户一键登录
-      </NutButton>
+      {agreed ? (
+        <NutButton className="login_btn" openType="getPhoneNumber|agreePrivacyAuthorization" onGetPhoneNumber={e => handleOneClickLogin(e)}>
+          用户一键登录
+        </NutButton>
+      ) : (
+        <NutButton className="login_btn" onClick={() => tips()}>
+          用户一键登录
+        </NutButton>
+      )}
+
       <Text className="login_btn_phone" onClick={() => Taro.navigateTo({ url: '/subpackages/login/loginPhone/index' })}>
         手机验证码登录
       </Text>

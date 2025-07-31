@@ -1,8 +1,11 @@
 .business-profile-page {
-    // min-height: 100vh;
+    width: 100%;
+    height: 100%;
     background: #fff;
     font-family: PingFang SC, sans-serif;
     padding: 0 24rpx;
+    box-sizing: border-box;
+    padding-bottom: 150rpx;
 }
 
 .bp-header {
@@ -177,5 +180,5 @@
     justify-content: center;
     border: none;
     margin: 0 auto;
-    margin-top: 32rpx;
+    margin-top: 110rpx;
 }

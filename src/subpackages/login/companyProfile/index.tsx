@@ -12,6 +12,7 @@ import { Button, Input, Form, FormItem } from '@nutui/nutui-react-taro'
 import './index.scss'
 import { companyInfoAPI, searchCompaniesAPI } from '@/api/company'
 import { useAppSelector } from '@/hooks/useAppStore'
+import { configCompanyPostAPI } from '@/api/setting'
 
 function CompanyProfile() {
   const [selected, setSelected] = useState(1)
@@ -71,6 +72,12 @@ function CompanyProfile() {
       companyName: selectedCompanyName,
       userName: name
     })
+    configCompanyPostAPI(
+      {
+        companyName: selectedCompanyName
+      },
+      res => {}
+    )
     Taro.navigateTo({
       url: `/subpackages/login/businessProfile/index?companyName=${selectedCompanyName}&userName=${name}`
     })
@@ -115,7 +122,6 @@ function CompanyProfile() {
 
   // 处理建议项点击
   const handleSuggestClick = (suggestValue: string) => {
-
     // 立即设置输入框内容
     setCustomCompany(suggestValue)
 
@@ -194,7 +200,9 @@ function CompanyProfile() {
         <View className="cp_label" style="margin-bottom: 20rpx;">
           您的姓名（选填）
         </View>
-        <Input className="cp_name_input" placeholder="请输入您的姓名" value={name} onChange={e => setName(e)} />
+        <View>
+          <Input className="cp_name_input" placeholder="请输入您的姓名" value={name} onChange={e => setName(e)} />
+        </View>
       </View>
       <Button className="cp_next_btn" onClick={handleNext}>
         下一步

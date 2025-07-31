@@ -172,15 +172,10 @@ function Index() {
   useLoad(options => {
     let res = JSON.parse(options.res)
     const list = res.companyList.map((item: any) => {
-      // 获取省份信息
-      // 获取省份信息（处理连续字符串格式）
       let locationStr = item.province || item.address || item.location || '未知省份'
-
-      // 从连续字符串中提取省份
       if (locationStr.includes('省')) {
         item.location = locationStr.split('省')[0] + '省'
       } else if (locationStr.includes('市')) {
-        // 处理直辖市情况（北京市、上海市、天津市、重庆市）
         const directMunicipalities = ['北京', '上海', '天津', '重庆']
         const found = directMunicipalities.find(city => locationStr.includes(city))
         item.location = found ? found + '市' : locationStr.split('市')[0] + '市'
@@ -255,7 +250,6 @@ function Index() {
       url: '/subpackages/company/enterpriseDetail/index?company=' + JSON.stringify(item)
     })
   }
-
 
   // 处理地区选择
   const handleRegionSelect = (province: string, city: string) => {
@@ -896,13 +890,13 @@ function Index() {
                   <View className="enterpriseContent_item_bottom_left">
                     {!isDisliked && (
                       <View onClick={handleLike} className={`enterpriseContent_item_bottom_left_good ${isLiked ? 'liked' : ''} ${showHeartbeat ? 'heartbeat' : ''}`}>
-                        <Image src="http://36.141.100.123:10013/glks/assets/enterprise/enterprise6.png" className="enterpriseContent_item_bottom_left_good_img" />
+                        <Image src={!isLiked ? 'http://36.141.100.123:10013/glks/assets/enterprise/enterprise8.png' : 'http://36.141.100.123:10013/glks/assets/enterprise/enterprise6.png'} className="enterpriseContent_item_bottom_left_good_img" />
                         <Text className="enterpriseContent_item_bottom_left_good_text">有效</Text>
                       </View>
                     )}
                     {!isLiked && (
                       <View onClick={handleDislike} className={`enterpriseContent_item_bottom_left_bad ${isDisliked ? 'disliked' : ''} ${showShake ? 'shake' : ''}`}>
-                        <Image src="http://36.141.100.123:10013/glks/assets/enterprise/enterprise7.png" className="enterpriseContent_item_bottom_left_bad_img" />
+                        <Image src={!isDisliked ? 'http://36.141.100.123:10013/glks/assets/enterprise/enterprise9.png' : 'http://36.141.100.123:10013/glks/assets/enterprise/enterprise7.png'} className="enterpriseContent_item_bottom_left_bad_img" />
                         <Text className="enterpriseContent_item_bottom_left_bad_text">无效线索</Text>
                         {isDisliked && <ArrowDown color="#8E8E8E" style={{ width: '28rpx', height: '28rpx', marginLeft: '6rpx' }} />}
                       </View>

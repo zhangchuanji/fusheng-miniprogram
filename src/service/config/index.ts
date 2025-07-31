@@ -4,14 +4,30 @@ export const BASE_URL = 'http://192.168.110.35:10017'
 // 上传文件
 export const uploadFileURL = '/infra/file/upload'
 
+// 用户/隐私协议
+export const userAgreementURL = '/system/protocol/get-enabled-by-type'
+
+// 获取地区
+export const getAreaURL = '/system/area/tree'
+
+// 配置企业信息
+export const configCompanyGetURL = '/fs/user-company/get'
+export const configCompanyPostURL = '/fs/user-company/create'
+export const configCompanyUpdateURL = '/fs/user-company/update'
+// 企业分类
+export const configCompanySectorURL = '/fs/industry-category/get'
+
 // 用户认证相关API
 export const loginByPhoneURL = '/member/auth/weixin-mini-app-login'
 export const loginByCodeURL = '/member/auth/sms-login'
 export const loginInfoURL = '/member/user/get'
+export const loginInfoUpdateURL = '/member/user/update'
 export const loginSocialURL = '/member/auth/social-login'
 export const refreshTokenURL = '/member/auth/refresh-token'
 export const validateSmsCodeURL = '/member/auth/validate-sms-code'
 export const sendSmsCodeURL = '/member/auth/send-sms-code'
+export const logoutURL = '/member/auth/logout'
+export const updateMobileURL = '/member/user/update-mobile'
 
 // 企业信息相关API
 export const getCompanyInfoURL = '/fs/ai/get-company-info'
@@ -19,7 +35,6 @@ export const searchCompaniesURL = '/fs/ai/search-companies'
 export const getProductSellingPointsURL = '/fs/ai/getProductSellingPoints'
 export const generateReportURL = '/fs/ai/generate-report'
 export const enterpriseDetailURL = '/fs/ai/enterprise-detail'
-
 
 // AI对话相关API
 export const textStageURL = '/fs/ai/text-stage'
