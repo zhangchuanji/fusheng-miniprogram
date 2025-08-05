@@ -73,6 +73,7 @@ function BusinessProfile() {
           icon: 'none'
         })
         Taro.hideLoading()
+        Taro.navigateBack()
       }
     })
   }, [])

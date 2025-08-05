@@ -6,6 +6,38 @@
   padding-top: 32rpx;
   position: relative;
 
+  .customizeDialog {
+    .nut-dialog {
+      padding: 20rpx !important;
+      box-sizing: border-box;
+    }
+
+    .nut-dialog-content {
+      margin: 0;
+      min-width: auto;
+      min-height: auto;
+      max-height: auto;
+      border-radius: 0 0 24rpx 24rpx;
+      box-sizing: border-box;
+    }
+
+    .nut-dialog-footer {
+      margin-top: 40rpx;
+
+      .nut-dialog-footer-ok {
+        min-width: 260rpx;
+        height: 80rpx;
+        border-radius: 24rpx;
+      }
+
+      .nut-dialog-footer-cancel {
+        min-width: 260rpx;
+        height: 80rpx;
+        border-radius: 24rpx;
+      }
+    }
+  }
+
   .chatPage_inputs {
     width: 100%;
     height: 100%;
@@ -274,7 +306,6 @@
           width: 106rpx;
           height: 106rpx;
           border-radius: 14rpx;
-          border: 2rpx solid #E9E9E9;
 
           .company_left_img {
             width: 100%;
@@ -588,11 +619,42 @@
     }
   }
 
+  .floatingButton {
+    // width: 60rpx;
+    position: absolute;
+    right: 30rpx;
+    bottom: 350rpx;
+
+    .floatingButtonTop {
+      width: 80rpx;
+      height: 80rpx;
+      border-radius: 50%;
+      border: 2rpx solid #F0F3FF;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #fff;
+      margin-bottom: 40rpx;
+    }
+
+    .floatingButtonBottom {
+      width: 80rpx;
+      height: 80rpx;
+      border-radius: 50%;
+      border: 2rpx solid #F0F3FF;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #fff;
+    }
+  }
+
   .chatPage_bottom {
     width: 100%;
     height: 314rpx;
     background: linear-gradient(180deg, rgba(240, 243, 255, 0) 0%, #F0F3FF 100%);
-    position: fixed; /* 改为 fixed 定位 */
+    position: fixed;
+    /* 改为 fixed 定位 */
     bottom: 0;
     left: 0;
     right: 0;
@@ -602,7 +664,7 @@
     box-sizing: border-box;
     /* 添加过渡动画 */
     transition: bottom 0.25s ease-in-out, height 0.25s ease-in-out;
-    
+
     .chatPage_bottom_input {
       width: 100%;
       height: 170rpx;
@@ -641,6 +703,7 @@
       }
 
       .chatPage_input {
+        width: 100%;
         font-family: PingFang SC, PingFang SC;
         font-weight: 400;
         font-size: 32rpx;

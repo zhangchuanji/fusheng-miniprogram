@@ -3,7 +3,7 @@ import { View, Text, Image, ScrollView, Input, Textarea, Button } from '@tarojs/
 import { ArrowDownSize6, Close, Checked, Search, Success, CheckClose } from '@nutui/icons-react-taro'
 import { searchCompaniesAPI } from '@/api/company'
 import { clueFollowUpCreateAPI } from '@/api/clue' // 移除uploadFileAPI
-import { Calendar, Popup } from '@nutui/nutui-react-taro'
+import { Calendar, CalendarCard, type CalendarCardValue, Popup } from '@nutui/nutui-react-taro'
 import Taro from '@tarojs/taro'
 import './index.scss'
 import { useSelector } from 'react-redux'
@@ -33,11 +33,11 @@ function AddFollowPage() {
     contactId: '',
     type: '',
     method: '',
-    followUpTime: new Date().toISOString().split('T')[0],
+    followUpTime: '',
     content: '',
     followUpFileList: [] as FileItem[]
   })
-
+  const [changeFollowUpTime, setChangeFollowUpTime] = useState(new Date() as CalendarCardValue)
   const userInfo = useSelector((state: any) => state.login.userInfo)
   const [showFollowUpType, setShowFollowUpType] = useState(false)
   const [showFollowUpMethod, setShowFollowUpMethod] = useState(false)
@@ -180,13 +180,20 @@ function AddFollowPage() {
   }
 
   // 选择下拉选项
+  // 添加一个辅助函数来移除HTML标签
+  const stripHtmlTags = (html: string): string => {
+    return html.replace(/<[^>]*>/g, '')
+  }
+
   const selectOption = (field: string, option: any) => {
     const optionName = typeof option === 'string' ? option : option.name
+    // 移除HTML标签后再存储
+    const cleanOptionName = stripHtmlTags(optionName)
 
     setFormData(prev => {
       const newData = {
         ...prev,
-        [field]: optionName
+        [field]: cleanOptionName // 使用清理后的值
       }
 
       // 根据字段类型设置对应的ID
@@ -338,7 +345,6 @@ function AddFollowPage() {
           fileName: fileItem.name
         },
         success: res => {
-          console.log('上传成功:', res)
           if (progressInterval) {
             clearInterval(progressInterval)
           }
@@ -388,6 +394,22 @@ function AddFollowPage() {
     setFollowUpFileList(prev => prev.filter(file => file.fileId !== fileId))
   }
 
+  function Timing() {
+    setFormData(prev => ({
+      ...prev,
+      followUpTime: conversionTime(changeFollowUpTime)
+    }))
+    setShowFollowUpTime(false)
+  }
+
+  const conversionTime = time => {
+    const date = new Date(time)
+    const year = date.getFullYear()
+    const month = String(date.getMonth() + 1).padStart(2, '0')
+    const day = String(date.getDate()).padStart(2, '0')
+    return `${year}-${month}-${day}`
+  }
+
   const closeSelect = (e: any) => {
     e.stopPropagation()
     if (dropdownVisible.associateLead || dropdownVisible.associateLeadContact) {
@@ -399,8 +421,6 @@ function AddFollowPage() {
   }
 
   const onInputClick = (field: any) => {
-    console.log(field, 'onInputClick')
-
     // 先关闭所有下拉选项
     setDropdownVisible({
       associateLead: false,
@@ -415,11 +435,8 @@ function AddFollowPage() {
     }
   }
 
-  const setChooseValue = (value: string) => {
-    setFormData(prev => ({
-      ...prev,
-      followUpTime: `${value[0]}-${value[1]}-${value[2]}`
-    }))
+  const onChangeFollowUpTime = (value: any) => {
+    setChangeFollowUpTime(value)
   }
 
   const closePopup = (field: string) => {
@@ -491,10 +508,19 @@ function AddFollowPage() {
             )}
             {isShowDropdownIcon ? (
               <View onClick={() => onInputClick(field)} className="field-input-disabled">
-                {formData[field] ? formData[field] : placeholder}
+                {field === 'followUpTime' ? (formData[field] ? conversionTime(formData[field]) : '请选择跟进时间') : formData[field] || placeholder}
               </View>
             ) : (
-              <Input className="field-input" placeholder={placeholder} value={isDropdownField ? formData[field] || searchKeyword[field] : formData[field]} onInput={e => (isDropdownField ? handleSearchInput(field, e.detail.value) : handleInputChange(field, e.detail.value))} />
+              <Input
+                className="field-input"
+                placeholder={placeholder}
+                value={isDropdownField ? formData[field] || searchKeyword[field] : formData[field]}
+                onInput={e => (isDropdownField ? handleSearchInput(field, e.detail.value) : handleInputChange(field, e.detail.value))}
+                onClick={e => {
+                  e.stopPropagation()
+                  isDropdownField && toggleDropdown(field)
+                }}
+              />
             )}
             {hasDropdown && (
               <View
@@ -547,6 +573,20 @@ function AddFollowPage() {
   }
 
   function handleSubmit(): void {
+    if (!formData.associateLead) {
+      Taro.showToast({
+        title: '请选择关联线索',
+        icon: 'none'
+      })
+      return
+    }
+    if (!formData.associateLeadContact) {
+      Taro.showToast({
+        title: '请选择关联线索联系人',
+        icon: 'none'
+      })
+      return
+    }
     if (!formData.type) {
       Taro.showToast({
         title: '请选择跟进类型',
@@ -554,9 +594,9 @@ function AddFollowPage() {
       })
       return
     }
-    if (!formData.method) {
+    if (!formData.followUpTime) {
       Taro.showToast({
-        title: '请选择跟进方式',
+        title: '请选择跟进时间',
         icon: 'none'
       })
       return
@@ -579,6 +619,11 @@ function AddFollowPage() {
           icon: 'none'
         })
         Taro.navigateBack()
+      } else {
+        Taro.showToast({
+          title: res.data.msg || '添加失败, 请稍后重试',
+          icon: 'none'
+        })
       }
     })
   }
@@ -684,7 +729,12 @@ function AddFollowPage() {
             ))}
         </View>
       </Popup>
-      <Calendar visible={showFollowUpTime} defaultValue={formData.followUpTime} startDate={'1900-01-01'} onClose={() => closePopup('followUpTime')} onConfirm={setChooseValue} />
+      <Popup zIndex={99999} closeIcon={<Close size="32rpx" color="#333333" />} onClose={() => closePopup('followUpTime')} closeable style={{ height: '70%' }} visible={showFollowUpTime} title="选择跟进时间" position="bottom">
+        <CalendarCard defaultValue={changeFollowUpTime} onChange={onChangeFollowUpTime} />
+        <View className="buttonTime" onClick={() => Timing()}>
+          选择时间
+        </View>
+      </Popup>
     </View>
   )
 }

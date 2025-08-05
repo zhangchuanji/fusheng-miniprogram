@@ -16,6 +16,7 @@ function Index() {
       content: '确定退出登陆吗？',
       success: res => {
         if (res.confirm) {
+          Taro.clearStorageSync()
           logoutAPI({}, res => {
             if (res.success) {
               Taro.reLaunch({
@@ -37,6 +38,7 @@ function Index() {
           <Cell className="nutui-cell-clickable" title="修改手机号" align="center" extra={<ArrowRight size={'28rpx'} color="#B6B6B6" />} onClick={() => Taro.navigateTo({ url: '/subpackages/setting/changePhone/index' })} />
           <Cell className="nutui-cell-clickable" title="联系我们" align="center" extra={<ArrowRight size={'28rpx'} color="#B6B6B6" />} onClick={() => Taro.navigateTo({ url: '/subpackages/setting/contactUs/index' })} />
           <Cell className="nutui-cell-clickable" title="企业管理" align="center" extra={<ArrowRight size={'28rpx'} color="#B6B6B6" />} onClick={() => Taro.navigateTo({ url: '/subpackages/setting/enterprise/index' })} />
+          <Cell className="nutui-cell-clickable" title="修改查询企业" align="center" extra={<ArrowRight size={'28rpx'} color="#B6B6B6" />} onClick={() => Taro.navigateTo({ url: '/subpackages/login/companyProfile/index' })} />
           <Cell className="nutui-cell-clickable" title="意见反馈" align="center" extra={<ArrowRight size={'28rpx'} color="#B6B6B6" />} onClick={() => Taro.navigateTo({ url: '/subpackages/setting/feedback/index' })} />
           <Cell className="nutui-cell-clickable" title="关于我们" align="center" extra={<ArrowRight size={'28rpx'} color="#B6B6B6" />} onClick={() => Taro.navigateTo({ url: '/subpackages/setting/aboutUs/index' })} />
         </Cell.Group>

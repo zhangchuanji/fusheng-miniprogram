@@ -2,7 +2,7 @@
   "libVersion": "3.8.10",
   "projectname": "盖利克斯AI",
   "setting": {
-    "urlCheck": true,
+    "urlCheck": false,
     "coverView": false,
     "lazyloadPlaceholderEnable": false,
     "skylineRenderEnable": false,

@@ -1,4 +1,4 @@
-import { useCallback, useRef } from 'react'
+import { useCallback, useRef, useState, useEffect } from 'react'
 
 /**
  * 防抖 Hook
@@ -68,6 +68,28 @@ export function useDebounceWithImmediate<T extends (...args: any[]) => any>(
     },
     [callback, delay, immediate]
   )
+}
+
+/**
+ * 防抖值 Hook
+ * @param value 要防抖的值
+ * @param delay 延迟时间（毫秒）
+ * @returns 防抖后的值
+ */
+export function useDebounceValue<T>(value: T, delay: number): T {
+  const [debouncedValue, setDebouncedValue] = useState<T>(value)
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedValue(value)
+    }, delay)
+
+    return () => {
+      clearTimeout(handler)
+    }
+  }, [value, delay])
+
+  return debouncedValue
 }
 
 export default useDebounce

@@ -9,16 +9,16 @@ import { useSelector } from 'react-redux'
 import { ArrowRightSize6 } from '@nutui/icons-react-taro'
 
 const initialData = {
-  companyName: '',
-  companyShortName: '',
-  companyPhone: '',
-  companyType: '',
-  industryCategoryId: '',
-  industryCategoryName: '',
-  areaId: '',
-  postalCode: '',
-  fax: '',
-  businessLicense: ''
+  companyName: undefined as string | undefined,
+  companyShortName: undefined as string | undefined,
+  companyPhone: undefined as string | undefined,
+  companyType: undefined as number | undefined,
+  industryCategoryId: undefined as string | undefined,
+  industryCategoryName: undefined as string | undefined,
+  areaId: undefined as string | undefined,
+  postalCode: undefined as string | undefined,
+  fax: undefined as string | undefined,
+  businessLicense: undefined as string | undefined
 }
 
 // 在组件开始部分添加企业类型数据
@@ -222,7 +222,7 @@ function Index() {
             setCompanyTypeValue([matchedType.value]) // 设置选中值用于回显
             setForm(prevForm => ({
               ...prevForm,
-              companyType: matchedType.text
+              companyType: matchedType.value
             }))
           } else {
             setCompanyTypeDesc('请选择企业类型')
@@ -242,7 +242,7 @@ function Index() {
     setCompanyTypeValue(value) // 更新选中值
     setForm({
       ...form,
-      companyType: selectedType
+      companyType: options[0]?.value
     })
     setCompanyTypeVisible(false)
   }
@@ -308,7 +308,6 @@ function Index() {
           fileName: fileItem
         },
         success: res => {
-          console.log('上传成功:', res)
           // 解析服务器返回的数据
           let responseData
           try {

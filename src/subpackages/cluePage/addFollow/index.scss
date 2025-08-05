@@ -4,7 +4,7 @@
     padding: 0 24rpx;
     box-sizing: border-box;
     --nutui-calendar-active-background-color: #4981F8;
-    --nutui-calendar-choose-background-color: #EAF2FD;
+    --nutui-calendar-choose-background-color: #4981F8;
     --nutui-calendar-choose-color: #4981F8;
     --nutui-calendar-day67-color: #4981F8;
     --nutui-color-primary: #4981F8;
@@ -49,15 +49,23 @@
                 color: #333333;
             }
         }
-
-        .active {
-            background: #F4F6FF;
-        }
     }
 
     .form-container {
         width: 100%;
         height: 100%;
+    }
+
+    .buttonTime {
+        width: 94%;
+        height: 80rpx;
+        background: #2156FE;
+        color: #fff;
+        border-radius: 104rpx;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 40rpx auto;
     }
 
     .form-field {

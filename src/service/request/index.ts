@@ -36,7 +36,6 @@ class TaroRequest {
     // 添加默认的全局拦截器
     this.addGlobalRequestInterceptor(
       (config) => {
-        // console.log('发起请求:', config.url)
         return config
       },
       (err) => {
@@ -47,7 +46,7 @@ class TaroRequest {
 
     this.addGlobalResponseInterceptor(
       (res) => {
-        // console.log('请求成功:', res)
+        // ('请求成功:', res)
         return res
       },
       (err) => {

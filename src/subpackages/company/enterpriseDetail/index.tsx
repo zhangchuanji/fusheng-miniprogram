@@ -1,5 +1,5 @@
-import React, { useState, useCallback, useEffect } from 'react'
-import { Checkbox, Popup, TextArea } from '@nutui/nutui-react-taro'
+import React, { useState, useCallback, useEffect, useMemo } from 'react'
+import { Checkbox, Popup, Tabs, TextArea } from '@nutui/nutui-react-taro'
 import { View, Image, Text, ScrollView } from '@tarojs/components'
 import { Add, ArrowDown } from '@nutui/icons-react-taro'
 import Taro, { useLoad } from '@tarojs/taro'
@@ -41,7 +41,26 @@ function Index() {
   const [showCustomDialog, setShowCustomDialog] = useState(false) // 自定义确认弹窗
   const [showRestoreDialog, setShowRestoreDialog] = useState(false) // 恢复确认弹窗
   const [showBusinessIntelligence, setShowBusinessIntelligence] = useState(false) // 商机情报弹窗
+  const [isShowPhone, setIsShowPhone] = useState(false) // 联系人弹窗
   const [showPopup, setShowPopup] = useState(false) // 商机情报弹窗
+  const [phoneInfo, setPhoneInfo] = useState<any[]>([]) // 手机号
+  const [fixedLines, setFixedLines] = useState<any[]>([]) // 固话
+  const [emails, setEmails] = useState<any[]>([]) // 邮箱
+  const [address, setAddress] = useState<any[]>([]) // 地址
+  const [others, setOthers] = useState<any[]>([]) // 其他
+
+  const [tabValue, setTabValue] = useState(0) // 当前选中的标签页
+  const [allContactInformation, setAllContactInformation] = useState(0) // 全部联系数量
+  const tabList = useMemo(
+    () => [
+      { id: 1, name: `手机号 ${phoneInfo?.length || 0}` },
+      { id: 2, name: `固话 ${fixedLines?.length || 0}` },
+      { id: 3, name: `邮箱 ${emails?.length || 0}` },
+      { id: 4, name: `地址 ${address?.length || 0}` },
+      { id: 5, name: `其他 ${others?.length || 0}` }
+    ],
+    [phoneInfo, fixedLines, emails, address, others]
+  )
 
   // ==================== 线索操作状态 ====================
   const [isShowAdd, setIsShowAdd] = useState(true) // 是否显示加入线索按钮
@@ -242,6 +261,18 @@ function Index() {
 
   useLoad(options => {
     let res = JSON.parse(options.company)
+
+    // 统计联系方式总数
+    const totalCount = Object.values(res.contactInfo || {}).reduce<number>((sum, arr: any) => {
+      return sum + (Array.isArray(arr) ? arr.length : 0)
+    }, 0)
+    setPhoneInfo(res.contactInfo?.phones || []) // 添加默认值 []
+    setEmails(res.contactInfo?.emails || []) // 添加默认值 []
+    // 同样需要为其他可能缺失的字段添加默认值
+    setFixedLines(res.contactInfo?.fixedLines || [])
+    setAddress(res.contactInfo?.address || [])
+    setOthers(res.contactInfo?.others || [])
+    setAllContactInformation(totalCount)
     enterpriseDetailAPI({ gid: res.gid, pageNum: 1, pageSize: 3 }, res => {
       if (res.success) {
         setCompanyDetail(res.data)
@@ -264,7 +295,7 @@ function Index() {
           <View className="popup_header_title">无效线索原因</View>
           <Image onClick={() => setIsShowInvalid(false)} src="http://36.141.100.123:10013/glks/assets/enterprise/enterprise14.png" className="popup_header_img" />
         </View>
-        <View className="invalid_content">不匹配原因不匹配原因不匹配原因不匹配原因不匹配原因不匹配原因不匹配原因不匹配原因不匹配原因</View>
+        <View className="invalid_content">不匹配原因不匹配原因不匹配原因不匹配原因不匹配原因不匹配原因不匹配原因不匹配原因不匹配原因不匹配原因</View>
         <View onClick={() => setShowRestoreDialog(true)} className="invalid_content_button">
           恢复
         </View>
@@ -304,9 +335,200 @@ function Index() {
         </View>
       </Popup>
 
+      {/* 联系人 */}
+      <Popup position="bottom" style={{ maxHeight: '95%', minHeight: '95%' }} visible={isShowPhone} onClose={() => setIsShowPhone(false)}>
+        <View className="popup_header">
+          <View className="popup_header_title">联系人</View>
+          <Image onClick={() => setIsShowPhone(false)} src="http://36.141.100.123:10013/glks/assets/enterprise/enterprise14.png" className="popup_header_img" />
+        </View>
+        <Tabs
+          value={tabValue}
+          onChange={(value: number) => {
+            setTabValue(value)
+          }}
+        >
+          {tabList.map(item => (
+            <Tabs.TabPane key={item.id} title={item.name}>
+              {tabValue === 0 && (
+                <>
+                  <View className="tab_content">
+                    {phoneInfo.map((item, index) => (
+                      <View className="tab_content_item" key={item} onClick={() => Taro.makePhoneCall({ phoneNumber: item })}>
+                        <View className="tab_content_item_one">
+                          <View className="modile">{item}</View>
+                          {index < 3 ? <View className="recommend">推荐</View> : null}
+                        </View>
+                        <View className="tab_content_item_two">
+                          <View className="name">- -</View>
+                          <View className="position">- -</View>
+                          <View className="security">
+                            <Image src="http://36.141.100.123:10013/glks/assets/enterprise/enterprise12.png" className="security_img" />
+                            <View className="security_dot"></View>
+                            <View className="security_text">未检测</View>
+                          </View>
+                        </View>
+                        <View className="tab_content_item_three">
+                          <Text style={{ color: '#333333' }}>来自：</Text> - -
+                        </View>
+                        {index < 3 ? (
+                          <View className="tab_content_item_four">
+                            <Image src="http://36.141.100.123:10013/glks/assets/enterprise/enterprise13.png" className="tab_content_item_four_img" />
+                            <Image src="http://36.141.100.123:10013/glks/assets/enterprise/enterprise13.png" className="tab_content_item_four_img" />
+                            <Image src="http://36.141.100.123:10013/glks/assets/enterprise/enterprise13.png" className="tab_content_item_four_img" />
+                          </View>
+                        ) : null}
+                      </View>
+                    ))}
+                  </View>
+                </>
+              )}
+              {tabValue === 1 && (
+                <>
+                  <View className="tab_content">
+                    {phoneInfo.map(item => (
+                      <View className="tab_content_item">
+                        <View className="tab_content_item_one">
+                          <View className="modile">{item}</View>
+                          <View className="recommend">推荐</View>
+                        </View>
+                        <View className="tab_content_item_two">
+                          <View className="name">- -</View>
+                          <View className="position">- -</View>
+                          <View className="security">
+                            <Image src="http://36.141.100.123:10013/glks/assets/enterprise/enterprise12.png" className="security_img" />
+                            <View className="security_dot"></View>
+                            <View className="security_text">未检测</View>
+                          </View>
+                        </View>
+                        <View className="tab_content_item_three">
+                          <Text style={{ color: '#333333' }}>来自：</Text> - -
+                        </View>
+                        <View className="tab_content_item_four">
+                          <Image src="http://36.141.100.123:10013/glks/assets/enterprise/enterprise13.png" className="tab_content_item_four_img" />
+                          <Image src="http://36.141.100.123:10013/glks/assets/enterprise/enterprise13.png" className="tab_content_item_four_img" />
+                          <Image src="http://36.141.100.123:10013/glks/assets/enterprise/enterprise13.png" className="tab_content_item_four_img" />
+                        </View>
+                      </View>
+                    ))}
+                  </View>
+                </>
+              )}
+              {tabValue === 2 && (
+                <>
+                  <View className="tab_content">
+                    {emails.map(item => (
+                      <View className="tab_content_item" key={item} onClick={() => Taro.setClipboardData({ data: item })}>
+                        <View className="tab_content_item_one">
+                          <View className="modile">{item}</View>
+                          <View className="recommend">推荐</View>
+                        </View>
+                        <View className="tab_content_item_two">
+                          <View className="name">- -</View>
+                          <View className="position">- -</View>
+                          <View className="security">
+                            <Image src="http://36.141.100.123:10013/glks/assets/enterprise/enterprise12.png" className="security_img" />
+                            <View className="security_dot"></View>
+                            <View className="security_text">未检测</View>
+                          </View>
+                        </View>
+                        <View className="tab_content_item_three">
+                          <Text style={{ color: '#333333' }}>来自：</Text> - -
+                        </View>
+                        <View className="tab_content_item_four">
+                          <Image src="http://36.141.100.123:10013/glks/assets/enterprise/enterprise13.png" className="tab_content_item_four_img" />
+                          <Image src="http://36.141.100.123:10013/glks/assets/enterprise/enterprise13.png" className="tab_content_item_four_img" />
+                          <Image src="http://36.141.100.123:10013/glks/assets/enterprise/enterprise13.png" className="tab_content_item_four_img" />
+                        </View>
+                      </View>
+                    ))}
+                  </View>
+                </>
+              )}
+              {tabValue === 3 && (
+                <>
+                  <View className="tab_content">
+                    {phoneInfo.map(item => (
+                      <View className="tab_content_item">
+                        <View className="tab_content_item_one">
+                          <View className="modile">{item}</View>
+                          <View className="recommend">推荐</View>
+                        </View>
+                        <View className="tab_content_item_two">
+                          <View className="name">- -</View>
+                          <View className="position">- -</View>
+                          <View className="security">
+                            <Image src="http://36.141.100.123:10013/glks/assets/enterprise/enterprise12.png" className="security_img" />
+                            <View className="security_dot"></View>
+                            <View className="security_text">未检测</View>
+                          </View>
+                        </View>
+                        <View className="tab_content_item_three">
+                          <Text style={{ color: '#333333' }}>来自：</Text> - -
+                        </View>
+                        <View className="tab_content_item_four">
+                          <Image src="http://36.141.100.123:10013/glks/assets/enterprise/enterprise13.png" className="tab_content_item_four_img" />
+                          <Image src="http://36.141.100.123:10013/glks/assets/enterprise/enterprise13.png" className="tab_content_item_four_img" />
+                          <Image src="http://36.141.100.123:10013/glks/assets/enterprise/enterprise13.png" className="tab_content_item_four_img" />
+                        </View>
+                      </View>
+                    ))}
+                  </View>
+                </>
+              )}
+              {tabValue === 4 && (
+                <>
+                  <View className="tab_content">
+                    {phoneInfo.map(item => (
+                      <View className="tab_content_item">
+                        <View className="tab_content_item_one">
+                          <View className="modile">{item}</View>
+                          <View className="recommend">推荐</View>
+                        </View>
+                        <View className="tab_content_item_two">
+                          <View className="name">- -</View>
+                          <View className="position">- -</View>
+                          <View className="security">
+                            <Image src="http://36.141.100.123:10013/glks/assets/enterprise/enterprise12.png" className="security_img" />
+                            <View className="security_dot"></View>
+                            <View className="security_text">未检测</View>
+                          </View>
+                        </View>
+                        <View className="tab_content_item_three">
+                          <Text style={{ color: '#333333' }}>来自：</Text> - -
+                        </View>
+                        <View className="tab_content_item_four">
+                          <Image src="http://36.141.100.123:10013/glks/assets/enterprise/enterprise13.png" className="tab_content_item_four_img" />
+                          <Image src="http://36.141.100.123:10013/glks/assets/enterprise/enterprise13.png" className="tab_content_item_four_img" />
+                          <Image src="http://36.141.100.123:10013/glks/assets/enterprise/enterprise13.png" className="tab_content_item_four_img" />
+                        </View>
+                      </View>
+                    ))}
+                  </View>
+                </>
+              )}
+            </Tabs.TabPane>
+          ))}
+        </Tabs>
+      </Popup>
+
       <View className="enterpriseContent_item">
         <View className="enterpriseContent_item_top">
-          <Image src="http://36.141.100.123:10013/glks/assets/enterprise/enterprise11.png" className="enterpriseContent_item_Img" />
+          {company.logo ? (
+            // 判断是否为图片链接（包含http或https）
+            company.logo.includes('http') ? (
+              <Image src={company.logo} className="enterpriseContent_item_Img" />
+            ) : (
+              // 如果是文字，显示文字
+              <Text style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#1B5BFF', color: '#fff', borderRadius: '8rpx', fontSize: '24rpx', textAlign: 'center', padding: '8rpx', boxSizing: 'border-box' }} className="enterpriseContent_item_Img">
+                {company.logo}
+              </Text>
+            )
+          ) : (
+            // 如果为空，显示"暂无"
+            <Text className="enterpriseContent_item_Img" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#1B5BFF', color: '#fff', borderRadius: '8rpx', fontSize: '24rpx' }}>
+              暂无
+            </Text>
+          )}
           <View className="enterpriseContent_item_Text">
             <View className="title">{company.name}</View>
             <View className="enterpriseContent_item_tag">
@@ -367,8 +589,12 @@ function Index() {
         <View className="enterpriseContent_item_product_phone">
           <View className="phone_left">
             <Image src="http://36.141.100.123:10013/glks/assets/corpDetail/corpDetail20.png" className="phone_left_img" />
-            <View className="phone_text">0772-3750099</View>
-            <View className="phone_more">全部456</View>
+            <View className="phone_text" onClick={() => Taro.makePhoneCall({ phoneNumber: phoneInfo[0] })}>
+              {phoneInfo[0]}
+            </View>
+            <View className="phone_more" onClick={() => setIsShowPhone(true)}>
+              全部{allContactInformation}
+            </View>
           </View>
           <View className="phone_right">
             <View className="phone_right_item">
@@ -599,7 +825,22 @@ function Index() {
             return (
               <View className="peer_content_item" key={simIndex}>
                 <View className="peer_content_item_top">
-                  {item.logo ? <Image src={item.logo} className="peer_content_item_img" /> : <Image src="http://36.141.100.123:10013/glks/assets/corpDetail/corpDetail17.png" className="peer_content_item_img" />}
+                  {item.logo ? (
+                    // 判断是否为图片链接（包含http或https）
+                    item.logo.includes('http') ? (
+                      <Image src={item.logo} className="peer_content_item_img" />
+                    ) : (
+                      // 如果是文字，显示文字
+                      <Text style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#1B5BFF', color: '#fff', borderRadius: '8rpx', fontSize: '24rpx', textAlign: 'center', padding: '8rpx', boxSizing: 'border-box' }} className="peer_content_item_img">
+                        {item.logo}
+                      </Text>
+                    )
+                  ) : (
+                    // 如果为空，显示"暂无"
+                    <Text className="peer_content_item_img" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#1B5BFF', color: '#fff', borderRadius: '8rpx', fontSize: '24rpx' }}>
+                      暂无
+                    </Text>
+                  )}
                   <View className="peer_content_item_text">{item.name}</View>
                 </View>
                 <View className="peer_content_item_bottom">主营：{item.alias}</View>

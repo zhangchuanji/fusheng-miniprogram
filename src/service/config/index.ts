@@ -1,5 +1,6 @@
 export const TIME_OUT = 120000
-export const BASE_URL = 'http://192.168.110.35:10017'
+
+export const BASE_URL = 'http://192.168.110.20:10017'
 
 // 上传文件
 export const uploadFileURL = '/infra/file/upload'
@@ -56,6 +57,8 @@ export const aiMessageCreateURL = '/fs/ai-message/create'
 export const aiMessageEvaluationCreateURL = '/fs/ai-message-evaluation/create'
 // 添加收藏
 export const userFavoriteCreateURL = '/fs/user-favorite/create'
+// 删除收藏
+export const userFavoriteDeleteURL = '/fs/user-favorite/delete'
 // 获取收藏列表
 export const userFavoriteListURL = '/fs/user-favorite/list'
 

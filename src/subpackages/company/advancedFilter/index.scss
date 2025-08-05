@@ -133,6 +133,25 @@
     justify-content: space-between;
   }
 
+  .searchSelect {
+    width: 100%;
+    height: 84rpx;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-top: 42rpx;
+    box-sizing: border-box;
+
+    .searchSelect_text {
+      width: 90%;
+      font-family: PingFang SC, PingFang SC;
+      font-weight: 400;
+      font-size: 28rpx;
+      color: #333333;
+    }
+  }
+
+
   .searchRange {
     width: 100%;
     display: grid;

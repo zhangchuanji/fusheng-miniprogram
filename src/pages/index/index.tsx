@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react'
-import { Dialog, Popup, Tabs } from '@nutui/nutui-react-taro'
+import { Dialog, Empty, Popup, Tabs } from '@nutui/nutui-react-taro'
 import { View, Image, ScrollView } from '@tarojs/components'
 import Taro, { nextTick } from '@tarojs/taro'
 import './index.scss'
@@ -10,10 +10,22 @@ import { Setting, Star, TriangleDown, TriangleUp } from '@nutui/icons-react-taro
 import { aiSessionGetHistorySessionAPI, aiSessionListAPI, userFavoriteListAPI } from '@/api/chatMsg'
 import { useAppSelector } from '@/hooks/useAppStore'
 import AiMessageComponent from '@/components/AiMessageComponent'
+import { useAppDispatch } from '@/hooks/useAppStore'
+import { getSessionListAsync, getFavoriteListAsync } from '@/redux/asyncs/conversation'
+import { useDebounce } from '@/hooks/useDebounce' // 添加防抖 hook 导入
+import { IConversation } from '@/redux/modules/conversation'
 
 function Index() {
+  const dispatch = useAppDispatch()
   const userInfo = useAppSelector(state => state.login.userInfo)
-  const { getExampleData, exampleData } = useExampleActions()
+  // 获取conversation相关状态
+  const {
+    conversations, // 会话列表数据
+    favorites, // 收藏列表数据
+    loading, // 加载状态
+    currentConversationId // 当前会话ID
+  } = useAppSelector(state => state.conversation)
+
   const [capsuleInfo, setCapsuleInfo] = useState({ height: 32, statusBarHeight: 0 })
   const [activeIndex, setActiveIndex] = useState(0)
   const [showSetting, setShowSetting] = useState(false)
@@ -24,8 +36,6 @@ function Index() {
   // 将单个展开状态改为对象，用于管理每个收藏项的展开状态
   const [expandedItems, setExpandedItems] = useState<{ [key: number]: boolean }>({})
   const handleActiveIndex = idx => setActiveIndex(idx)
-  const [historySession, setHistorySession] = useState<any[]>([])
-  const [favoriteSession, setFavoriteSession] = useState<any[]>([]) // 收藏会话
 
   // 添加ref来调用子组件方法
   const aiChatRef = useRef<any>(null)
@@ -36,7 +46,7 @@ function Index() {
     // 获取系统信息
     const systemInfo = Taro.getSystemInfoSync()
 
-    if (!Taro.getStorageSync('companyInfo') || !Taro.getStorageSync('companyInfo').expansionDomainKeywords) {
+    if (!Taro.getStorageSync('companyInfo') || !Taro.getStorageSync('companyInfo').expansionDomainKeywordsSelected || Taro.getStorageSync('companyInfo').expansionDomainKeywordsSelected.length === 0) {
       setCompanyShow(true)
     }
 
@@ -63,46 +73,23 @@ function Index() {
   }
 
   const getSession = () => {
-    aiSessionListAPI({ userId: userInfo?.id }, res => {
-      if (res.success && res.data) {
-        const convertedData = Object.entries(res.data).map(([name, list]) => ({
-          name,
-          list: list as any[]
-        }))
-        setHistorySession(convertedData)
-      } else {
-      }
-    })
+    dispatch(getSessionListAsync())
   }
 
   const getFavoriteList = () => {
-    userFavoriteListAPI({ userId: userInfo?.id }, res => {
-      if (res.success && res.data) {
-        const favoriteList = res.data.map((item: any) => ({
-          ...item,
-          role: 'ai',
-          apiStatus: {
-            textComplete: true,
-            companyComplete: true
-          },
-          content: item.contentSummary,
-          companyList: JSON.parse(item.enterpriseInfo).companyList,
-          splitNum: JSON.parse(item.enterpriseInfo).splitNum,
-          total: JSON.parse(item.enterpriseInfo).total
-        }))
-        console.log(favoriteList)
-
-        setFavoriteSession(favoriteList)
-      } else {
-      }
-    })
+    dispatch(getFavoriteListAsync())
   }
 
   useEffect(() => {
-    getExampleData({
-      pageNo: 1,
-      pageSize: 10
+    Taro.eventCenter.on('addSession', res => {
+      if (res) {
+        setActiveIndex(0)
+      }
     })
+
+    return () => {
+      Taro.eventCenter.off('addSession')
+    }
   }, [])
 
   // 当userInfo加载完成后调用getSession
@@ -112,11 +99,6 @@ function Index() {
       getFavoriteList()
     }
   }, [userInfo])
-
-  // 监听historySession的变化
-  useEffect(() => {
-    console.log('historySession changed:', historySession)
-  }, [historySession])
 
   useEffect(() => {
     nextTick(() => {
@@ -153,11 +135,20 @@ function Index() {
     setCompanyShow(false)
   }
 
-  const goNew = () => {
+  // 原始的 getAiSession 调用函数
+  const handleGetAiSession = () => {
     if (aiChatRef.current && aiChatRef.current.getAiSession) {
       aiChatRef.current.getAiSession()
     } else {
+      Taro.eventCenter.trigger('addMsg', true)
     }
+  }
+
+  // 创建防抖版本的函数，延迟 300ms
+  const debouncedGetAiSession = useDebounce(handleGetAiSession, 300)
+
+  const goNew = () => {
+    debouncedGetAiSession() // 使用防抖版本
   }
 
   // 修改展开收起函数，接收索引参数
@@ -171,9 +162,12 @@ function Index() {
   const getChatItem = (chatItem: any) => {
     aiSessionGetHistorySessionAPI({ id: chatItem.id }, res => {
       if (res.success && res.data) {
-        Taro.eventCenter.trigger('getChatItem', res.data)
-        Taro.setStorageSync('aiSessionId', chatItem.id)
-        setShowSetting(false)
+        setActiveIndex(0)
+        nextTick(() => {
+          Taro.eventCenter.trigger('getChatItem', res.data)
+          Taro.setStorageSync('aiSessionId', chatItem.id)
+          setShowSetting(false)
+        })
       }
     })
   }
@@ -221,10 +215,10 @@ function Index() {
             >
               <Tabs.TabPane title="问答记录">
                 <ScrollView enhanced showScrollbar={false} scrollY className="scrollView">
-                  {historySession &&
-                    historySession.length > 0 &&
-                    historySession.map(item => (
-                      <View key={item.name}>
+                  {conversations &&
+                    conversations.length > 0 &&
+                    conversations.map((item: IConversation, index) => (
+                      <View key={index}>
                         <View className="item-date">{item.name}</View>
                         {item.list &&
                           item.list.length > 0 &&
@@ -235,13 +229,27 @@ function Index() {
                           ))}
                       </View>
                     ))}
+                  {(!conversations || conversations.length === 0) && (
+                    <Empty
+                      description="暂无问答记录"
+                      image={
+                        <Image
+                          style={{
+                            width: '100%',
+                            height: '100%'
+                          }}
+                          src="http://36.141.100.123:10013/glks/assets/emptyImg.png"
+                        />
+                      }
+                    />
+                  )}
                 </ScrollView>
               </Tabs.TabPane>
               <Tabs.TabPane title="我的收藏">
                 <ScrollView enhanced showScrollbar={false} scrollY className="scrollView">
-                  {favoriteSession &&
-                    favoriteSession.length > 0 &&
-                    favoriteSession.map((item: any, index: any) => {
+                  {favorites &&
+                    favorites.length > 0 &&
+                    favorites.map((item: any, index: any) => {
                       const isExpanded = expandedItems[index] || false
                       return (
                         <View key={index}>
@@ -289,6 +297,20 @@ function Index() {
                         </View>
                       )
                     })}
+                  {(!favorites || favorites.length === 0) && (
+                    <Empty
+                      description="暂无收藏记录"
+                      image={
+                        <Image
+                          style={{
+                            width: '100%',
+                            height: '100%'
+                          }}
+                          src="http://36.141.100.123:10013/glks/assets/emptyImg.png"
+                        />
+                      }
+                    />
+                  )}
                 </ScrollView>
               </Tabs.TabPane>
             </Tabs>
@@ -310,8 +332,13 @@ function Index() {
           </View>
         </View>
       </Dialog>
-      {activeIndex === 0 && <AiChat ref={aiChatRef} height={totalHeight} />}
-      {activeIndex === 1 && <CluePage height={totalHeight} />}
+      <View style={{ display: activeIndex === 0 ? 'block' : 'none' }}>
+        <AiChat ref={aiChatRef} height={totalHeight} />
+      </View>
+
+      <View style={{ display: activeIndex === 1 ? 'block' : 'none' }}>
+        <CluePage height={totalHeight} />
+      </View>
     </View>
   )
 }

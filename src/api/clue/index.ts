@@ -63,8 +63,7 @@ export const clueCreateAPI = (data: any, callback: (res: IResponse<any>) => void
 // 删除线索
 export const clueDeleteAPI = (data: any, callback: (res: IResponse<any>) => void) => {
   taroDelete({
-    url: clueDeleteURL,
-    data,
+    url: clueDeleteURL + '?id=' + data.id,
     success: (res: any) => {
       callback({
         success: true,

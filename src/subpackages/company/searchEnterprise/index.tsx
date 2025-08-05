@@ -1,8 +1,9 @@
-import React, { useEffect, useState, useCallback } from 'react'
+import React, { useEffect, useState, useCallback, useMemo } from 'react'
 import { Checkbox, InfiniteLoading, Radio, Popup, Cell, Button, Tabs, TextArea, SearchBar } from '@nutui/nutui-react-taro'
 import { View, Image, Text } from '@tarojs/components'
 import { Add, ArrowDown } from '@nutui/icons-react-taro'
-import Taro, { options } from '@tarojs/taro'
+import Taro, { useLoad } from '@tarojs/taro'
+import { clueCreateAPI, clueDeleteAPI } from '@/api/clue'
 import './index.scss'
 import CustomDialog from '@/components/CustomDialog'
 
@@ -13,7 +14,10 @@ function Index() {
 
   // ==================== 列表数据状态 ====================
   const [customHasMore, setCustomHasMore] = useState(true) // 是否还有更多数据
-  const [customList, setCustomList] = useState<any[]>([{}, {}]) // 企业列表数据
+  const [leadStatus, setLeadStatus] = useState<{ [key: string]: boolean }>({}) // 每条线索的状态管理
+  const [currentOperatingItem, setCurrentOperatingItem] = useState<any>(null) // 当前操作的线索项
+  const [customList, setCustomList] = useState<any[]>([]) // 企业列表数据
+  const [filteredCustomList, setFilteredCustomList] = useState<any[]>([]) // 过滤后的企业列表数据
 
   // ==================== 弹窗显示状态 ====================
   const [isShowPhone, setIsShowPhone] = useState(false) // 联系人弹窗
@@ -22,10 +26,15 @@ function Index() {
   const [isShowInvalid, setIsShowInvalid] = useState(false) // 无效线索原因弹窗
   const [showCustomDialog, setShowCustomDialog] = useState(false) // 自定义确认弹窗
   const [showRestoreDialog, setShowRestoreDialog] = useState(false) // 恢复确认弹窗
+  const [phoneInfo, setPhoneInfo] = useState<any[]>([]) // 手机号
+  const [fixedLines, setFixedLines] = useState<any[]>([]) // 固话
+  const [emails, setEmails] = useState<any[]>([]) // 邮箱
+  const [address, setAddress] = useState<any[]>([]) // 地址
+  const [others, setOthers] = useState<any[]>([]) // 其他
 
   // ==================== 线索操作状态 ====================
   const [isShowAdd, setIsShowAdd] = useState(true) // 是否显示加入线索按钮
-  const [dialogType, setDialogType] = useState<'add' | 'remove'>('add') // 弹窗类型：添加/移除
+  const [dialogType, setDialogType] = useState<'add' | 'remove' | 'batchAdd'>('add') // 弹窗类型：添加/移除
 
   // ==================== 点赞点踩状态 ====================
   const [isLiked, setIsLiked] = useState(false) // 是否已点赞
@@ -38,13 +47,23 @@ function Index() {
 
   // ==================== 标签页相关状态 ====================
   const [tabValue, setTabValue] = useState(0) // 当前选中的标签页
-  const [tabList, setTabList] = useState([
-    { id: 1, name: '手机号 148' },
-    { id: 2, name: '固话 148' },
-    { id: 3, name: '邮箱 148' },
-    { id: 4, name: '地址 148' },
-    { id: 5, name: '其他 148' }
-  ]) // 标签页列表
+  const tabList = useMemo(
+    () => [
+      { id: 1, name: `手机号 ${phoneInfo?.length || 0}` },
+      { id: 2, name: `固话 ${fixedLines?.length || 0}` },
+      { id: 3, name: `邮箱 ${emails?.length || 0}` },
+      { id: 4, name: `地址 ${address?.length || 0}` },
+      { id: 5, name: `其他 ${others?.length || 0}` }
+    ],
+    [phoneInfo, fixedLines, emails, address, others]
+  )
+
+  useLoad(options => {
+    const customList = options?.customList
+    if (customList) {
+      setCustomList(JSON.parse(customList))
+    }
+  })
 
   // ==================== 反馈相关状态 ====================
   const [feedBackValue, setFeedBackValue] = useState('') // 反馈内容
@@ -85,8 +104,39 @@ function Index() {
 
   // 处理搜索
   const handleSearch = () => {
-    console.log(searchValue)
+    if (!searchValue.trim()) {
+      // 如果搜索关键词为空，显示所有数据
+      setFilteredCustomList(customList)
+      return
+    }
+
+    // 模糊搜索逻辑 - 仅搜索 businessScope、industry、name 三个字段
+    const filtered = customList.filter(item => {
+      const searchTerm = searchValue.toLowerCase()
+
+      // 搜索字段：公司名称、行业、经营范围
+      const searchFields = [
+        item.name || '', // 公司名称
+        item.industry || '', // 行业
+        item.businessScope || '' // 经营范围
+      ]
+
+      // 检查是否有任何字段包含搜索关键词
+      return searchFields.some(field => field.toString().toLowerCase().includes(searchTerm))
+    })
+
+    setFilteredCustomList(filtered)
   }
+
+  // 监听搜索值变化，实时搜索
+  useEffect(() => {
+    handleSearch()
+  }, [searchValue, customList])
+
+  // 初始化时设置过滤列表
+  useEffect(() => {
+    setFilteredCustomList(customList)
+  }, [customList])
 
   // ==================== 点赞点踩处理函数 ====================
   // 处理点赞点击
@@ -120,37 +170,53 @@ function Index() {
 
   // ==================== 线索操作处理函数 ====================
   // 处理加入线索点击
-  const handleAddToLeads = (e: any) => {
+  const handleAddToLeads = (e: any, item: any) => {
     e.stopPropagation()
     setDialogType('add')
     setShowCustomDialog(true)
+    setCurrentOperatingItem(item)
   }
 
   // 处理移除线索点击
-  const handleRemoveFromLeads = (e: any) => {
+  const handleRemoveFromLeads = (e: any, item: any) => {
     e.stopPropagation()
     setDialogType('remove')
     setShowCustomDialog(true)
+    // 保存当前操作的线索ID
+    setCurrentOperatingItem(item)
   }
 
   // 处理确认弹窗
   const handleDialogConfirm = () => {
     setShowCustomDialog(false)
-    if (dialogType === 'add') {
-      setIsShowAdd(false)
-      Taro.showToast({
-        title: '已添加线索',
-        icon: 'none',
-        duration: 500
-      })
-    } else {
-      setIsShowAdd(true)
-      Taro.showToast({
-        title: '已移除线索',
-        icon: 'none',
-        duration: 500
-      })
+    if (currentOperatingItem) {
+      const itemId = currentOperatingItem.gid || currentOperatingItem.id || currentOperatingItem.name
+      if (dialogType === 'add') {
+        setLeadStatus(prev => ({ ...prev, [itemId]: false })) // false 表示已加入线索，不显示"加入线索"按钮
+        clueCreateAPI({ unifiedSocialCreditCodes: currentOperatingItem.creditCode }, res => {
+          if (res.success) {
+            Taro.showToast({
+              title: '已添加线索',
+              icon: 'none',
+              duration: 500
+            })
+          }
+        })
+      } else {
+        setLeadStatus(prev => ({ ...prev, [itemId]: true })) // true 表示未加入线索，显示"加入线索"按钮
+        clueDeleteAPI({ unifiedSocialCreditCode: currentOperatingItem.creditCode }, res => {
+          if (res.success) {
+            Taro.showToast({
+              title: '已移除线索',
+              icon: 'none',
+              duration: 500
+            })
+          }
+        })
+      }
+      return
     }
+    setCurrentOperatingItem(null)
   }
 
   // 处理取消弹窗
@@ -160,6 +226,13 @@ function Index() {
       title: '已取消',
       icon: 'none',
       duration: 500
+    })
+  }
+
+  // 企业详情
+  const handleEnterpriseDetail = (item: any) => {
+    Taro.navigateTo({
+      url: '/subpackages/company/enterpriseDetail/index?company=' + JSON.stringify(item)
     })
   }
 
@@ -173,6 +246,18 @@ function Index() {
       title: '已恢复',
       icon: 'none',
       duration: 500
+    })
+  }
+
+  function openPhone(val: any) {
+    setIsShowPhone(true)
+    setPhoneInfo(val?.contactInfo?.phones)
+    setEmails(val.contactInfo.emails)
+  }
+
+  const handleAiResearchReport = (company: any) => {
+    Taro.navigateTo({
+      url: `/subpackages/company/aiResearchReport/index?creditCode=${company.creditCode}`
     })
   }
 
@@ -239,7 +324,7 @@ function Index() {
           <View className="popup_header_title">无效线索原因</View>
           <Image onClick={() => setIsShowInvalid(false)} src="http://36.141.100.123:10013/glks/assets/enterprise/enterprise14.png" className="popup_header_img" />
         </View>
-        <View className="invalid_content">不匹配原因不匹配原因不匹配原因不匹配原因不匹配原因不匹配原因不匹配原因不匹配原因不匹配原因</View>
+        <View className="invalid_content">不匹配原因不匹配原因不匹配原因不匹配原因不匹配原因不匹配原因不匹配原因不匹配原因不匹配原因不匹配原因</View>
         <View onClick={() => setShowRestoreDialog(true)} className="invalid_content_button">
           恢复
         </View>
@@ -426,7 +511,7 @@ function Index() {
       </View>
 
       {/* 筛选内容区域 */}
-      <View className="enterpriseContent" style={{ height: `calc(100vh - ${headerHeight}px)` }}>
+      <View className="enterpriseContent">
         <InfiniteLoading
           target="enterpriseContent"
           loadingText={
@@ -450,76 +535,114 @@ function Index() {
           hasMore={customHasMore}
           onLoadMore={customLoadMore}
         >
-          {customList.map((item, index) => (
-            <View key={index}>
+          {filteredCustomList.map((item: any, index: number) => (
+            <View key={index} onClick={() => handleEnterpriseDetail(item)}>
               <View className="enterpriseContent_item">
                 <View className="enterpriseContent_item_top">
-                  <Image src="http://36.141.100.123:10013/glks/assets/enterprise/enterprise11.png" className="enterpriseContent_item_Img" />
+                  {item.logo ? (
+                    // 判断是否为图片链接（包含http或https）
+                    item.logo.includes('http') ? (
+                      <Image src={item.logo} className="enterpriseContent_item_Img" />
+                    ) : (
+                      // 如果是文字，显示文字
+                      <Text style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#1B5BFF', color: '#fff', borderRadius: '8rpx', fontSize: '24rpx', textAlign: 'center', padding: '8rpx', boxSizing: 'border-box' }} className="enterpriseContent_item_Img">
+                        {item.logo}
+                      </Text>
+                    )
+                  ) : (
+                    // 如果为空，显示"暂无"
+                    <Text className="enterpriseContent_item_Img" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#1B5BFF', color: '#fff', borderRadius: '8rpx', fontSize: '24rpx' }}>
+                      暂无
+                    </Text>
+                  )}
                   <View className="enterpriseContent_item_Text">
-                    <View className="title">杭州XX科技有限公司杭州XX科技有限公司杭州XX科技有限公司杭州XX科技有限公司杭州XX科技有限公司</View>
+                    <View className="title">{item.name}</View>
                     <View className="description">
                       <View className="certification">
                         <Image src="http://36.141.100.123:10013/glks/assets/enterprise/enterprise3.png" className="certification_img" />
-                        <View className="certification_text">认证</View>
+                        <View className="certification_text">官网</View>
                       </View>
-                      <View className="match">匹配80%</View>
+                      <View className="match">匹配{item.score}%</View>
                     </View>
                   </View>
                 </View>
                 <View className="enterpriseContent_item_tag">
-                  <View className="enterpriseContent_item_tag_item">存续</View>
-                  <View className="enterpriseContent_item_tag_item">省级制造业单项冠军企业</View>
-                  <View className="enterpriseContent_item_tag_item">高新企业</View>
-                  <View className="enterpriseContent_item_tag_item">展开</View>
+                  <View className="enterpriseContent_item_tag_item">{item.regStatus}</View>
+                  {item.tags &&
+                    item.tags.length > 0 &&
+                    item.tags.map((tag: any, tagIndex: number) => (
+                      <View key={tagIndex} className="enterpriseContent_item_tag_item">
+                        {tag}
+                      </View>
+                    ))}
                 </View>
                 <View className="enterpriseContent_item_info">
-                  <View className="enterpriseContent_item_info_item">郭雄</View>
-                  <View className="enterpriseContent_item_info_item">10000万人民币</View>
-                  <View className="enterpriseContent_item_info_item">2003-11-10</View>
-                  <View className="enterpriseContent_item_info_item">深圳</View>
+                  <View className="enterpriseContent_item_info_item">{item.legalPerson}</View>
+                  <View className="enterpriseContent_item_info_item">{item.regCapital}</View>
+                  <View className="enterpriseContent_item_info_item">{item.establishTime}</View>
+                  <View className="enterpriseContent_item_info_item">{item.handleLocation}</View>
                 </View>
                 <View className="enterpriseContent_item_product">
-                  <View className={`enterpriseContent_item_product_left${expandedProducts[index] ? ' expanded' : ''}`}>{highlightKeyword('产品与服务：柴油发电机组、驱动电机、新能源发电机、高新能源发电机、驱动电机、新能源发电机、高新能源发电机、驱动电机、新能源发电机、高新能源发电机、驱动电机、新能源发电机、高新能源发电机、驱动电机、新能源发电机、高新能源发电机', searchValue || '电机')}</View>
-                  <View className="enterpriseContent_item_product_right" onClick={() => setExpandedProducts(prev => ({ ...prev, [index]: !prev[index] }))}>
+                  <View className={`enterpriseContent_item_product_left${expandedProducts[index] ? ' expanded' : ''}`}>{highlightKeyword(item.businessScope, searchValue || item.orgType)}</View>
+                  <View
+                    className="enterpriseContent_item_product_right"
+                    onClick={e => {
+                      e.stopPropagation()
+                      setExpandedProducts(prev => ({ ...prev, [index]: !prev[index] }))
+                    }}
+                  >
                     {expandedProducts[index] ? '收起' : '展开'}
                   </View>
                 </View>
                 <View className="enterpriseContent_item_contact">
                   <View className="enterpriseContent_item_contact_item">
-                    <Image src="http://36.141.100.123:10013/glks/assets/enterprise/enterprise5.png" className="enterpriseContent_item_contact_item_img" />
+                    <Image onClick={() => handleAiResearchReport(item)} src="http://36.141.100.123:10013/glks/assets/enterprise/enterprise5.png" className="enterpriseContent_item_contact_item_img" />
                   </View>
-                  <View onClick={() => handleActiveIndex(4)} className="enterpriseContent_item_contact_item">
+                  <View
+                    onClick={e => {
+                      e.stopPropagation()
+                      openPhone(item)
+                    }}
+                    className="enterpriseContent_item_contact_item"
+                  >
                     <Image src="http://36.141.100.123:10013/glks/assets/enterprise/enterprise1.png" className="enterpriseContent_item_contact_item_img" />
-                    电话(112)
+                    电话({item?.contactInfo?.phones.length || 0})
                   </View>
-                  <View onClick={() => handleActiveIndex(5)} className="enterpriseContent_item_contact_item">
+                  <View
+                    onClick={e => {
+                      e.stopPropagation()
+                      handleActiveIndex(5)
+                    }}
+                    className="enterpriseContent_item_contact_item"
+                  >
                     <Image src="http://36.141.100.123:10013/glks/assets/enterprise/enterprise2.png" className="enterpriseContent_item_contact_item_img" />
-                    地址(2)
+                    地址({address?.length || 0})
                   </View>
                 </View>
                 <View className="enterpriseContent_item_bottom">
                   <View className="enterpriseContent_item_bottom_left">
                     {!isDisliked && (
                       <View onClick={handleLike} className={`enterpriseContent_item_bottom_left_good ${isLiked ? 'liked' : ''} ${showHeartbeat ? 'heartbeat' : ''}`}>
-                        <Image src="http://36.141.100.123:10013/glks/assets/enterprise/enterprise6.png" className="enterpriseContent_item_bottom_left_good_img" />
+                        <Image src={!isLiked ? 'http://36.141.100.123:10013/glks/assets/enterprise/enterprise8.png' : 'http://36.141.100.123:10013/glks/assets/enterprise/enterprise6.png'} className="enterpriseContent_item_bottom_left_good_img" />
                         <Text className="enterpriseContent_item_bottom_left_good_text">有效</Text>
                       </View>
                     )}
                     {!isLiked && (
                       <View onClick={handleDislike} className={`enterpriseContent_item_bottom_left_bad ${isDisliked ? 'disliked' : ''} ${showShake ? 'shake' : ''}`}>
-                        <Image src="http://36.141.100.123:10013/glks/assets/enterprise/enterprise7.png" className="enterpriseContent_item_bottom_left_bad_img" />
+                        <Image src={!isDisliked ? 'http://36.141.100.123:10013/glks/assets/enterprise/enterprise9.png' : 'http://36.141.100.123:10013/glks/assets/enterprise/enterprise7.png'} className="enterpriseContent_item_bottom_left_bad_img" />
                         <Text className="enterpriseContent_item_bottom_left_bad_text">无效线索</Text>
                         {isDisliked && <ArrowDown color="#8E8E8E" style={{ width: '28rpx', height: '28rpx', marginLeft: '6rpx' }} />}
                       </View>
                     )}
                   </View>
-                  {isShowAdd ? (
-                    <View onClick={handleAddToLeads} className="enterpriseContent_item_bottom_right">
+                  {/* 获取当前线索的状态，默认为 true（显示加入线索按钮） */}
+                  {leadStatus[item.gid || item.id || item.name] !== false ? (
+                    <View onClick={e => handleAddToLeads(e, item)} className="enterpriseContent_item_bottom_right">
                       <Add color="#fff" style={{ marginRight: '12rpx', width: '32rpx', height: '32rpx' }} />
                       <Text className="enterpriseContent_item_bottom_right_add_text">加入线索</Text>
                     </View>
                   ) : (
-                    <View onClick={handleRemoveFromLeads} className="remove">
+                    <View onClick={e => handleRemoveFromLeads(e, item)} className="remove">
                       <Text className="remove_text">移除</Text>
                       <View className="remove_icon"></View>
                     </View>

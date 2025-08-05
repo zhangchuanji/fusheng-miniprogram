@@ -1,4 +1,4 @@
-import { refreshTokenAPI } from '@/api/login'
+import {} from '@/api/login'
 import { BASE_URL, TIME_OUT } from './config'
 import TaroRequest from './request'
 import { appURL } from './url'
@@ -27,7 +27,6 @@ const createTaroRequest = (baseURL: string) => {
         return config
       },
       requestFailureFn: error => {
-        console.log('Taro请求失败', error)
         return error
         // return Promise.reject(error)
       },
@@ -40,13 +39,7 @@ const createTaroRequest = (baseURL: string) => {
             Taro.reLaunch({
               url: '/pages/login/index'
             })
-            refreshTokenAPI({ refreshToken: Taro.getStorageSync('token').refreshToken }, response => {
-              if (response.success) {
-                // 刷新成功，更新token和登录时间
-                Taro.setStorageSync('token', response.data)
-                Taro.setStorageSync('loginTime', Date.now())
-              }
-            })
+            Taro.clearStorageSync()
             return res.data
           } else {
             throw res.data
@@ -56,7 +49,6 @@ const createTaroRequest = (baseURL: string) => {
         }
       },
       responseFailureFn: error => {
-        console.log('Taro响应失败', error)
         return error
         // return Promise.reject(error)
       }

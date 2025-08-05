@@ -93,9 +93,6 @@ function EditFollowPage() {
 
   // 获取跟进详情数据
   useEffect(() => {
-    console.log(1)
-    console.log(id)
-
     if (id) {
       setIsEditMode(true)
       fetchFollowUpDetail()
@@ -113,7 +110,6 @@ function EditFollowPage() {
       setLoading(false)
       if (res.success && res.data) {
         const detail = res.data
-        console.log('获取到的详情数据:', detail) // 调试日志
 
         // 设置表单数据 - 修复数据映射
         setFormData(prev => ({
@@ -151,7 +147,6 @@ function EditFollowPage() {
 
         // 设置文件列表 - 修复文件数据映射
         if (detail.followUpFileList && detail.followUpFileList.length > 0) {
-          console.log('detail.followUpFileList', detail.followUpFileList)
 
           const fileList = detail.followUpFileList.map((file, index) => ({
             fileId: Date.now() + index,
@@ -162,7 +157,6 @@ function EditFollowPage() {
             status: 'completed' as const,
             url: file.url || file.filePath
           }))
-          console.log('fileList', fileList)
           setFollowUpFileList(fileList)
           setFormData(prev => ({ ...prev, followUpFileList: fileList }))
         } else if (detail.fileList && detail.fileList.length > 0) {
@@ -431,7 +425,6 @@ function EditFollowPage() {
           fileName: fileItem.name
         },
         success: res => {
-          console.log('上传成功:', res)
           if (progressInterval) {
             clearInterval(progressInterval)
           }
@@ -489,7 +482,6 @@ function EditFollowPage() {
   }
 
   const onInputClick = (field: any) => {
-    console.log(field, 'onInputClick')
 
     // 编辑模式下跟进时间不可修改
     if (isEditMode && field === 'followUpTime') {

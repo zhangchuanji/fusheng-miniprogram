@@ -16,7 +16,6 @@ function Index() {
       sizeType: ['original', 'compressed'],
       sourceType: ['album', 'camera'],
       success: res => {
-        console.log('选择图片成功:', res)
         // 处理选中的图片
         if (res.tempFilePaths && res.tempFilePaths.length > 0) {
           setImage([...image, ...res.tempFilePaths]) // 设置第一张图片
@@ -25,11 +24,9 @@ function Index() {
       fail: err => {
         // 用户取消选择图片是正常行为，不需要当作错误处理
         if (err.errMsg && err.errMsg.includes('cancel')) {
-          console.log('用户取消选择图片')
           return
         }
         // 其他错误才需要处理
-        console.log('选择图片失败:', err)
         Taro.showToast({
           title: '选择图片失败',
           icon: 'none'

@@ -104,42 +104,65 @@
     background: #fff;
     border-top-left-radius: 32rpx;
     border-top-right-radius: 32rpx;
-    padding: 48rpx 32rpx 32rpx 32rpx;
+    padding: 30rpx 0;
+    padding-bottom: 46rpx;
     box-sizing: border-box;
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    position: relative;
 }
 
 .changePhone-modal-header {
+    width: 100%;
     display: flex;
-    justify-content: space-between;
     align-items: center;
-    margin-bottom: 32rpx;
+    justify-content: center;
+    height: 60rpx;
+    margin-bottom: 10rpx;
+    text-align: center;
 }
 
 .changePhone-modal-title {
     font-size: 28rpx;
     color: #333;
+    font-family: PingFang SC, PingFang SC;
+    font-weight: 600;
+    font-size: 32rpx;
+    color: #333333;
 }
 
 .changePhone-modal-close {
-    font-size: 36rpx;
-    color: #999;
+    width: 50rpx;
+    height: 50rpx;
+    position: absolute;
+    top: 36rpx;
+    right: 32rpx;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
 }
 
 .changePhone-modal-content {
-    color: #666;
+    width: 280rpx;
+    font-family: PingFang SC, PingFang SC;
+    font-weight: 500;
     font-size: 28rpx;
-    margin-bottom: 32rpx;
+    color: #666666;
+    margin-bottom: 36rpx;
+    text-align: center;
 }
 
 .changePhone-modal-btn {
-    width: 100%;
+    width: 354rpx;
+    height: 76rpx;
     background: #2156FE;
-    border-radius: 48rpx;
-    height: 96rpx;
+    border-radius: 296rpx;
+    font-family: PingFang SC, PingFang SC;
+    font-weight: 500;
+    font-size: 32rpx;
+    color: #FFFFFF;
     display: flex;
     align-items: center;
     justify-content: center;
-    color: #fff;
-    font-size: 32rpx;
-    font-weight: 500;
 }

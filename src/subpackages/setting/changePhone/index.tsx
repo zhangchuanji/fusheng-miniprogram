@@ -2,13 +2,16 @@ import React, { useState } from 'react'
 import { View, Text, Input } from '@tarojs/components'
 import Taro from '@tarojs/taro'
 import { useAppSelector } from '@/hooks/useAppStore'
-import { sendSmsCodeAPI, validateSmsCodeAPI } from '@/api/login'
-
-import './index.scss'
+import { loginByInfoAPI, sendSmsCodeAPI, validateSmsCodeAPI } from '@/api/login'
+import { useAppDispatch } from '@/hooks/useAppStore'
+import { userInfoAction } from '@/redux/modules/login'
 import { updateMobileAPI } from '@/api/setting'
+import './index.scss'
+import { CheckClose } from '@nutui/icons-react-taro'
 
 function Index() {
   const userInfo = useAppSelector(state => state.login.userInfo)
+  const dispatch = useAppDispatch()
 
   // 0: 输入原手机号  1: 已绑定手机号  2: 安全校验
   const [step, setStep] = useState(0)
@@ -26,6 +29,8 @@ function Index() {
     sendSmsCodeAPI({ mobile: phone, scene: 2 }, res => {
       if (res.success) {
         Taro.showToast({ title: '验证码已发送', icon: 'none' })
+      } else {
+        Taro.showToast({ title: res.data.msg, icon: 'none' })
       }
       setCountdown(60)
       const timer = setInterval(() => {
@@ -43,9 +48,11 @@ function Index() {
   // 发送验证码
   const handleNewSendCode = () => {
     if (newCountdown > 0) return
-    sendSmsCodeAPI({ mobile: phone, scene: 2 }, res => {
+    sendSmsCodeAPI({ mobile: newPhone, scene: 2 }, res => {
       if (res.success) {
         Taro.showToast({ title: '验证码已发送', icon: 'none' })
+      } else {
+        Taro.showToast({ title: res.data.msg, icon: 'none' })
       }
       setNewCountdown(60)
       const timer = setInterval(() => {
@@ -98,15 +105,25 @@ function Index() {
       Taro.showToast({ title: '请输入新手机号和验证码', icon: 'none' })
       return
     }
-    validateSmsCodeAPI({ mobile: newPhone, code: newCode, scene: 2 }, res => {
-      if (res.success && res.data) {
-        updateMobileAPI({ mobile: newPhone, code: newCode, oldCode: code }, res => {
+    updateMobileAPI({ mobile: newPhone, code: newCode, oldCode: undefined }, res => {
+      if (res.success) {
+        Taro.showToast({ title: '更换成功', icon: 'success' })
+        loginByInfoAPI(res => {
           if (res.success) {
-            Taro.showToast({ title: '更换成功', icon: 'success' })
+            dispatch(userInfoAction({ type: 'set', data: res.data }))
+            Taro.hideLoading()
+            setStep(1)
           } else {
-            Taro.showToast({ title: res.data.msg || '更换失败', icon: 'success' })
+            Taro.hideLoading()
+            Taro.showToast({
+              title: '获取信息失败，请重试',
+              icon: 'none',
+              duration: 2000
+            })
           }
         })
+      } else {
+        Taro.showToast({ title: res.data.msg || '更换失败', icon: 'success' })
       }
     })
   }
@@ -114,6 +131,12 @@ function Index() {
   // 弹窗关闭
   const handleModalClose = () => {
     setShowModal(false)
+  }
+
+  const copyPhone = () => {
+    Taro.setClipboardData({
+      data: '400-400-400'
+    })
   }
 
   return (
@@ -124,7 +147,7 @@ function Index() {
           <View className="changePhone-title">请输入原手机号</View>
           <View className="changePhone-input-group">
             <View className="changePhone-input-row">
-              <Input className="changePhone-input" placeholder="请输入原手机号" value={phone} onInput={e => setPhone(e.detail.value)} type="number" />
+              <Input className="changePhone-input" disabled placeholder="请输入原手机号" value={phone} onInput={e => setPhone(e.detail.value)} type="number" />
               <Text className="changePhone-send-code" onClick={handleSendCode}>
                 {countdown > 0 ? `${countdown}s后重新获取` : '发送验证码'}
               </Text>
@@ -136,7 +159,9 @@ function Index() {
           <View className="changePhone-btn" onClick={handleNext}>
             下一步
           </View>
-          <View className="changePhone-tip">手机号停用或无法接收验证码?</View>
+          <View className="changePhone-tip" onClick={() => setShowModal(true)}>
+            手机号停用或无法接收验证码?
+          </View>
         </>
       )}
 
@@ -179,15 +204,18 @@ function Index() {
           <View className="changePhone-modal">
             <View className="changePhone-modal-header">
               <Text className="changePhone-modal-title">如果您的手机号无法接收验证码</Text>
-              <Text className="changePhone-modal-close" onClick={handleModalClose}>
-                ×
-              </Text>
+              <View className="changePhone-modal-close" onClick={handleModalClose}>
+                <CheckClose color='#333' size="30rpx" />
+              </View>
             </View>
-            <View className="changePhone-modal-content">
-              请联系客服协助验证
-              <br />
-              400-400-400
+            <View style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <View className="changePhone-modal-content">
+                请联系客服协助验证
+                <br />
+                <Text onClick={copyPhone}>400-400-400</Text>
+              </View>
             </View>
+
             <View className="changePhone-modal-btn" onClick={handleModalClose}>
               我知道了
             </View>

@@ -26,7 +26,6 @@ function Index() {
   useLoad(options => {
     if (options.phone) {
       setPhone(options.phone)
-      console.log('获取到手机号:', options.phone)
     }
   })
 
@@ -74,7 +73,6 @@ function Index() {
     if (countdown > 0) return
 
     // 这里可以调用发送验证码的API
-    console.log('重新发送验证码')
     setCountdown(60) // 60秒倒计时
   }
 
@@ -134,7 +132,20 @@ function Index() {
   const setInfo = (apiResponse: IResponse<IUserInfo>) => {
     if (apiResponse.success) {
       dispatch(userInfoAction({ type: 'set', data: apiResponse.data }))
-      Taro.navigateTo({ url: '/subpackages/login/companyProfile/index' })
+      if (apiResponse.data?.companyName && apiResponse.data?.targetCompanyServe) {
+        let targetCompanyServe = JSON.parse(apiResponse?.data?.targetCompanyServe || '{}')
+        Taro.setStorageSync('companyInfo', {
+          companyName: apiResponse?.data?.companyName || '',
+          userName: apiResponse?.data?.name || '',
+          coreSellingPoints: targetCompanyServe.coreSellingPoints,
+          expansionDomainKeywords: targetCompanyServe.expansionDomainKeywords,
+          expansionDomainKeywordsSelected: targetCompanyServe.expansionDomainKeywordsSelected,
+          customInput: targetCompanyServe.customInput
+        })
+        Taro.reLaunch({ url: '/pages/index/index' })
+      } else {
+        Taro.reLaunch({ url: '/subpackages/login/companyProfile/index' })
+      }
       Taro.hideLoading()
     } else {
       Taro.hideLoading()

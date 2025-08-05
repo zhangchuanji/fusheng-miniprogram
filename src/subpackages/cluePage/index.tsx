@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useEffect } from 'react'
 import { View, Text, Image, ScrollView } from '@tarojs/components'
-import { Cell, Popup, Tabs, Input, Calendar, Drag } from '@nutui/nutui-react-taro'
+import { Cell, Popup, Tabs, Input, Calendar, Drag, Empty } from '@nutui/nutui-react-taro'
 import './index.scss'
 import { SearchBar } from '@nutui/nutui-react-taro'
 import { ArrowRight, Checked } from '@nutui/icons-react-taro'
@@ -176,15 +176,15 @@ function CluePage({ height }: { height: number }) {
                 let locationStr = parsedInfo.companyList[0].location || '未知省份'
 
                 if (locationStr.includes('省')) {
-                  parsedInfo.companyList[0].location = locationStr.split('省')[0] + '省'
+                  parsedInfo.companyList[0].handleLocation = locationStr.split('省')[0] + '省'
                 } else if (locationStr.includes('市')) {
                   const directMunicipalities = ['北京', '上海', '天津', '重庆']
                   const found = directMunicipalities.find(city => locationStr.includes(city))
-                  parsedInfo.companyList[0].location = found ? found + '市' : locationStr.split('市')[0] + '市'
+                  parsedInfo.companyList[0].handleLocation = found ? found + '市' : locationStr.split('市')[0] + '市'
                 } else if (locationStr.includes('自治区')) {
-                  parsedInfo.companyList[0].location = locationStr.split('自治区')[0] + '自治区'
+                  parsedInfo.companyList[0].handleLocation = locationStr.split('自治区')[0] + '自治区'
                 } else {
-                  parsedInfo.companyList[0].location = '未知省份'
+                  parsedInfo.companyList[0].handleLocation = '未知省份'
                 }
 
                 if (parsedInfo.companyList[0].tags && Array.isArray(parsedInfo.companyList[0].tags)) {
@@ -244,6 +244,10 @@ function CluePage({ height }: { height: number }) {
           clueDeleteAPI({ id }, res => {
             if (res.success) {
               getClueList()
+              Taro.showToast({
+                title: '删除成功',
+                icon: 'none'
+              })
             }
           })
         }
@@ -260,15 +264,12 @@ function CluePage({ height }: { height: number }) {
   useDidShow(() => {
     // 根据当前选中的tab刷新对应的数据
     if (tabvalue === 0) {
-      console.log(1)
 
       getClueList() // 刷新线索列表
     } else if (tabvalue === 1) {
-      console.log(2)
 
       getFollowUpList() // 刷新跟进记录
     } else if (tabvalue === 2) {
-      console.log(3)
 
       getSession() // 刷新历史匹配线索
     }
@@ -368,8 +369,6 @@ function CluePage({ height }: { height: number }) {
 
   // 企业列表
   const handleEnterpriseList = (item: any) => {
-    console.log(item)
-
     let res = {
       companyList: item.companyList,
       total: item.total
@@ -389,23 +388,31 @@ function CluePage({ height }: { height: number }) {
     // 执行搜索逻辑
   }, [debouncedSearchValue])
 
+  function addFollow() {
+    if (clueList && clueList.length > 0) {
+      Taro.navigateTo({ url: '/subpackages/cluePage/addFollow/index' })
+    } else {
+      Taro.showToast({
+        title: '请先添加线索',
+        icon: 'none'
+      })
+    }
+  }
+
   function parseDate(createTime: any): React.ReactNode {
     let time = new Date(createTime)
     // 转为2025-01-01 12:00:00
     let year = time.getFullYear()
-    let month = time.getMonth() + 1
-    let day = time.getDate()
-    let hour = time.getHours()
-    let minute = time.getMinutes()
-    let second = time.getSeconds()
+    let month = (time.getMonth() + 1).toString().padStart(2, '0')
+    let day = time.getDate().toString().padStart(2, '0')
+    let hour = time.getHours().toString().padStart(2, '0')
+    let minute = time.getMinutes().toString().padStart(2, '0')
+    let second = time.getSeconds().toString().padStart(2, '0')
     return `${year}-${month}-${day} ${hour}:${minute}:${second}`
   }
 
   // 触底加载函数
   const loadMoreClueList = () => {
-    console.log(clueLoading)
-    console.log(!clueHasMore)
-
     if (clueLoading || !clueHasMore) return
     getClueList(cluePageNum + 1, true)
   }
@@ -687,17 +694,10 @@ function CluePage({ height }: { height: number }) {
 
       <Calendar visible={isVisible} type="range" onClose={() => setIsVisible(false)} onConfirm={handleCalendarConfirm} />
 
-      <Drag attract>
-        <View
-          className="floating-add-btn"
-          onClick={() => {
-            Taro.navigateTo({ url: '/subpackages/cluePage/addFollow/index' })
-          }}
-        >
-          <View className="add-icon-row"></View>
-          <View className="add-icon-col"></View>
-        </View>
-      </Drag>
+      <View className="floating-add-btn" onClick={() => addFollow()}>
+        <View className="add-icon-row"></View>
+        <View className="add-icon-col"></View>
+      </View>
       <Tabs
         value={tabvalue}
         onChange={value => {
@@ -797,6 +797,20 @@ function CluePage({ height }: { height: number }) {
                     </View>
                   </View>
                 ))}
+              {(!clueList || clueList.length === 0) && (
+                <Empty
+                  description="暂无线索"
+                  image={
+                    <Image
+                      style={{
+                        width: '100%',
+                        height: '100%'
+                      }}
+                      src="http://36.141.100.123:10013/glks/assets/emptyImg.png"
+                    />
+                  }
+                />
+              )}
             </ScrollView>
           </View>
         </Tabs.TabPane>
@@ -833,9 +847,9 @@ function CluePage({ height }: { height: number }) {
                   <View className="clueRecord_item_left">{item?.avatar ? <Image src={item.avatar} className="avatar" /> : <Image src="http://36.141.100.123:10013/glks/assets/enterprise/enterprise11.png" className="avatar" />}</View>
                   <View className="clueRecord_item_right">
                     <View className="clueRecord_item_right_top">
-                      <View className="name">{userInfo?.nickname || '客户名称'}</View>
-                      <View className="position">{userInfo?.position || '客户职位'}</View>
-                      <View className="status">
+                      <View className="name text-ellipsis">{userInfo?.nickname || '客户名称'}</View>
+                      <View className="position text-ellipsis">{userInfo?.position || '客户职位'}</View>
+                      <View className="status text-ellipsis">
                         {item.type || '跟进类型'}（{item.method || '跟进方式'})
                       </View>
                     </View>
@@ -851,6 +865,20 @@ function CluePage({ height }: { height: number }) {
                   </View>
                 </View>
               ))}
+              {(!followUpList || followUpList.length === 0) && (
+                <Empty
+                  description="暂无跟进"
+                  image={
+                    <Image
+                      style={{
+                        width: '100%',
+                        height: '100%'
+                      }}
+                      src="http://36.141.100.123:10013/glks/assets/emptyImg.png"
+                    />
+                  }
+                />
+              )}
             </ScrollView>
           </View>
         </Tabs.TabPane>
@@ -875,7 +903,22 @@ function CluePage({ height }: { height: number }) {
                     <View className="history_msg">问答问题：{item.userMessage}</View>
                     <View className="history_company">
                       <View className="history_img">
-                        <Image src="http://36.141.100.123:10013/glks/assets/enterprise/enterprise11.png" className="history_img_img" />
+                        {item.companyInfo.logo ? (
+                          // 判断是否为图片链接（包含http或https）
+                          item.companyInfo.logo.includes('http') ? (
+                            <Image src={item.companyInfo.logo} className="history_img_img" />
+                          ) : (
+                            // 如果是文字，显示文字
+                            <Text style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#1B5BFF', color: '#fff', borderRadius: '8rpx', fontSize: '24rpx', textAlign: 'center', padding: '8rpx', boxSizing: 'border-box' }} className="history_img_img">
+                              {item.companyInfo.logo}
+                            </Text>
+                          )
+                        ) : (
+                          // 如果为空，显示"暂无"
+                          <Text className="history_img_img" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#1B5BFF', color: '#fff', borderRadius: '8rpx', fontSize: '24rpx' }}>
+                            暂无
+                          </Text>
+                        )}
                       </View>
                       <View className="history_info">
                         <View className="info_top">
@@ -883,7 +926,7 @@ function CluePage({ height }: { height: number }) {
                           <ArrowRight color="#2B2B2B" size="30rpx" />
                         </View>
                         <View className="info_msgs">
-                          <View className="msgs_item">{item.companyInfo?.location || '- -'}</View>
+                          <View className="msgs_item">{item.companyInfo?.handleLocation || '- -'}</View>
                           <View className="msgs_tag">
                             <Image src="http://36.141.100.123:10013/glks/assets/corpDetail/corpDetail21.png" className="msgs_tag_img" />
                             <View className="msgs_tag_text">官网</View>
@@ -912,6 +955,20 @@ function CluePage({ height }: { height: number }) {
                   </View>
                 </View>
               ))}
+              {(!historySession || historySession.length === 0) && (
+                <Empty
+                  description="暂无历史记录"
+                  image={
+                    <Image
+                      style={{
+                        width: '100%',
+                        height: '100%'
+                      }}
+                      src="http://36.141.100.123:10013/glks/assets/emptyImg.png"
+                    />
+                  }
+                />
+              )}
             </View>
           </ScrollView>
         </Tabs.TabPane>

@@ -85,7 +85,7 @@ function FollowPage() {
               <Image className="avatar" src="http://36.141.100.123:10013/glks/assets/enterprise/enterprise11.png" />
               <View className="user-details">
                 <Text className="user-name">{userInfo?.nickname}</Text>
-                <Text className="user-role">{userInfo?.role || '职位'}</Text>
+                <Text className="user-role">{userInfo?.position || '职位'}</Text>
               </View>
             </View>
             <View className="status-section">
@@ -146,10 +146,13 @@ function FollowPage() {
 
             <View className="detail-item">
               <Text className="item-label">相关附件</Text>
-              {followUpDetail?.followUpFileList?.length > 0 &&
-                followUpDetail?.followUpFileList.map(item => {
-                  return <Text className="item-value link">{item?.name || '附件'}</Text>
-                })}
+              {followUpDetail?.followUpFileList?.length > 0 && (
+                <>
+                  <Text className="item-value link">{followUpDetail.followUpFileList[0]?.name || '附件'}</Text>
+                  {followUpDetail.followUpFileList.length > 1 && <Text style={{ color: '#2156FE', fontSize: '28rpx', fontWeight: '500', marginLeft: '14rpx' }}>(+{followUpDetail.followUpFileList.length - 1})</Text>}
+                </>
+              )}
+              {followUpDetail?.followUpFileList?.length === 0 && <Text className="item-value link">暂无附件</Text>}
             </View>
 
             {/* <View className="detail-item">

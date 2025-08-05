@@ -14,15 +14,9 @@ import { setLoginStatus, userInfoAction } from '@/redux/modules/login'
 
 function Index() {
   const dispatch = useAppDispatch()
-  const { getExampleData, exampleData } = useExampleActions()
   const [agreed, setAgreed] = useState(false)
 
   useEffect(() => {
-    getExampleData({
-      pageNo: 1,
-      pageSize: 10
-    })
-
     // 页面加载时从本地存储读取token
     const storedToken = Taro.getStorageSync('token')
     if (storedToken.accessToken) {
@@ -31,7 +25,7 @@ function Index() {
       const currentTime = Date.now()
       const TOKEN_REFRESH_INTERVAL = 25 * 24 * 60 * 60 * 1000 // 25天的毫秒数
 
-      if (loginTime && currentTime - loginTime >= TOKEN_REFRESH_INTERVAL) {
+      if (loginTime && Math.abs(currentTime - loginTime) >= TOKEN_REFRESH_INTERVAL) {
         refreshTokenAPI({ refreshToken: storedToken.refreshToken }, response => {
           if (response.success) {
             Taro.setStorageSync('token', response.data)
@@ -50,8 +44,11 @@ function Index() {
   }, [])
 
   const handleAgreementClick = (type: 'user' | 'privacy') => {
-    // 处理协议点击事件
-    console.log(`点击了${type === 'user' ? '用户协议' : '隐私政策'}`)
+    if (type === 'user') {
+      Taro.navigateTo({ url: 'subpackages/setting/userAgreement/index' })
+    } else {
+      Taro.navigateTo({ url: 'subpackages/setting/privacyPolicy/index' })
+    }
   }
 
   const setLoginInfo = (apiResponse: IResponse<IUserInfo>) => {
@@ -81,7 +78,20 @@ function Index() {
   const setInfo = (apiResponse: IResponse<IUserInfo>) => {
     if (apiResponse.success) {
       dispatch(userInfoAction({ type: 'set', data: apiResponse.data }))
-      Taro.navigateTo({ url: '/subpackages/login/companyProfile/index' })
+      if (apiResponse.data?.companyName && apiResponse.data?.targetCompanyServe) {
+        let targetCompanyServe = JSON.parse(apiResponse?.data?.targetCompanyServe || '{}')
+        Taro.setStorageSync('companyInfo', {
+          companyName: apiResponse?.data?.companyName || '',
+          userName: apiResponse?.data?.name || '',
+          coreSellingPoints: targetCompanyServe.coreSellingPoints,
+          expansionDomainKeywords: targetCompanyServe.expansionDomainKeywords,
+          expansionDomainKeywordsSelected: targetCompanyServe.expansionDomainKeywordsSelected,
+          customInput: targetCompanyServe.customInput
+        })
+        Taro.reLaunch({ url: '/pages/index/index' })
+      } else {
+        Taro.reLaunch({ url: '/subpackages/login/companyProfile/index' })
+      }
       Taro.hideLoading()
     } else {
       Taro.hideLoading()
@@ -105,7 +115,8 @@ function Index() {
         expansionDomainKeywordsSelected: targetCompanyServe.expansionDomainKeywordsSelected,
         customInput: targetCompanyServe.customInput
       })
-      Taro.navigateTo({ url: '/pages/index/index' })
+
+      Taro.reLaunch({ url: '/pages/index/index' })
       Taro.hideLoading()
     } else {
       Taro.hideLoading()

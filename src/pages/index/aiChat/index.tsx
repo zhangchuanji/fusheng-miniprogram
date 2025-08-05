@@ -1,10 +1,13 @@
 import React, { useEffect, useRef, useState, forwardRef, useImperativeHandle } from 'react'
-import { View, Image, Input, Text, ScrollView } from '@tarojs/components'
+import { View, Image, Input, Text, ScrollView, Textarea } from '@tarojs/components'
 import Taro, { useDidShow, useDidHide } from '@tarojs/taro'
 import './index.scss'
 import { textStageAPI, companyStageAPI, guessYouWantAPI, aiSessionCreateAPI, aiMessageCreateAPI, aiSessionUpdateAPI, aiMessageEvaluationCreateAPI, userFavoriteCreateAPI } from '@/api/chatMsg'
 import { useAppSelector } from '@/hooks/useAppStore'
-import { Dialog, TextArea } from '@nutui/nutui-react-taro'
+import { Dialog, TextArea, BackTop } from '@nutui/nutui-react-taro'
+import { ArrowDownSize6, ArrowUpSize6 } from '@nutui/icons-react-taro'
+import { useAppDispatch } from '@/hooks/useAppStore'
+import { getSessionListAsync, getFavoriteListAsync } from '@/redux/asyncs/conversation'
 import AiMessageComponent from '@/components/AiMessageComponent'
 
 const TechLoadingAnimation = () => {
@@ -28,17 +31,29 @@ const Index = forwardRef<{ getAiSession: () => void }, { height: number }>(({ he
     content: string
     companyList: any[]
     apiStatus: { textComplete: boolean; companyComplete: boolean }
+    favorite: boolean
+    like: number
+    dislike: number
     messageId: string
   }
+  const dispatch = useAppDispatch()
+
   const [messages, setMessages] = useState<Message[]>([])
   const [input, setInput] = useState('')
   const [isStreaming, setIsStreaming] = useState(false)
   const contentRef = useRef<any>(null)
   const [recommendAnim, setRecommendAnim] = useState('')
+  const [conversationId, setConversationId] = useState('')
+  const [likeImage, setLikeImage] = useState('http://36.141.100.123:10013/glks/assets/home/home11.png')
+  const [clickOnTheImage, setClickOnTheImage] = useState('http://36.141.100.123:10013/glks/assets/home/home12.png')
+  const [collectPictures, setCollectPictures] = useState('http://36.141.100.123:10013/glks/assets/home/home13.png')
   const recommendRef = useRef<HTMLDivElement>(null)
   const [shouldAutoScroll, setShouldAutoScroll] = useState(true)
   const [loadFailed, setLoadFailed] = useState(false)
+  const [inputRef, setInputRef] = useState<any>(null)
+  const [currentScrollTop, setCurrentScrollTop] = useState(0)
   const [scrollToBottomTrigger, setScrollToBottomTrigger] = useState(0)
+  const [scrollToBottomTriggerCopy, setScrollToBottomTriggerCopy] = useState(0)
   const [keyboardHeight, setKeyboardHeight] = useState(0)
   const [bottomHeight, setBottomHeight] = useState('314rpx')
   const companyInfo = Taro.getStorageSync('companyInfo') || {}
@@ -49,7 +64,9 @@ const Index = forwardRef<{ getAiSession: () => void }, { height: number }>(({ he
   const [answerContent, setAnswerContent] = useState({
     content: '',
     companyList: [] as any[],
-    userInput: ''
+    userInput: '',
+    like: 0,
+    dislike: 0
   })
   // 添加功能按钮状态管理
   const [buttonStates, setButtonStates] = useState<{ [key: string]: { [buttonIndex: number]: boolean } }>({})
@@ -67,7 +84,9 @@ const Index = forwardRef<{ getAiSession: () => void }, { height: number }>(({ he
     const currentAnswerContent = {
       content: msg.filter(item => item.role === 'ai')[0].content,
       companyList: msg.filter(item => item.role === 'ai')[0].companyList,
-      userInput: msg.filter(item => item.role === 'user')[0].content
+      userInput: msg.filter(item => item.role === 'user')[0].content,
+      like: msg.filter(item => item.role === 'ai')[0].like,
+      dislike: msg.filter(item => item.role === 'ai')[0].dislike
     }
 
     setAnswerContent(currentAnswerContent)
@@ -81,28 +100,98 @@ const Index = forwardRef<{ getAiSession: () => void }, { height: number }>(({ he
     }))
 
     if (buttonIndex === 0) {
-    } else if (buttonIndex === 1) {
-      aiMessageEvaluationCreateAPI({ userId: userInfo?.id, messageId: aiSessionId, entryPoint: 'ai_chat', isLiked: 1, questionContent: currentAnswerContent.userInput, answerContent: JSON.stringify(currentAnswerContent) }, res => {})
-    } else if (buttonIndex === 2) {
-      setYiJianVisible(true)
-    } else if (buttonIndex === 3) {
-      let contentSummary = JSON.stringify({
-        content: msg.filter(item => item.role === 'ai')[0].content,
-        companyList: msg.filter(item => item.role === 'ai')[0].companyList,
-        splitNum: msg.filter(item => item.role === 'ai')[0].splitNum,
-        total: msg.filter(item => item.role === 'ai')[0].total
-      })
-      let queryParams = {
-        title: msg.filter(item => item.role === 'user')[0].content,
-        userId: userInfo?.id,
-        messageId,
-        contentSummary: contentSummary
+      // 构建复制内容：AI回答 + 企业信息
+      let copyContent = currentAnswerContent.content
+
+      // 如果有企业列表，添加企业信息
+      if (currentAnswerContent.companyList && currentAnswerContent.companyList.length > 0) {
+        copyContent += '\n\n企业信息：\n'
+
+        currentAnswerContent.companyList.forEach((company, index) => {
+          copyContent += `\n${index + 1}. ${company.name || '未知企业名称'}\n`
+          if (company.legalPerson) copyContent += `   法人: ${company.legalPerson}\n`
+          if (company.tags && company.tags.length > 0) {
+            copyContent += `   标签: ${company.tags.join(', ')}\n`
+          }
+          if (company.contactInfo.phones && company.contactInfo.phones.length > 0) {
+            copyContent += `   联系方式: ${company.contactInfo.phones.join(', ')}\n`
+          }
+          if (company.score) copyContent += `   匹配度: ${company.score}%\n`
+          if (company.industry) copyContent += `   经营范围: ${company.industry}\n`
+          if (company.orgType) copyContent += `   公司类型: ${company.orgType}\n`
+          if (company.location) copyContent += `   所在省份: ${company.location}\n`
+          if (company.businessScope) copyContent += `   公司简介: ${company.businessScope}\n`
+        })
       }
-      userFavoriteCreateAPI(queryParams, res => {
-        if (res.success) {
-          Taro.showToast({ title: '收藏成功', icon: 'none' })
-        }
+
+      Taro.setClipboardData({
+        data: copyContent
       })
+    } else if (buttonIndex === 1) {
+      // 更新messages状态，只修改特定messageId的消息
+      setMessages(prevMessages =>
+        prevMessages.map(message => {
+          if (message.messageId === messageId && message.role === 'ai') {
+            const newLikeStatus = message.like === 1 ? 0 : 1
+            return { ...message, like: newLikeStatus }
+          }
+          return message
+        })
+      )
+
+      // 根据当前消息的状态设置图片
+      const aiMsg = msg.filter(item => item.role === 'ai')[0]
+      const newLikeStatus = aiMsg.like === 1 ? 0 : 1
+      // aiMessageEvaluationCreateAPI({ userId: userInfo?.id, messageId: aiSessionId, entryPoint: 'ai_chat', isLiked: 1, questionContent: currentAnswerContent.userInput, answerContent: JSON.stringify(currentAnswerContent) }, res => {
+      //   if (res.success) {
+      //     msg.filter(item => item.role === 'ai')[0].like = 1
+      //   }
+      // })
+    } else if (buttonIndex === 2) {
+      // 更新messages状态，只修改特定messageId的消息
+      setMessages(prevMessages =>
+        prevMessages.map(message => {
+          if (message.messageId === messageId && message.role === 'ai') {
+            const newDislikeStatus = message.dislike === 1 ? 0 : 1
+            return { ...message, dislike: newDislikeStatus }
+          }
+          return message
+        })
+      )
+      // setYiJianVisible(true)
+    } else if (buttonIndex === 3) {
+      // 更新messages状态，只修改特定messageId的消息
+      setMessages(prevMessages =>
+        prevMessages.map(message => {
+          if (message.messageId === messageId && message.role === 'ai') {
+            return { ...message, favorite: !message.favorite }
+          }
+          return message
+        })
+      )
+      // let contentSummary = JSON.stringify({
+      //   content: msg.filter(item => item.role === 'ai')[0].content,
+      //   companyList: msg.filter(item => item.role === 'ai')[0].companyList,
+      //   splitNum: msg.filter(item => item.role === 'ai')[0].splitNum,
+      //   total: msg.filter(item => item.role === 'ai')[0].total,
+      //   favorite: msg.filter(item => item.role === 'ai')[0].favorite,
+      //   like: msg.filter(item => item.role === 'ai')[0].like,
+      //   dislike: msg.filter(item => item.role === 'ai')[0].dislike
+      // })
+      // let queryParams = {
+      //   title: msg.filter(item => item.role === 'user')[0].content,
+      //   userId: userInfo?.id,
+      //   messageId,
+      //   contentSummary: contentSummary
+      // }
+      // userFavoriteCreateAPI(queryParams, res => {
+      //   if (res.success) {
+      //     if (res.success) {
+      //     }
+      //     dispatch(getFavoriteListAsync())
+      //     Taro.showToast({ title: '收藏成功', icon: 'none' })
+      //   }
+      // })
     }
   }
 
@@ -110,13 +199,22 @@ const Index = forwardRef<{ getAiSession: () => void }, { height: number }>(({ he
   useEffect(() => {
     if (process.env.TARO_ENV === 'weapp') {
       Taro.onKeyboardHeightChange(res => {
-        console.log('键盘高度变化:', res.height)
         setKeyboardHeight(res.height)
-        // 强制重新渲染
-        setTimeout(() => {
-          setScrollToBottomTrigger(prev => prev + 1)
-        }, 100)
+        // // 强制重新渲染
+        // setTimeout(() => {
+        //   setScrollToBottomTrigger(prev => prev + 1)
+        // }, 100)
       })
+    }
+
+    Taro.eventCenter.on('addMsg', res => {
+      if (res) {
+        getAiSession()
+      }
+    })
+
+    return () => {
+      Taro.eventCenter.off('addMsg')
     }
   }, [])
 
@@ -144,23 +242,43 @@ const Index = forwardRef<{ getAiSession: () => void }, { height: number }>(({ he
       if (res.success && res.data) {
         Taro.setStorageSync('aiSessionId', res.data)
         setAiSessionId(res.data)
+        dispatch(getSessionListAsync())
+        Taro.eventCenter.trigger('addSession', true)
+        Taro.showToast({ title: '会话创建成功', icon: 'none' })
         setMessages([])
       }
     })
   }
 
   useEffect(() => {
-    const handleToCompanyList = res => {
+    const handleToCompanyList = (res: string) => {
+      
       let msg = messages.filter(item => item.messageId === res)
       if (msg.length > 0) {
         const aiMsg = msg.filter(item => item.role === 'ai')[0]
         if (aiMsg) {
-          let res = {
+          let val = {
             companyList: aiMsg.companyList,
             total: aiMsg.total
           }
+
+          // 先跳转页面
           Taro.navigateTo({
-            url: `/subpackages/company/enterpriseSearch/index?res=${JSON.stringify(res)}`
+            url: `/subpackages/company/enterpriseSearch/index?messageId=${res}`
+          }).then(() => {
+            // 页面跳转成功后，延迟触发事件
+            setTimeout(() => {
+              Taro.eventCenter.trigger('enterpriseSearchData', {
+                companyList: val.companyList,
+                total: val.total,
+                messageId: res
+              })
+              console.log('触发事件总线:', {
+                companyList: val.companyList,
+                total: val.total,
+                messageId: res
+              })
+            }, 100) // 延迟100ms确保目标页面已经加载
           })
         }
       }
@@ -197,7 +315,10 @@ const Index = forwardRef<{ getAiSession: () => void }, { height: number }>(({ he
               content: item.userMessage,
               companyList: [],
               apiStatus: { textComplete: true, companyComplete: true },
-              messageId: item.id || Date.now().toString()
+              messageId: item.id || Date.now().toString(),
+              favorite: false,
+              like: 0,
+              dislike: 0
             })
           }
           if (item.aiResponse) {
@@ -208,7 +329,10 @@ const Index = forwardRef<{ getAiSession: () => void }, { height: number }>(({ he
               splitNum: JSON.parse(item.enterpriseInfo).splitNum,
               total: JSON.parse(item.enterpriseInfo).total,
               apiStatus: { textComplete: true, companyComplete: true },
-              messageId: item.id || Date.now().toString()
+              messageId: item.id || Date.now().toString(),
+              favorite: false,
+              like: 0,
+              dislike: 0
             })
           }
         })
@@ -232,12 +356,10 @@ const Index = forwardRef<{ getAiSession: () => void }, { height: number }>(({ he
     // 如果没有找到未保存的AI消息，直接返回
     if (!aiMessage) return
 
-    // 检查AI消息是否已完成（文本和公司信息都已完成）
     if (!aiMessage.apiStatus?.textComplete || !aiMessage.apiStatus?.companyComplete) return
 
     const answerTime = formatTime(new Date())
     const userMessage = lastTwoMessages.find(msg => msg.role === 'user' && msg.messageId === '')
-    console.log(userMessage)
 
     if (aiMessage) {
       const questionTimestamp = new Date(questionTime).getTime()
@@ -284,6 +406,7 @@ const Index = forwardRef<{ getAiSession: () => void }, { height: number }>(({ he
       if (rects && rects.length) {
         const totalHeight = rects.reduce((sum, rect) => sum + (rect?.height || 0), 0)
         setScrollToBottomTrigger(totalHeight)
+        setScrollToBottomTriggerCopy(totalHeight)
       } else {
       }
     })
@@ -367,10 +490,14 @@ const Index = forwardRef<{ getAiSession: () => void }, { height: number }>(({ he
       Taro.eventCenter.trigger('companyShow', true)
     }
     if (!input.trim() || isStreaming) return
-    aiSessionUpdateAPI({ userId: userInfo?.id, id: aiSessionId, title: input }, res => {})
+    aiSessionUpdateAPI({ userId: userInfo?.id, id: aiSessionId, title: input }, res => {
+      if (res.success) {
+        dispatch(getSessionListAsync())
+      }
+    })
 
     setQuestionTime(formatTime(new Date())) // 用户发送消息的时间
-    setMessages(msgs => [...msgs, { splitNum: 0, total: 0, role: 'user', content: input, companyList: [], apiStatus: { textComplete: false, companyComplete: false }, messageId: '' }, { splitNum: 0, total: 0, role: 'ai', content: '', companyList: [], apiStatus: { textComplete: false, companyComplete: false }, messageId: '' }])
+    setMessages(msgs => [...msgs, { splitNum: 0, total: 0, role: 'user', content: input, companyList: [], apiStatus: { textComplete: false, companyComplete: false }, messageId: '', favorite: false, like: 0, dislike: 0 }, { splitNum: 0, total: 0, role: 'ai', content: '', companyList: [], apiStatus: { textComplete: false, companyComplete: false }, messageId: '', favorite: false, like: 0, dislike: 0 }])
     if (companyInfo?.customInput) {
       companyInfo.expansionDomainKeywordsSelected = [...companyInfo.expansionDomainKeywordsSelected, companyInfo.customInput]
     }
@@ -392,6 +519,7 @@ const Index = forwardRef<{ getAiSession: () => void }, { height: number }>(({ he
             query: input,
             questionKeyword: companyInfo.expansionDomainKeywordsSelected.join(','),
             aiSessionId: aiSessionId,
+            conversationId: conversationId,
             productSellingPointsRespDTO: {
               coreSellingPoints: {
                 coreBusiness: companyInfo.coreSellingPoints.coreBusiness,
@@ -404,6 +532,7 @@ const Index = forwardRef<{ getAiSession: () => void }, { height: number }>(({ he
           },
           res => {
             if (res && res.success && res.data) {
+              setConversationId(res.data.conversationId)
               let responseText = ''
               if (typeof res.data === 'string') {
                 responseText = res.data
@@ -464,15 +593,15 @@ const Index = forwardRef<{ getAiSession: () => void }, { height: number }>(({ he
                   res.data.companyInfoResponseList.forEach((item: any) => {
                     let locationStr = item.province || item.address || item.location || '未知省份'
                     if (locationStr.includes('省')) {
-                      item.location = locationStr.split('省')[0] + '省'
+                      item.handleLocation = locationStr.split('省')[0] + '省'
                     } else if (locationStr.includes('市')) {
                       const directMunicipalities = ['北京', '上海', '天津', '重庆']
                       const found = directMunicipalities.find(city => locationStr.includes(city))
-                      item.location = found ? found + '市' : locationStr.split('市')[0] + '市'
+                      item.handleLocation = found ? found + '市' : locationStr.split('市')[0] + '市'
                     } else if (locationStr.includes('自治区')) {
-                      item.location = locationStr.split('自治区')[0] + '自治区'
+                      item.handleLocation = locationStr.split('自治区')[0] + '自治区'
                     } else {
-                      item.location = '未知省份'
+                      item.handleLocation = '未知省份'
                     }
                     // 移除英文名，只保留中文名
                     if (item.legalPerson) {
@@ -482,10 +611,12 @@ const Index = forwardRef<{ getAiSession: () => void }, { height: number }>(({ he
                       item.legalPerson = '- -'
                     }
                   })
+
                   newMsgs[newMsgs.length - 1].companyList = res.data.companyInfoResponseList
                   newMsgs[newMsgs.length - 1].total = res.data.total
                   newMsgs[newMsgs.length - 1].splitNum = res.data.splitNum
                 }
+
                 return newMsgs
               })
             }
@@ -503,16 +634,16 @@ const Index = forwardRef<{ getAiSession: () => void }, { height: number }>(({ he
             })
           }
         )
-      } catch (error) {
-        console.log(error)
-      }
+      } catch (error) {}
     }
     doAll()
     setInput('')
   }
 
-  const speechToText = () => {
-    console.log('语音转文字')
+  const speechToText = () => {}
+
+  const assignment = (val: any) => {
+    setInput(val)
   }
 
   const getRecommendBatches = () => {
@@ -538,20 +669,52 @@ const Index = forwardRef<{ getAiSession: () => void }, { height: number }>(({ he
   }
 
   // 处理滚动事件
+  // 在状态定义区域添加新的状态
+  const [showScrollButtons, setShowScrollButtons] = useState(false)
+  const [isAtTop, setIsAtTop] = useState(true)
+  const [isAtBottom, setIsAtBottom] = useState(true)
+
   const handleScroll = (e: any) => {
     const { scrollTop: currentScrollTop, scrollHeight: currentScrollHeight, clientHeight } = e.detail
     const isNearBottom = currentScrollHeight - currentScrollTop - clientHeight < 50
     setShouldAutoScroll(isNearBottom)
+    setCurrentScrollTop(currentScrollTop)
+
+    // 新增：控制置顶置底按钮显示
+    const isAtTopPosition = currentScrollTop <= 10
+    const isAtBottomPosition = currentScrollHeight - currentScrollTop - clientHeight < 50
+
+    setIsAtTop(isAtTopPosition)
+    setIsAtBottom(isAtBottomPosition)
+    setShowScrollButtons(!isAtTopPosition || !isAtBottomPosition)
+  }
+
+  // 新增：滚动到顶部函数
+  const scrollToTop = () => {
+    setScrollToBottomTrigger(1)
+  }
+
+  // 新增：滚动到底部函数
+  const scrollToBottom = () => {
+    setScrollToBottomTrigger(scrollToBottomTriggerCopy)
   }
 
   const [yiJianVisible, setYiJianVisible] = useState(false)
   const [yiJianInput, setYiJianInput] = useState('')
 
   const yiJianConfirm = () => {
-    aiMessageEvaluationCreateAPI({ userId: userInfo?.id, messageId: aiSessionId, entryPoint: 'ai_chat', isLiked: 0, questionContent: answerContent.userInput, answerContent: JSON.stringify(answerContent), commentContent: yiJianInput }, res => {
-      Taro.showToast({ title: '评价成功', icon: 'none' })
-    })
+    // aiMessageEvaluationCreateAPI({ userId: userInfo?.id, messageId: aiSessionId, entryPoint: 'ai_chat', isLiked: 0, questionContent: answerContent.userInput, answerContent: JSON.stringify(answerContent), commentContent: yiJianInput }, res => {
+    //   if (res.success) {
+    //     answerContent.dislike = 1
+    //     Taro.showToast({ title: '反馈成功', icon: 'none' })
+    //     setClickOnTheImage('http://36.141.100.123:10013/glks/assets/home/home15.png')
+    //   }
+    // })
     setYiJianVisible(false)
+  }
+
+  const handleInput = (e: any) => {
+    setInput(e.detail.value)
   }
 
   const yiJianCancel = () => {
@@ -580,7 +743,7 @@ const Index = forwardRef<{ getAiSession: () => void }, { height: number }>(({ he
                   recommendBatches.map((item, idx) => (
                     <View
                       onClick={() => {
-                        setInput(item)
+                        assignment(item)
                       }}
                       className="chatPage_recommend_content_item"
                       key={idx}
@@ -598,6 +761,7 @@ const Index = forwardRef<{ getAiSession: () => void }, { height: number }>(({ he
           )}
         </View>
       ) : (
+        // 在ScrollView后面添加置顶置底按钮
         <ScrollView className="chatPage_content" ref={contentRef} style={{ height: `calc(100vh - ${height}px - 319rpx)` }} scrollY scrollTop={scrollToBottomTrigger} onScroll={handleScroll} enhanced={true} scrollWithAnimation={true} showScrollbar={false}>
           {messages.map((msg, idx) => (
             <View key={idx} className={`chatMsg ${msg.role === 'user' ? 'user' : 'ai'}`} style={{ padding: '8px 0' }}>
@@ -612,9 +776,9 @@ const Index = forwardRef<{ getAiSession: () => void }, { height: number }>(({ he
                   {msg.content && msg.apiStatus.textComplete && msg.apiStatus.companyComplete ? (
                     <View className="chatMsg_ai_fun">
                       <Image src="http://36.141.100.123:10013/glks/assets/home/home10.png" className={`chatMsg_ai_fun_img ${buttonStates[msg.messageId]?.[0] ? 'button-active' : ''}`} onClick={() => handleButtonClick(msg.messageId, 0)} data-message-id={msg.messageId} data-button-index={0} />
-                      <Image src="http://36.141.100.123:10013/glks/assets/home/home11.png" className={`chatMsg_ai_fun_img ${buttonStates[msg.messageId]?.[1] ? 'button-active' : ''}`} onClick={() => handleButtonClick(msg.messageId, 1)} data-message-id={msg.messageId} data-button-index={1} />
-                      <Image src="http://36.141.100.123:10013/glks/assets/home/home12.png" className={`chatMsg_ai_fun_img ${buttonStates[msg.messageId]?.[2] ? 'button-active' : ''}`} onClick={() => handleButtonClick(msg.messageId, 2)} data-message-id={msg.messageId} data-button-index={2} />
-                      <Image src="http://36.141.100.123:10013/glks/assets/home/home13.png" className={`chatMsg_ai_fun_img ${buttonStates[msg.messageId]?.[3] ? 'button-active' : ''}`} onClick={() => handleButtonClick(msg.messageId, 3)} data-message-id={msg.messageId} data-button-index={3} />
+                      {msg.dislike == 0 ? <Image src={msg.like == 0 ? 'http://36.141.100.123:10013/glks/assets/home/home11.png' : 'http://36.141.100.123:10013/glks/assets/home/home14.png'} className={`chatMsg_ai_fun_img ${buttonStates[msg.messageId]?.[1] ? 'button-active' : ''}`} onClick={() => handleButtonClick(msg.messageId, 1)} data-message-id={msg.messageId} data-button-index={1} /> : null}
+                      {msg.like == 0 ? <Image src={msg.dislike == 0 ? 'http://36.141.100.123:10013/glks/assets/home/home12.png' : 'http://36.141.100.123:10013/glks/assets/home/home15.png'} className={`chatMsg_ai_fun_img ${buttonStates[msg.messageId]?.[2] ? 'button-active' : ''}`} onClick={() => handleButtonClick(msg.messageId, 2)} data-message-id={msg.messageId} data-button-index={2} /> : null}
+                      <Image src={!msg.favorite ? 'http://36.141.100.123:10013/glks/assets/home/home13.png' : 'http://36.141.100.123:10013/glks/assets/home/home16.png'} className={`chatMsg_ai_fun_img ${buttonStates[msg.messageId]?.[3] ? 'button-active' : ''}`} onClick={() => handleButtonClick(msg.messageId, 3)} data-message-id={msg.messageId} data-button-index={3} />
                     </View>
                   ) : null}
                 </View>
@@ -624,19 +788,34 @@ const Index = forwardRef<{ getAiSession: () => void }, { height: number }>(({ he
         </ScrollView>
       )}
 
+      {messages.length != 0 && (
+        <View className="floatingButton">
+          {currentScrollTop > 2 && (
+            <View className="floatingButtonTop" onClick={() => scrollToTop()}>
+              <ArrowUpSize6 color="#333" size="30rpx" />
+            </View>
+          )}
+          {scrollToBottomTriggerCopy - currentScrollTop > 400 && (
+            <View className="floatingButtonBottom" onClick={() => scrollToBottom()}>
+              <ArrowDownSize6 color="#333" size="30rpx" />
+            </View>
+          )}
+        </View>
+      )}
+
       <View
         className="chatPage_bottom"
         style={{
           height: bottomHeight,
           bottom: keyboardHeight ? `${keyboardHeight}px` : 0,
-          transition: 'height 0.1s, bottom 0.1s'
+          transition: 'height 0.26s, bottom 0.26s'
         }}
       >
         <View className="chatPage_bottom_input">
-          <Input adjust-position={false} className="chatPage_input" value={input} onInput={e => setInput(e.detail.value)} onConfirm={send} placeholder="请输入您的客户需求～" placeholderStyle="color: #A9A9A9;" disabled={isStreaming} />
+          <Textarea ref={inputRef} adjust-position={false} value={input} onInput={handleInput} className="chatPage_input" onConfirm={send} placeholder="请输入您的客户需求～" placeholderStyle="color: #A9A9A9;" disabled={isStreaming} />
           <View className="chatPage_fun">
             <View className="chatPage_fun_left">
-              <Image
+              {/* <Image
                 onClick={() => {
                   speechToText()
                 }}
@@ -646,7 +825,7 @@ const Index = forwardRef<{ getAiSession: () => void }, { height: number }>(({ he
               <View className="chatPage_fun_left2">
                 <Image src="http://36.141.100.123:10013/glks/assets/home/home8.png" className="chatPage_fun_left2Img" />
                 <Text>深度思考</Text>
-              </View>
+              </View> */}
             </View>
             <Image
               src="http://36.141.100.123:10013/glks/assets/home/home9.png"
@@ -659,9 +838,11 @@ const Index = forwardRef<{ getAiSession: () => void }, { height: number }>(({ he
         </View>
       </View>
 
-      <Dialog title="您对本回答满意吗？" visible={yiJianVisible} onConfirm={() => yiJianConfirm()} onCancel={() => yiJianCancel()}>
-        <TextArea className="chatPage_inputs" placeholder="请输入您的评价" value={yiJianInput} onInput={e => setYiJianInput(e.detail.value)} />
-      </Dialog>
+      <View className="customizeDialog">
+        <Dialog title="您对本回答满意吗？" visible={yiJianVisible} onConfirm={() => yiJianConfirm()} onCancel={() => yiJianCancel()}>
+          <TextArea className="chatPage_inputs" placeholder="请输入您的评价" value={yiJianInput} onInput={e => setYiJianInput(e.detail.value)} />
+        </Dialog>
+      </View>
     </View>
   )
 })

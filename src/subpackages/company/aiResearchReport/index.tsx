@@ -140,11 +140,19 @@ function Index() {
       },
       res => {
         if (res.success) {
-          console.log('res', JSON.parse(res.data));
-          
           Taro.setStorageSync('report', JSON.parse(res.data))
           setReport(JSON.parse(res.data))
           setApiCompleted(true)
+        } else {
+          setApiCompleted(false)
+          Taro.showToast({
+            title: '报告生成失败, 请稍后重试',
+            icon: 'none',
+            duration: 2000
+          })
+          setTimeout(() => {
+            Taro.navigateBack()
+          }, 2000)
         }
       }
     )
@@ -160,7 +168,6 @@ function Index() {
     return Object.entries(report).map(([taskKey, taskData], index) => {
       if (!taskData || typeof taskData !== 'object') return null
       const { title = '', content = '' } = taskData as { title?: string; content?: string }
-      console.log('content', parseMarkdown(content))
 
       return (
         <View key={taskKey} className="aiResearchReportPage_content_item">
@@ -187,7 +194,7 @@ function Index() {
             </View>
           </View>
           <View className="loading_title">AI企业分析报告生产中{Math.floor(progress)}%</View>
-          <View className="loading_subtitle">此报告为New Galaxy AI生产的专属报告重点信息，过程了解</View>
+          <View className="loading_subtitle">此报告为New Galaxy AI生产的专属报告重点信息，迅速了解</View>
         </View>
       </View>
     )

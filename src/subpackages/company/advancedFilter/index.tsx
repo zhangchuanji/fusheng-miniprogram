@@ -1,91 +1,58 @@
 import { ArrowRightSize6, Check } from '@nutui/icons-react-taro'
-import { Popup, CalendarCard, Cascader } from '@nutui/nutui-react-taro'
+import { Popup, CalendarCard, Cascader, CascaderOption } from '@nutui/nutui-react-taro'
 import { Image, Input, View } from '@tarojs/components'
 import './index.scss'
 import { useState } from 'react'
 import Taro from '@tarojs/taro'
+import { configCompanySectorAPI } from '@/api/setting'
 
 function Index() {
-  // 资本相关变量
-  const [minCapital, setMinCapital] = useState('')
-  const [maxCapital, setMaxCapital] = useState('')
+  // 表单数据状态管理
+  const [formData, setFormData] = useState({
+    // 注册资本相关字段
+    capital: '', // 预设资本范围选项
+    minCapital: '', // 自定义最低资本
+    maxCapital: '', // 自定义最高资本
 
-  // 成立年限日期相关变量（新增）
-  const [startDate, setStartDate] = useState('')
-  const [endDate, setEndDate] = useState('')
+    // 资本类型
+    capitalType: '', // 资本币种类型
 
-  const [minPeople, setMinPeople] = useState('')
-  const [maxPeople, setMaxPeople] = useState('')
+    // 经济类型
+    ecoType: '', // 企业经济性质
+
+    // 成立年限日期相关字段
+    years: '', // 预设年限选项
+    startDate: '', // 自定义开始日期
+    endDate: '', // 自定义结束日期
+
+    // 参保人数相关字段
+    people: '', // 预设人数范围选项
+    minPeople: '', // 自定义最低人数
+    maxPeople: '', // 自定义最高人数
+
+    // 行业相关字段
+    industry: '', // 所属行业
+    industryValue: '', // 级联选择的行业值
+
+    // 产品关键词
+    product: '', // 产品关键词选择
+
+    // 关键词查找范围
+    searchRange: '', // 搜索范围选择
+
+    // 登记状态
+    status: '', // 企业登记状态
+
+    // 机构类型
+    orgType: '' // 企业机构类型
+  })
+
   const [showPopup, setShowPopup] = useState(false)
   const [showCustomYearInput, setShowCustomYearInput] = useState(false)
-  const [showIndustry, setShowIndustry] = useState(false)
-  // 多分组选中项
-  const [selected, setSelected] = useState<{ [key: string]: string | null }>({})
   const [popUpHeight, setPopUpHeight] = useState(0)
-  const [industryValue, setIndustryValue] = useState([])
-  const [industryOptions, setIndustryOptions] = useState([
-    {
-      value1: 'ZheJiang',
-      text1: '浙江',
-      items: [
-        {
-          value1: 'HangZhou',
-          text1: '杭州',
-          disabled: true,
-          items: [
-            { value1: 'XiHu', text1: '西湖区', disabled: true },
-            { value1: 'YuHang', text1: '余杭区' }
-          ]
-        },
-        {
-          value1: 'WenZhou',
-          text1: '温州',
-          items: [
-            { value1: 'LuCheng', text1: '鹿城区' },
-            { value1: 'OuHai', text1: '瓯海区' }
-          ]
-        }
-      ]
-    },
-    {
-      value1: '湖南',
-      text1: '湖南',
-      disabled: true,
-      items: [
-        {
-          value1: '长沙',
-          text1: '长沙',
-          disabled: true,
-          items: [
-            { value1: '芙蓉区', text1: '芙蓉区' },
-            { value1: '岳麓区', text1: '岳麓区' }
-          ]
-        },
-        {
-          value1: '岳阳',
-          text1: '岳阳',
-          children: [
-            { value1: '岳阳楼区', text1: '岳阳楼区' },
-            { value1: '云溪区', text1: '云溪区' }
-          ]
-        }
-      ]
-    },
-    {
-      value1: '福建',
-      text1: '福建',
-      items: [
-        {
-          value1: '福州',
-          text1: '福州',
-          items: [
-            { value1: '鼓楼区', text1: '鼓楼区' },
-            { value1: '台江区', text1: '台江区' }
-          ]
-        }
-      ]
-    }
-  ])
+  const [sectorVisible, setSectorVisible] = useState(false)
+  const [sectorValue, setSectorValue] = useState<string[]>([])
+  const [sectorDesc, setSectorDesc] = useState('请选择行业')
 
   // 分组数据
   const searchGroups = [
@@ -102,7 +69,7 @@ function Index() {
     {
       key: 'industry',
       title: '所属行业',
-      items: ['住宿和餐饮']
+      items: []
     },
     {
       key: 'status',
@@ -139,39 +106,66 @@ function Index() {
     setShowPopup(false)
   }
 
-  const closeIndustryPopup = () => {
-    setShowIndustry(false)
-    setShowPopup(false)
-  }
-
-  const changeIndustryValue = () => {
-    setShowIndustry(false)
-    setShowPopup(false)
-  }
-
-  const closeSwitch = () => {
-    setShowPopup(false)
-  }
-
   const closeCustomYearInput = () => {
     setShowCustomYearInput(false)
     setShowPopup(false)
   }
 
   const handleMinPeople = (e: any) => {
-    setMinPeople(e.detail.value)
+    setFormData(prev => ({ ...prev, minPeople: e.detail.value }))
   }
 
   const handleMaxPeople = (e: any) => {
-    setMaxPeople(e.detail.value)
+    setFormData(prev => ({ ...prev, maxPeople: e.detail.value }))
+  }
+
+  // 改进的懒加载函数
+  const loadCascaderItemData = (node: any, resolve: (data: any[]) => void) => {
+    // 获取父节点ID，根节点使用0
+    const parentId = node.value ? parseInt(node.value) : 0
+    configCompanySectorAPI({ id: parentId }, res => {
+      if (res.success) {
+        const options = res.data.map(item => ({
+          value: item.id.toString(),
+          text: item.name,
+          leaf: false // 先设为false，让组件自己判断
+        }))
+        resolve(options)
+      } else {
+        resolve([])
+      }
+    })
+  }
+
+  // 处理级联选择器变化
+  const onSectorChange = (value: string[], path: CascaderOption[]) => {
+    setSectorValue(value)
+    // 修复重复调用map的问题
+    const pathTexts = path.map(item => item.text)
+    const sectorNames = pathTexts[pathTexts.length - 1]
+    setSectorDesc(sectorNames || '请选择行业')
+
+    // 更新表单数据
+    const lastSelected = value[value.length - 1]
+    setFormData({
+      ...formData,
+      industryValue: lastSelected,
+      industry: sectorNames || '请选择行业'
+    })
+  }
+
+  const handleSubmit = () => {
   }
 
   // 修改日期选择函数
   const setChooseValue = (e: any) => {
     const formatDate = (date: any) => (date ? `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}` : '')
     const [start, end] = e
-    setStartDate(formatDate(start))
-    setEndDate(formatDate(end))
+    setFormData(prev => ({
+      ...prev,
+      startDate: formatDate(start),
+      endDate: formatDate(end)
+    }))
   }
 
   // 选中处理
@@ -188,16 +182,18 @@ function Index() {
       return
     }
     if (groupKey === 'industry') {
-      setShowIndustry(true)
-      setShowPopup(true)
+      setSectorVisible(true)
+      return
     }
-    setSelected(prev => ({ ...prev, [groupKey]: item }))
+    setFormData(prev => ({
+      ...prev,
+      [groupKey]: item
+    }))
   }
 
   // 判断输入框有值
-  const isCapitalInputActive = !!(minCapital || maxCapital)
-  const isPeopleInputActive = !!(minPeople || maxPeople)
-  const isDateInputActive = !!(startDate || endDate) // 新增日期判断
+  const isCapitalInputActive = !!(formData.minCapital || formData.maxCapital)
+  const isPeopleInputActive = !!(formData.minPeople || formData.maxPeople)
 
   return (
     <View className="advancedFilterPage" style={{ overflow: showPopup ? 'hidden' : 'auto', height: showPopup ? '100vh' : 'auto' }}>
@@ -213,11 +209,11 @@ function Index() {
           <View className="popup_bottom_date">
             <View className="popup_bottom_date_text">
               <View className="popup_bottom_date_text_title">开始</View>
-              <View style={{ color: startDate ? '#333333' : '#B9B9B9' }}>{startDate ? startDate : '请选择'}</View>
+              <View style={{ color: formData.startDate ? '#333333' : '#B9B9B9' }}>{formData.startDate ? formData.startDate : '请选择'}</View>
             </View>
             <View className="popup_bottom_date_text">
               <View className="popup_bottom_date_text_title">结束</View>
-              <View style={{ color: endDate ? '#333333' : '#B9B9B9' }}>{endDate ? endDate : '请选择'}</View>
+              <View style={{ color: formData.endDate ? '#333333' : '#B9B9B9' }}>{formData.endDate ? formData.endDate : '请选择'}</View>
             </View>
           </View>
           <View onClick={() => closeCustomYearInput()} className="popup_bottom_btn">
@@ -229,53 +225,46 @@ function Index() {
         </View>
       </Popup>
 
-      <Popup className="advancedPopup" position="bottom" style={{ maxHeight: '80%', minHeight: '80%' }} visible={showIndustry} onClose={closeSwitch}>
-        <View className="popup_header">
-          <View className="popup_header_title">所属行业</View>
-          <Image onClick={() => closeIndustryPopup()} src="http://36.141.100.123:10013/glks/assets/enterprise/enterprise14.png" className="popup_header_img" />
-        </View>
-        <Cascader
-          optionKey={{
-            textKey: 'text1',
-            valueKey: 'value1',
-            childrenKey: 'items'
-          }}
-          popup={false}
-          value={industryValue}
-          options={industryOptions}
-          closeable
-          onClose={() => closeIndustryPopup()}
-          onChange={() => changeIndustryValue()}
-        />
-      </Popup>
-      {searchGroups.map(group => (
-        <View className="searchItem" key={group.key}>
-          <View className="searchTitle">
-            {group.title}
-            <ArrowRightSize6 color="#8E8E8E" size={'28rpx'} />
+      <Cascader visible={sectorVisible} defaultValue={sectorValue} title="选择行业" closeable onClose={() => setSectorVisible(false)} onChange={onSectorChange} lazy onLoad={loadCascaderItemData} />
+
+      {searchGroups.map(group =>
+        group.key === 'industry' ? (
+          <View className="searchItem" key={group.key} onClick={() => handleSelect(group.key, '')}>
+            <View className="searchTitle">{group.title}</View>
+            <View className="searchSelect">
+              <View className="searchSelect_text">{sectorDesc}</View>
+              <ArrowRightSize6 color="#8E8E8E" size={'28rpx'} />
+            </View>
           </View>
-          <View className="searchRange" style={group.grid ? { gridTemplateColumns: `repeat(${group.grid}, 1fr)` } : {}}>
-            {group.items.map(item => (
-              <View key={item} className={`searchRange_item${selected[group.key] === item ? ' searchRange_item--active' : ''}`} onClick={() => handleSelect(group.key, item)}>
-                {item}
-                {selected[group.key] === item && (
-                  <View className="searchRange_item__tick">
-                    <Check color="#fff" size={'20rpx'} />
-                  </View>
-                )}
-              </View>
-            ))}
-            {/* 下面保留原有特殊输入项和单位项的渲染逻辑 */}
-            {group.key === 'people' && (
-              <View className="searchRange_item searchRange_item--full" style={{ gridColumn: '2 / 4' }}>
-                <Input placeholder="最低人数" className="searchRange_item_input" value={minPeople} onInput={handleMinPeople} />
-                <View className="searchRange_item_input_text">-</View>
-                <Input placeholder="最高人数" className="searchRange_item_input" value={maxPeople} onInput={handleMaxPeople} />
-              </View>
-            )}
+        ) : (
+          <View className="searchItem" key={group.key}>
+            <View className="searchTitle">
+              {group.title}
+              <ArrowRightSize6 color="#8E8E8E" size={'28rpx'} />
+            </View>
+            <View className="searchRange" style={group.grid ? { gridTemplateColumns: `repeat(${group.grid}, 1fr)` } : {}}>
+              {group.items.map(item => (
+                <View key={item} className={`searchRange_item${formData[group.key] === item ? ' searchRange_item--active' : ''}`} onClick={() => handleSelect(group.key, item)}>
+                  {item}
+                  {formData[group.key] === item && (
+                    <View className="searchRange_item__tick">
+                      <Check color="#fff" size={'20rpx'} />
+                    </View>
+                  )}
+                </View>
+              ))}
+              {/* 下面保留原有特殊输入项和单位项的渲染逻辑 */}
+              {group.key === 'people' && (
+                <View className="searchRange_item searchRange_item--full" style={{ gridColumn: '2 / 4' }}>
+                  <Input placeholder="最低人数" className="searchRange_item_input" value={formData.minPeople} onInput={handleMinPeople} />
+                  <View className="searchRange_item_input_text">-</View>
+                  <Input placeholder="最高人数" className="searchRange_item_input" value={formData.maxPeople} onInput={handleMaxPeople} />
+                </View>
+              )}
+            </View>
           </View>
-        </View>
-      ))}
+        )
+      )}
       {/* 注册资本单独渲染，因有特殊输入项 */}
       <View className="searchItem">
         <View className="searchTitle">
@@ -286,15 +275,18 @@ function Index() {
           {['100万内', '100-200万', '200-500万', '500-1000万', '1000-5000万', '5000万以上'].map(item => (
             <View
               key={item}
-              className={`searchRange_item${selected['capital'] === item && !isCapitalInputActive ? ' searchRange_item--active' : ''}`}
+              className={`searchRange_item${formData['capital'] === item && !isCapitalInputActive ? ' searchRange_item--active' : ''}`}
               onClick={() => {
-                setSelected(prev => ({ ...prev, capital: item }))
-                setMinCapital('')
-                setMaxCapital('')
+                setFormData(prev => ({
+                  ...prev,
+                  capital: item,
+                  minCapital: '',
+                  maxCapital: ''
+                }))
               }}
             >
               {item}
-              {selected['capital'] === item && !isCapitalInputActive && (
+              {formData['capital'] === item && !isCapitalInputActive && (
                 <View className="searchRange_item__tick">
                   <Check color="#fff" size={'20rpx'} />
                 </View>
@@ -305,20 +297,26 @@ function Index() {
             <Input
               placeholder="最低资本"
               className="searchRange_item_input"
-              value={minCapital}
+              value={formData.minCapital}
               onInput={e => {
-                setMinCapital(e.detail.value)
-                setSelected(prev => ({ ...prev, capital: '' }))
+                setFormData(prev => ({
+                  ...prev,
+                  minCapital: e.detail.value,
+                  capital: ''
+                }))
               }}
             />
             <View className="searchRange_item_input_text">-</View>
             <Input
               placeholder="最高资本"
               className="searchRange_item_input"
-              value={maxCapital}
+              value={formData.maxCapital}
               onInput={e => {
-                setMaxCapital(e.detail.value)
-                setSelected(prev => ({ ...prev, capital: '' }))
+                setFormData(prev => ({
+                  ...prev,
+                  maxCapital: e.detail.value,
+                  capital: ''
+                }))
               }}
             />
           </View>
@@ -335,15 +333,18 @@ function Index() {
           {['0人', '1-49人', '50-99人', '100-499人', '500-999人', '1000-4999人', '5000-9999人'].map(item => (
             <View
               key={item}
-              className={`searchRange_item${selected['people'] === item && !isPeopleInputActive ? ' searchRange_item--active' : ''}`}
+              className={`searchRange_item${formData['people'] === item && !isPeopleInputActive ? ' searchRange_item--active' : ''}`}
               onClick={() => {
-                setSelected(prev => ({ ...prev, people: item }))
-                setMinPeople('')
-                setMaxPeople('')
+                setFormData(prev => ({
+                  ...prev,
+                  people: item,
+                  minPeople: '',
+                  maxPeople: ''
+                }))
               }}
             >
               {item}
-              {selected['people'] === item && !isPeopleInputActive && (
+              {formData['people'] === item && !isPeopleInputActive && (
                 <View className="searchRange_item__tick">
                   <Check color="#fff" size={'20rpx'} />
                 </View>
@@ -354,25 +355,32 @@ function Index() {
             <Input
               placeholder="最低人数"
               className="searchRange_item_input"
-              value={minPeople}
+              value={formData.minPeople}
               onInput={e => {
-                setMinPeople(e.detail.value)
-                setSelected(prev => ({ ...prev, people: '' }))
+                setFormData(prev => ({
+                  ...prev,
+                  minPeople: e.detail.value,
+                  people: ''
+                }))
               }}
             />
             <View className="searchRange_item_input_text">-</View>
             <Input
               placeholder="最高人数"
               className="searchRange_item_input"
-              value={maxPeople}
+              value={formData.maxPeople}
               onInput={e => {
-                setMaxPeople(e.detail.value)
-                setSelected(prev => ({ ...prev, people: '' }))
+                setFormData(prev => ({
+                  ...prev,
+                  maxPeople: e.detail.value,
+                  people: ''
+                }))
               }}
             />
           </View>
         </View>
       </View>
+      <View onClick={handleSubmit}>确定</View>
     </View>
   )
 }

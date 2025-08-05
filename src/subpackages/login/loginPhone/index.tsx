@@ -55,7 +55,6 @@ function Index() {
 
   const handleAgreementClick = (type: 'user' | 'privacy') => {
     // 处理协议点击事件
-    console.log(`点击了${type === 'user' ? '用户协议' : '隐私政策'}`)
   }
 
   const sendSmsCode = async () => {
@@ -102,6 +101,12 @@ function Index() {
         Taro.navigateTo({
           url: '/subpackages/login/loginCode/index?phone=' + phone
         })
+      } else {
+        Taro.showToast({
+          title: res.data.msg,
+          icon: 'none',
+          duration: 2000
+        })
       }
     })
   }
@@ -122,7 +127,7 @@ function Index() {
       <NutButton className="login_btn" onClick={() => sendSmsCode()}>
         获取短信验证码
       </NutButton>
-      <Text className="login_btn_phone" onClick={() => Taro.navigateBack}>
+      <Text className="login_btn_phone" onClick={() => Taro.navigateBack()}>
         返回一键登录
       </Text>
       <View className="login_bottom">

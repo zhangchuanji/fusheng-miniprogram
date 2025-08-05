@@ -182,7 +182,6 @@ function Index() {
   }
 
   function onChooseAvatar(val: any) {
-    console.log(val.detail.avatarUrl)
     // 获取token
     const tokenData = Taro.getStorageSync('token')
     const token = tokenData?.accessToken
@@ -219,6 +218,13 @@ function Index() {
   }
 
   function saveInfo() {
+    if( userInfo?.position && userInfo.position.length > 6 ) {
+      Taro.showToast({
+        title: '职位不能超过6个字符',
+        icon: 'none'
+      })
+      return
+    }
     loginInfoUpdateAPI(userInfo, res => {
       if (res.success) {
         loginInfoAPI({}, res => {
@@ -283,7 +289,7 @@ function Index() {
         <View className="info_item">
           <View>职位</View>
           <View>
-            <Input adjustPosition={false} onFocus={e => getFocusScrollTop(e, 'position')} onBlur={getBlurScrollTop} style={{ textAlign: 'right' }} value={userInfo?.position} onInput={e => setUserInfo({ ...userInfo, position: e.detail.value })} />
+            <Input adjustPosition={false}  onFocus={e => getFocusScrollTop(e, 'position')} onBlur={getBlurScrollTop} style={{ textAlign: 'right' }} value={userInfo?.position} onInput={e => setUserInfo({ ...userInfo, position: e.detail.value })} />
           </View>
         </View>
       </View>

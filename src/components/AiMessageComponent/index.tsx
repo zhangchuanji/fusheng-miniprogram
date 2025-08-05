@@ -76,7 +76,22 @@ const AiMessageComponent: React.FC<AiMessageComponentProps> = ({ msg }) => {
             <View key={valIdx}>
               <View className="chat_ai_company" onClick={() => navigateToCompanyDetail(val)}>
                 <View className="company_left">
-                  <Image src="http://36.141.100.123:10013/glks/assets/enterprise/enterprise11.png" className="company_left_img" />
+                  {val.logo ? (
+                    // 判断是否为图片链接（包含http或https）
+                    val.logo.includes('http') ? (
+                      <Image src={val.logo} className="company_left_img" />
+                    ) : (
+                      // 如果是文字，显示文字
+                      <Text style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#1B5BFF', color: '#fff', borderRadius: '8rpx', fontSize: '24rpx', textAlign: 'center', padding: '8rpx', boxSizing: 'border-box' }} className="company_left_img">
+                        {val.logo}
+                      </Text>
+                    )
+                  ) : (
+                    // 如果为空，显示"暂无"
+                    <Text className="company_left_img" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#1B5BFF', color: '#fff', borderRadius: '8rpx', fontSize: '24rpx' }}>
+                      暂无
+                    </Text>
+                  )}
                 </View>
                 <View className="company_right">
                   <View className="company_right_top">
@@ -85,12 +100,12 @@ const AiMessageComponent: React.FC<AiMessageComponentProps> = ({ msg }) => {
                   </View>
                   <View className="company_right_tags">
                     <Text className="company_right_tag">活跃号</Text>
-                    <Text className="company_right_tag">189个联系方式</Text>
+                    <Text className="company_right_tag">{val.contactInfo.phones.length}联系方式</Text>
                     <Text className="company_right_tag">300-500人</Text>
                   </View>
                   <View className="company_right_info">
                     <Text className="legal-person">法人:{val.legalPerson}</Text>
-                    <Text className="address">广东</Text>
+                    <Text className="address">{val.handleLocation}</Text>
                     <View className="website">
                       <Image src="http://36.141.100.123:10013/glks/assets/enterprise/enterprise3.png" className="website_img" />
                       官网
