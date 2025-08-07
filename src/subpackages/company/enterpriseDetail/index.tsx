@@ -7,6 +7,7 @@ import './index.scss'
 import CustomDialog from '@/components/CustomDialog'
 import { enterpriseDetailAPI } from '@/api/company'
 import { clueCreateAPI, clueDeleteAPI } from '@/api/clue'
+import ContactPopup from '@/components/ContactPopup'
 
 function Index() {
   // 企业信息数据，提取自图片（无children）
@@ -336,180 +337,19 @@ function Index() {
       </Popup>
 
       {/* 联系人 */}
-      <Popup position="bottom" style={{ maxHeight: '95%', minHeight: '95%' }} visible={isShowPhone} onClose={() => setIsShowPhone(false)}>
-        <View className="popup_header">
-          <View className="popup_header_title">联系人</View>
-          <Image onClick={() => setIsShowPhone(false)} src="http://36.141.100.123:10013/glks/assets/enterprise/enterprise14.png" className="popup_header_img" />
-        </View>
-        <Tabs
-          value={tabValue}
-          onChange={(value: number) => {
-            setTabValue(value)
-          }}
-        >
-          {tabList.map(item => (
-            <Tabs.TabPane key={item.id} title={item.name}>
-              {tabValue === 0 && (
-                <>
-                  <View className="tab_content">
-                    {phoneInfo.map((item, index) => (
-                      <View className="tab_content_item" key={item} onClick={() => Taro.makePhoneCall({ phoneNumber: item })}>
-                        <View className="tab_content_item_one">
-                          <View className="modile">{item}</View>
-                          {index < 3 ? <View className="recommend">推荐</View> : null}
-                        </View>
-                        <View className="tab_content_item_two">
-                          <View className="name">- -</View>
-                          <View className="position">- -</View>
-                          <View className="security">
-                            <Image src="http://36.141.100.123:10013/glks/assets/enterprise/enterprise12.png" className="security_img" />
-                            <View className="security_dot"></View>
-                            <View className="security_text">未检测</View>
-                          </View>
-                        </View>
-                        <View className="tab_content_item_three">
-                          <Text style={{ color: '#333333' }}>来自：</Text> - -
-                        </View>
-                        {index < 3 ? (
-                          <View className="tab_content_item_four">
-                            <Image src="http://36.141.100.123:10013/glks/assets/enterprise/enterprise13.png" className="tab_content_item_four_img" />
-                            <Image src="http://36.141.100.123:10013/glks/assets/enterprise/enterprise13.png" className="tab_content_item_four_img" />
-                            <Image src="http://36.141.100.123:10013/glks/assets/enterprise/enterprise13.png" className="tab_content_item_four_img" />
-                          </View>
-                        ) : null}
-                      </View>
-                    ))}
-                  </View>
-                </>
-              )}
-              {tabValue === 1 && (
-                <>
-                  <View className="tab_content">
-                    {phoneInfo.map(item => (
-                      <View className="tab_content_item">
-                        <View className="tab_content_item_one">
-                          <View className="modile">{item}</View>
-                          <View className="recommend">推荐</View>
-                        </View>
-                        <View className="tab_content_item_two">
-                          <View className="name">- -</View>
-                          <View className="position">- -</View>
-                          <View className="security">
-                            <Image src="http://36.141.100.123:10013/glks/assets/enterprise/enterprise12.png" className="security_img" />
-                            <View className="security_dot"></View>
-                            <View className="security_text">未检测</View>
-                          </View>
-                        </View>
-                        <View className="tab_content_item_three">
-                          <Text style={{ color: '#333333' }}>来自：</Text> - -
-                        </View>
-                        <View className="tab_content_item_four">
-                          <Image src="http://36.141.100.123:10013/glks/assets/enterprise/enterprise13.png" className="tab_content_item_four_img" />
-                          <Image src="http://36.141.100.123:10013/glks/assets/enterprise/enterprise13.png" className="tab_content_item_four_img" />
-                          <Image src="http://36.141.100.123:10013/glks/assets/enterprise/enterprise13.png" className="tab_content_item_four_img" />
-                        </View>
-                      </View>
-                    ))}
-                  </View>
-                </>
-              )}
-              {tabValue === 2 && (
-                <>
-                  <View className="tab_content">
-                    {emails.map(item => (
-                      <View className="tab_content_item" key={item} onClick={() => Taro.setClipboardData({ data: item })}>
-                        <View className="tab_content_item_one">
-                          <View className="modile">{item}</View>
-                          <View className="recommend">推荐</View>
-                        </View>
-                        <View className="tab_content_item_two">
-                          <View className="name">- -</View>
-                          <View className="position">- -</View>
-                          <View className="security">
-                            <Image src="http://36.141.100.123:10013/glks/assets/enterprise/enterprise12.png" className="security_img" />
-                            <View className="security_dot"></View>
-                            <View className="security_text">未检测</View>
-                          </View>
-                        </View>
-                        <View className="tab_content_item_three">
-                          <Text style={{ color: '#333333' }}>来自：</Text> - -
-                        </View>
-                        <View className="tab_content_item_four">
-                          <Image src="http://36.141.100.123:10013/glks/assets/enterprise/enterprise13.png" className="tab_content_item_four_img" />
-                          <Image src="http://36.141.100.123:10013/glks/assets/enterprise/enterprise13.png" className="tab_content_item_four_img" />
-                          <Image src="http://36.141.100.123:10013/glks/assets/enterprise/enterprise13.png" className="tab_content_item_four_img" />
-                        </View>
-                      </View>
-                    ))}
-                  </View>
-                </>
-              )}
-              {tabValue === 3 && (
-                <>
-                  <View className="tab_content">
-                    {phoneInfo.map(item => (
-                      <View className="tab_content_item">
-                        <View className="tab_content_item_one">
-                          <View className="modile">{item}</View>
-                          <View className="recommend">推荐</View>
-                        </View>
-                        <View className="tab_content_item_two">
-                          <View className="name">- -</View>
-                          <View className="position">- -</View>
-                          <View className="security">
-                            <Image src="http://36.141.100.123:10013/glks/assets/enterprise/enterprise12.png" className="security_img" />
-                            <View className="security_dot"></View>
-                            <View className="security_text">未检测</View>
-                          </View>
-                        </View>
-                        <View className="tab_content_item_three">
-                          <Text style={{ color: '#333333' }}>来自：</Text> - -
-                        </View>
-                        <View className="tab_content_item_four">
-                          <Image src="http://36.141.100.123:10013/glks/assets/enterprise/enterprise13.png" className="tab_content_item_four_img" />
-                          <Image src="http://36.141.100.123:10013/glks/assets/enterprise/enterprise13.png" className="tab_content_item_four_img" />
-                          <Image src="http://36.141.100.123:10013/glks/assets/enterprise/enterprise13.png" className="tab_content_item_four_img" />
-                        </View>
-                      </View>
-                    ))}
-                  </View>
-                </>
-              )}
-              {tabValue === 4 && (
-                <>
-                  <View className="tab_content">
-                    {phoneInfo.map(item => (
-                      <View className="tab_content_item">
-                        <View className="tab_content_item_one">
-                          <View className="modile">{item}</View>
-                          <View className="recommend">推荐</View>
-                        </View>
-                        <View className="tab_content_item_two">
-                          <View className="name">- -</View>
-                          <View className="position">- -</View>
-                          <View className="security">
-                            <Image src="http://36.141.100.123:10013/glks/assets/enterprise/enterprise12.png" className="security_img" />
-                            <View className="security_dot"></View>
-                            <View className="security_text">未检测</View>
-                          </View>
-                        </View>
-                        <View className="tab_content_item_three">
-                          <Text style={{ color: '#333333' }}>来自：</Text> - -
-                        </View>
-                        <View className="tab_content_item_four">
-                          <Image src="http://36.141.100.123:10013/glks/assets/enterprise/enterprise13.png" className="tab_content_item_four_img" />
-                          <Image src="http://36.141.100.123:10013/glks/assets/enterprise/enterprise13.png" className="tab_content_item_four_img" />
-                          <Image src="http://36.141.100.123:10013/glks/assets/enterprise/enterprise13.png" className="tab_content_item_four_img" />
-                        </View>
-                      </View>
-                    ))}
-                  </View>
-                </>
-              )}
-            </Tabs.TabPane>
-          ))}
-        </Tabs>
-      </Popup>
+      <ContactPopup
+        visible={isShowPhone}
+        onClose={() => setIsShowPhone(false)}
+        contactData={{
+          phoneInfo,
+          fixedLines,
+          emails,
+          address,
+          others
+        }}
+        tabValue={tabValue}
+        onTabChange={(value: number) => setTabValue(value)}
+      />
 
       <View className="enterpriseContent_item">
         <View className="enterpriseContent_item_top">

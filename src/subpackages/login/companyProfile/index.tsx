@@ -37,18 +37,26 @@ function CompanyProfile() {
   }, [debouncedInputValue])
 
   useEffect(() => {
-    companyInfoAPI({ phone: userInfo?.mobile }, res => {
-      if (res.success) {
-        setCompanyList([...res.data, ''])
-      } else {
-        setCompanyList([''])
-      }
-    })
-    configCompanyGetAPI({}, res => {
-      if (res.success && res.data) {
-        setCompanyInfo(res.data)
-      }
-    })
+    try {
+      companyInfoAPI({ phone: userInfo?.mobile }, res => {
+        if (res.success) {
+          setCompanyList([...res.data, ''])
+        } else {
+          setCompanyList([''])
+        }
+      })
+      configCompanyGetAPI({}, res => {
+        try {
+          if (res.success && res.data) {
+            setCompanyInfo(res.data)
+          }
+        } catch (error) {
+          console.log(error)
+        }
+      })
+    } catch (error) {
+      console.log(error)
+    }
   }, [])
 
   const handleNext = () => {

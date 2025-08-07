@@ -1,13 +1,13 @@
 import React, { useEffect, useRef, useState } from 'react'
-import { Dialog, Empty, Popup, Tabs } from '@nutui/nutui-react-taro'
+import { Cell, Dialog, Empty, Popup, Swipe, Tabs } from '@nutui/nutui-react-taro'
 import { View, Image, ScrollView } from '@tarojs/components'
-import Taro, { nextTick } from '@tarojs/taro'
+import Taro, { nextTick, useLoad } from '@tarojs/taro'
 import './index.scss'
 import { useExampleActions } from '@/hooks/useExampleActions'
 import AiChat from './aiChat'
 import CluePage from '../../subpackages/cluePage/index'
-import { Setting, Star, TriangleDown, TriangleUp } from '@nutui/icons-react-taro'
-import { aiSessionGetHistorySessionAPI, aiSessionListAPI, userFavoriteListAPI } from '@/api/chatMsg'
+import { Del, Setting, Star, TriangleDown, TriangleUp } from '@nutui/icons-react-taro'
+import { aiSessionDeleteAPI, aiSessionGetHistorySessionAPI, aiSessionListAPI, userFavoriteListAPI } from '@/api/chatMsg'
 import { useAppSelector } from '@/hooks/useAppStore'
 import AiMessageComponent from '@/components/AiMessageComponent'
 import { useAppDispatch } from '@/hooks/useAppStore'
@@ -22,8 +22,6 @@ function Index() {
   const {
     conversations, // 会话列表数据
     favorites, // 收藏列表数据
-    loading, // 加载状态
-    currentConversationId // 当前会话ID
   } = useAppSelector(state => state.conversation)
 
   const [capsuleInfo, setCapsuleInfo] = useState({ height: 32, statusBarHeight: 0 })
@@ -33,6 +31,10 @@ function Index() {
   const tabKeys = ['customer', 'clue']
   const [tabvalue, setTabvalue] = useState(0)
   const [companyShow, setCompanyShow] = useState(false)
+  // 替换原来的 openRef，添加状态管理
+  const [currentOpenSwipe, setCurrentOpenSwipe] = useState<string | null>(null)
+  const swipeRefs = useRef<{ [key: string]: any }>({})
+  const openRef = useRef<any>(null)
   // 将单个展开状态改为对象，用于管理每个收藏项的展开状态
   const [expandedItems, setExpandedItems] = useState<{ [key: number]: boolean }>({})
   const handleActiveIndex = idx => setActiveIndex(idx)
@@ -79,6 +81,14 @@ function Index() {
   const getFavoriteList = () => {
     dispatch(getFavoriteListAsync())
   }
+
+  useLoad((options: any) => {
+    if (options.text) {
+      nextTick(() => {
+        Taro.eventCenter.trigger('send', options.text)
+      })
+    }
+  })
 
   useEffect(() => {
     Taro.eventCenter.on('addSession', res => {
@@ -137,11 +147,7 @@ function Index() {
 
   // 原始的 getAiSession 调用函数
   const handleGetAiSession = () => {
-    if (aiChatRef.current && aiChatRef.current.getAiSession) {
-      aiChatRef.current.getAiSession()
-    } else {
-      Taro.eventCenter.trigger('addMsg', true)
-    }
+    aiChatRef.current.getAiSessionCopy()
   }
 
   // 创建防抖版本的函数，延迟 300ms
@@ -157,6 +163,39 @@ function Index() {
       ...prev,
       [index]: !prev[index]
     }))
+  }
+
+  const deleteChatItem = (chatItem: any) => {
+    aiSessionDeleteAPI({ id: chatItem.id }, res => {
+      if (res.success) {
+        if (chatItem.id === Taro.getStorageSync('aiSessionId')) {
+          Taro.removeStorageSync('aiSessionId')
+        }
+        getSession()
+        // 关闭当前打开的 Swipe
+        if (currentOpenSwipe && swipeRefs.current[currentOpenSwipe]) {
+          swipeRefs.current[currentOpenSwipe].close()
+        }
+        setCurrentOpenSwipe(null)
+        setTimeout(() => {
+          Taro.showToast({ title: '删除成功', icon: 'none' })
+        }, 1000)
+      }
+    })
+  }
+
+  // 处理 Swipe 打开事件
+  const handleSwipeOpen = (chatItemId: string) => {
+    // 如果当前有打开的 Swipe 且不是同一个，先关闭它
+    if (currentOpenSwipe && currentOpenSwipe !== chatItemId && swipeRefs.current[currentOpenSwipe]) {
+      swipeRefs.current[currentOpenSwipe].close()
+    }
+    setCurrentOpenSwipe(chatItemId)
+  }
+
+  // 处理 Swipe 关闭事件
+  const handleSwipeClose = () => {
+    setCurrentOpenSwipe(null)
   }
 
   const getChatItem = (chatItem: any) => {
@@ -218,15 +257,30 @@ function Index() {
                   {conversations &&
                     conversations.length > 0 &&
                     conversations.map((item: IConversation, index) => (
-                      <View key={index}>
+                      <View className="setting_content_list_item" key={index}>
                         <View className="item-date">{item.name}</View>
                         {item.list &&
                           item.list.length > 0 &&
-                          item.list.map((chatItem: any, index: number) => (
-                            <View key={index} className="list-item" onClick={() => getChatItem(chatItem)}>
-                              <View className="item-text">{chatItem.title}</View>
-                            </View>
-                          ))}
+                          item.list.map((chatItem: any, index: number) => {
+                            const swipeKey = `${item.name}-${chatItem.id}`
+                            return (
+                              <Cell key={index} className="list_item" onClick={() => getChatItem(chatItem)}>
+                                <Swipe
+                                  ref={ref => {
+                                    if (ref) {
+                                      swipeRefs.current[swipeKey] = ref
+                                    }
+                                  }}
+                                  rightAction={<Del color="#FF1818" />}
+                                  onActionClick={() => deleteChatItem(chatItem)}
+                                  onOpen={() => handleSwipeOpen(swipeKey)}
+                                  onClose={handleSwipeClose}
+                                >
+                                  <View className="list-item-title">{chatItem.title}</View>
+                                </Swipe>
+                              </Cell>
+                            )
+                          })}
                       </View>
                     ))}
                   {(!conversations || conversations.length === 0) && (

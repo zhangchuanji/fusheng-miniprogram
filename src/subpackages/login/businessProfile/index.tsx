@@ -19,6 +19,12 @@ function BusinessProfile() {
     setSelectedTags(prev => (prev.includes(tag) ? prev.filter((t: string) => t !== tag) : [...prev, tag]))
   }
 
+  const defaultProduct = () => {
+    const targetTags = selectedTags.length === 0 ? tags : selectedTags
+    const firstTag = targetTags.length > 0 ? targetTags[0] : ''
+    return [firstTag, customInput].filter(Boolean).join(',')
+  }
+
   const handleNext = () => {
     // 获取现有的用户信息，保留公司名称和名字
     const existingUserInfo = Taro.getStorageSync('companyInfo') || {}
@@ -44,7 +50,7 @@ function BusinessProfile() {
       },
       res => {}
     )
-    Taro.navigateTo({ url: '/pages/index/index' })
+    Taro.navigateTo({ url: '/pages/index/index?text=' + `请推荐国内10家生产/主营“${defaultProduct()}”的潜在客户。` })
   }
 
   const handleCustomInputChange = (e: any) => {

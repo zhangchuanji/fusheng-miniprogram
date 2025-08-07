@@ -63,8 +63,18 @@ const navigateToCompanyDetail = (company: any) => {
   })
 }
 
-const navigateToCompanyList = (company: any) => {
-  Taro.eventCenter.trigger('toCompanyList', company.messageId)
+const navigateToCompanyList = (msg: any) => {
+  // 先跳转页面
+  Taro.navigateTo({ url: `/subpackages/company/enterpriseSearch/index?messageId=${msg.messageId}` }).then(() => {
+    // 页面跳转成功后，延迟触发事件
+    setTimeout(() => {
+      Taro.eventCenter.trigger('enterpriseSearchData', {
+        companyList: msg.companyList,
+        total: msg.total,
+        messageId: msg.messageId
+      })
+    }, 100) // 延迟100ms确保目标页面已经加载
+  })
 }
 
 const AiMessageComponent: React.FC<AiMessageComponentProps> = ({ msg }) => {

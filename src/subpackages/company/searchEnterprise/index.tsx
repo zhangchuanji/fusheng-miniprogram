@@ -6,6 +6,7 @@ import Taro, { useLoad } from '@tarojs/taro'
 import { clueCreateAPI, clueDeleteAPI } from '@/api/clue'
 import './index.scss'
 import CustomDialog from '@/components/CustomDialog'
+import ContactPopup from '@/components/ContactPopup'
 
 function Index() {
   // ==================== 搜索相关状态 ====================
@@ -331,131 +332,19 @@ function Index() {
       </Popup>
 
       {/* 联系人 */}
-      <Popup position="bottom" style={{ maxHeight: '95%', minHeight: '95%' }} visible={isShowPhone} onClose={() => setIsShowPhone(false)}>
-        <View className="popup_header">
-          <View className="popup_header_title">联系人</View>
-          <Image onClick={() => setIsShowPhone(false)} src="http://36.141.100.123:10013/glks/assets/enterprise/enterprise14.png" className="popup_header_img" />
-        </View>
-        <Tabs
-          value={tabValue}
-          onChange={(value: number) => {
-            setTabValue(value)
-          }}
-        >
-          {tabList.map(item => (
-            <Tabs.TabPane key={item.id} title={item.name}>
-              {tabValue === 0 && (
-                <>
-                  <View className="tab_content">
-                    <View className="tab_content_item">
-                      <View className="tab_content_item_one">
-                        <View className="modile">13355557676</View>
-                        <View className="recommend">推荐</View>
-                      </View>
-                      <View className="tab_content_item_two">
-                        <View className="name">王紫郡</View>
-                        <View className="position">总经理</View>
-                        <View className="security">
-                          <Image src="http://36.141.100.123:10013/glks/assets/enterprise/enterprise12.png" className="security_img" />
-                          <View className="security_dot"></View>
-                          <View className="security_text">未检测</View>
-                        </View>
-                      </View>
-                      <View className="tab_content_item_three">
-                        <Text style={{ color: '#333333' }}>来自：</Text>杭州XX科技有限公司
-                      </View>
-                      <View className="tab_content_item_four">
-                        <Image src="http://36.141.100.123:10013/glks/assets/enterprise/enterprise13.png" className="tab_content_item_four_img" />
-                        <Image src="http://36.141.100.123:10013/glks/assets/enterprise/enterprise13.png" className="tab_content_item_four_img" />
-                        <Image src="http://36.141.100.123:10013/glks/assets/enterprise/enterprise13.png" className="tab_content_item_four_img" />
-                      </View>
-                    </View>
-                    <View className="tab_content_item">
-                      <View className="tab_content_item_one">
-                        <View className="modile">13355557676</View>
-                        <View className="recommend">推荐</View>
-                      </View>
-                      <View className="tab_content_item_two">
-                        <View className="name">王紫郡</View>
-                        <View className="position">总经理</View>
-                        <View className="security">
-                          <Image src="http://36.141.100.123:10013/glks/assets/enterprise/enterprise12.png" className="security_img" />
-                          <View className="security_dot"></View>
-                          <View className="security_text">未检测</View>
-                        </View>
-                      </View>
-                      <View className="tab_content_item_three">
-                        <Text style={{ color: '#333333' }}>来自：</Text>杭州XX科技有限公司
-                      </View>
-                      <View className="tab_content_item_four">
-                        <Image src="http://36.141.100.123:10013/glks/assets/enterprise/enterprise13.png" className="tab_content_item_four_img" />
-                        <Image src="http://36.141.100.123:10013/glks/assets/enterprise/enterprise13.png" className="tab_content_item_four_img" />
-                      </View>
-                    </View>
-                    <View className="tab_content_item">
-                      <View className="tab_content_item_one">
-                        <View className="modile">13355557676</View>
-                        <View className="recommend">推荐</View>
-                      </View>
-                      <View className="tab_content_item_two">
-                        <View className="name">王紫郡</View>
-                        <View className="position">总经理</View>
-                        <View className="security">
-                          <Image src="http://36.141.100.123:10013/glks/assets/enterprise/enterprise12.png" className="security_img" />
-                          <View className="security_dot"></View>
-                          <View className="security_text">未检测</View>
-                        </View>
-                      </View>
-                      <View className="tab_content_item_three">
-                        <Text style={{ color: '#333333' }}>来自：</Text>杭州XX科技有限公司
-                      </View>
-                      <View className="tab_content_item_four">
-                        <Image src="http://36.141.100.123:10013/glks/assets/enterprise/enterprise13.png" className="tab_content_item_four_img" />
-                      </View>
-                    </View>
-                  </View>
-                </>
-              )}
-              {tabValue === 1 && (
-                <>
-                  <View>固话内容</View>
-                  <View>固话内容</View>
-                  <View>固话内容</View>
-                  <View>固话内容</View>
-                  <View>固话内容</View>
-                </>
-              )}
-              {tabValue === 2 && (
-                <>
-                  <View>邮箱内容</View>
-                  <View>邮箱内容</View>
-                  <View>邮箱内容</View>
-                  <View>邮箱内容</View>
-                  <View>邮箱内容</View>
-                </>
-              )}
-              {tabValue === 3 && (
-                <>
-                  <View>地址内容</View>
-                  <View>地址内容</View>
-                  <View>地址内容</View>
-                  <View>地址内容</View>
-                  <View>地址内容</View>
-                </>
-              )}
-              {tabValue === 4 && (
-                <>
-                  <View>其他内容</View>
-                  <View>其他内容</View>
-                  <View>其他内容</View>
-                  <View>其他内容</View>
-                  <View>其他内容</View>
-                </>
-              )}
-            </Tabs.TabPane>
-          ))}
-        </Tabs>
-      </Popup>
+      <ContactPopup
+        visible={isShowPhone}
+        onClose={() => setIsShowPhone(false)}
+        contactData={{
+          phoneInfo,
+          fixedLines,
+          emails,
+          address,
+          others
+        }}
+        tabValue={tabValue}
+        onTabChange={(value: number) => setTabValue(value)}
+      />
 
       {/* 工厂地址 */}
       <Popup position="bottom" style={{ maxHeight: '95%', minHeight: '95%' }} visible={isShowAddress} onClose={() => setIsShowAddress(false)}>

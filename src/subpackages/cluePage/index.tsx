@@ -123,6 +123,8 @@ function CluePage({ height }: { height: number }) {
     setClueLoading(true)
     clueListAPI({ pageNo: page, pageSize: 10, userId: userInfo?.id, keywords: searchValueClueList }, res => {
       if (res.success && res.data) {
+        console.log(res)
+
         res.data.list.forEach((item: any) => {
           if (item.tags && item.tags.length > 0 && typeof item.tags === 'string') {
             item.tags = item.tags
@@ -149,6 +151,7 @@ function CluePage({ height }: { height: number }) {
     setFollowUpLoading(true)
     clueFollowUpPageAPI({ pageNum: page, pageSize: 20, userId: userInfo?.id }, res => {
       if (res.success && res.data) {
+        console.log(res)
         if (append) {
           setFollowUpList(prev => [...prev, ...res.data.list])
         } else {
@@ -167,6 +170,7 @@ function CluePage({ height }: { height: number }) {
     setHistoryLoading(true)
     clueFollowUpHistoryAPI({ pageNum: page, pageSize: 20 }, res => {
       if (res.success && res.data) {
+        console.log(res)
         res.data.list = res.data.list.map(item => {
           try {
             if (item.enterpriseInfo && typeof item.enterpriseInfo === 'string') {
@@ -264,13 +268,10 @@ function CluePage({ height }: { height: number }) {
   useDidShow(() => {
     // 根据当前选中的tab刷新对应的数据
     if (tabvalue === 0) {
-
       getClueList() // 刷新线索列表
     } else if (tabvalue === 1) {
-
       getFollowUpList() // 刷新跟进记录
     } else if (tabvalue === 2) {
-
       getSession() // 刷新历史匹配线索
     }
   })
@@ -369,12 +370,16 @@ function CluePage({ height }: { height: number }) {
 
   // 企业列表
   const handleEnterpriseList = (item: any) => {
-    let res = {
-      companyList: item.companyList,
-      total: item.total
-    }
-    Taro.navigateTo({
-      url: `/subpackages/company/enterpriseSearch/index?res=${JSON.stringify(res)}`
+    // 先跳转页面
+    Taro.navigateTo({ url: `/subpackages/company/enterpriseSearch/index?messageId=${item.messageId}` }).then(() => {
+      // 页面跳转成功后，延迟触发事件
+      setTimeout(() => {
+        Taro.eventCenter.trigger('enterpriseSearchData', {
+          companyList: item.companyList,
+          total: item.total,
+          messageId: item.messageId
+        })
+      }, 100) // 延迟100ms确保目标页面已经加载
     })
   }
 
@@ -722,11 +727,20 @@ function CluePage({ height }: { height: number }) {
                   <View className="cluePage_item" key={index}>
                     <View className="cluePage_item_top">
                       {item.logo ? (
-                        <Image src={item.logo} className="cluePage_item_Img" />
+                        // 判断是否为图片链接（包含http或https）
+                        item.logo.includes('http') ? (
+                          <Image src={item.logo} className="cluePage_item_Img" />
+                        ) : (
+                          // 如果是文字，显示文字
+                          <Text style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#1B5BFF', color: '#fff', borderRadius: '8rpx', fontSize: '24rpx', textAlign: 'center', padding: '8rpx', boxSizing: 'border-box' }} className="cluePage_item_Img">
+                            {item.logo}
+                          </Text>
+                        )
                       ) : (
-                        <View className="cluePage_item_Img company-avatar">
-                          <Text className="company-avatar-text">{item.name ? item.name.substring(0, 2) : '暂无'}</Text>
-                        </View>
+                        // 如果为空，显示"暂无"
+                        <Text className="cluePage_item_Img" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#1B5BFF', color: '#fff', borderRadius: '8rpx', fontSize: '24rpx' }}>
+                          暂无
+                        </Text>
                       )}
                       <View className="cluePage_item_Text">
                         <View className="item_title">

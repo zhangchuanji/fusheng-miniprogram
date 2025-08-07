@@ -155,13 +155,26 @@
       height: 1rpx;
       background: #FFFFFF;
       border-radius: 26rpx;
-      padding: 24rpx;
       box-sizing: border-box;
       text-align: left; // 确保容器左对齐
       overflow: hidden;
 
       .scrollView {
         height: 69vh;
+
+        &::-webkit-scrollbar {
+          width: 0;
+          height: 0;
+          background-color: transparent;
+          display: none;
+        }
+      }
+
+      .setting_content_list_item {
+
+        &:last-child {
+          padding-bottom: 1rpx;
+        }
       }
 
       .item-date {
@@ -172,14 +185,34 @@
         text-align: left; // 确保日期左对齐
         margin-left: 0; // 移除左边距
         padding-left: 0; // 移除左内边距
+        padding: 0 24rpx;
+        box-sizing: border-box;
+      }
+
+      .nut-cell {
+        width: auto;
+      }
+
+      .list_item {
+        width: auto;
+        display: block; // 确保是块级元素
+        text-align: left; // 确保左对齐
+        margin: 20rpx 24rpx;
+        position: relative;
+
+        .list-item-title {
+          width: 100%;
+          height: 100%;
+          display: flex;
+          align-items: center;
+        }
       }
 
       .list-item {
-        width: 100%;
+        width: auto;
         display: block; // 确保是块级元素
         text-align: left; // 确保左对齐
-        margin-top: 16rpx;
-
+        margin: 16rpx 24rpx;
 
         .chatMsg_ai_fun_line {
           width: 100%;

@@ -573,11 +573,11 @@
 
         .cluePage_item_tag {
             width: 100%;
-            height: 44rpx;
+            min-height: 44rpx;
             margin-top: 24rpx;
             display: flex;
             align-items: center;
-            flex-wrap: nowrap;
+            flex-wrap: wrap;
             overflow-x: auto;
             gap: 12rpx;
 

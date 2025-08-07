@@ -1,6 +1,7 @@
 export const TIME_OUT = 120000
 
-export const BASE_URL = 'http://192.168.110.20:10017'
+export const BASE_URL = 'http://192.168.110.35:10017'
+// export const BASE_URL = 'https://fs.xiaohengquan.com'
 
 // 上传文件
 export const uploadFileURL = '/infra/file/upload'
@@ -44,6 +45,7 @@ export const guessYouWantURL = '/fs/ai/guess-you-want'
 
 // AI会话管理相关API
 export const aiSessionCreateURL = '/fs/ai-session/create'
+export const aiSessionDeleteURL = '/fs/ai-session/delete'
 export const aiSessionGetURL = '/fs/ai-session/get'
 export const aiSessionGetHistorySessionURL = '/fs/ai-session/get-history-session'
 export const aiSessionListURL = '/fs/ai-session/list'
@@ -55,6 +57,8 @@ export const aiSessionUpdateURL = '/fs/ai-session/update'
 export const aiMessageCreateURL = '/fs/ai-message/create'
 // 添加对话反馈
 export const aiMessageEvaluationCreateURL = '/fs/ai-message-evaluation/create'
+// 删除对话反馈
+export const aiMessageEvaluationDeleteURL = '/fs/ai-message-evaluation/delete'
 // 添加收藏
 export const userFavoriteCreateURL = '/fs/user-favorite/create'
 // 删除收藏
@@ -81,3 +85,6 @@ export const clueFollowUpUpdateURL = '/fs/follow-up/update'
 export const clueFollowUpDeleteURL = '/fs/follow-up/delete'
 // 获取历史记录
 export const clueFollowUpHistoryURL = '/fs/ai-message/page'
+
+// 企业反馈
+export const companyFeedbackCreateURL = '/fs/company-feedback/create'

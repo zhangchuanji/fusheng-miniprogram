@@ -6,9 +6,12 @@ import { ArrowRight } from '@nutui/icons-react-taro'
 import Taro from '@tarojs/taro'
 import { logoutAPI } from '@/api/login'
 import { userAgreementAPI, getAreaAPI, loginInfoAPI, loginInfoUpdateAPI } from '@/api/setting'
+import { useAppDispatch } from '@/hooks/useAppStore'
+import { setLoginStatus, userInfoAction } from '@/redux/modules/login'
 
 function Index() {
   const [capsuleInfo, setCapsuleInfo] = useState({ height: 32, statusBarHeight: 0 })
+  const dispatch = useAppDispatch()
 
   function logoutClick() {
     Taro.showModal({
@@ -16,9 +19,21 @@ function Index() {
       content: '确定退出登陆吗？',
       success: res => {
         if (res.confirm) {
-          Taro.clearStorageSync()
           logoutAPI({}, res => {
             if (res.success) {
+              Taro.clearStorageSync()
+              dispatch(
+                userInfoAction({
+                  id: undefined,
+                  nickname: undefined,
+                  position: undefined,
+                  avatar: undefined,
+                  areaId: undefined,
+                  mobile: undefined,
+                  sex: undefined
+                })
+              )
+              dispatch(setLoginStatus(false))
               Taro.reLaunch({
                 url: '/pages/login/index'
               })

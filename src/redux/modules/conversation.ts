@@ -55,19 +55,19 @@ const conversationSlice = createSlice({
       state.loading = payload
       return state
     },
-    
+
     // 设置会话列表
     setConversations: (state, { payload }) => {
       state.conversations = payload
       return state
     },
-    
+
     // 设置当前会话ID
     setCurrentConversationId: (state, { payload }) => {
       state.currentConversationId = payload
       return state
     },
-    
+
     // 设置收藏列表
     setFavorites: (state, { payload }) => {
       state.favorites = payload
@@ -76,11 +76,6 @@ const conversationSlice = createSlice({
   }
 })
 
-export const {
-  setLoading,
-  setConversations,
-  setCurrentConversationId,
-  setFavorites
-} = conversationSlice.actions
+export const { setLoading, setConversations, setCurrentConversationId, setFavorites } = conversationSlice.actions
 
 export default conversationSlice.reducer

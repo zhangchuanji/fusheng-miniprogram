@@ -16,12 +16,7 @@ class TaroRequest {
   private instanceInterceptors?: TaroInterceptors
   private baseConfig: Partial<Taro.request.Option>
 
-  constructor(config?: {
-    baseURL?: string
-    timeout?: number
-    header?: Record<string, any>
-    interceptors?: TaroInterceptors
-  }) {
+  constructor(config?: { baseURL?: string; timeout?: number; header?: Record<string, any>; interceptors?: TaroInterceptors }) {
     this.baseConfig = {
       timeout: config?.timeout || 120000,
       header: config?.header || {}
@@ -35,21 +30,21 @@ class TaroRequest {
 
     // 添加默认的全局拦截器
     this.addGlobalRequestInterceptor(
-      (config) => {
+      config => {
         return config
       },
-      (err) => {
+      err => {
         console.error('请求失败:', err)
         return Promise.reject(err)
       }
     )
 
     this.addGlobalResponseInterceptor(
-      (res) => {
+      res => {
         // ('请求成功:', res)
         return res
       },
-      (err) => {
+      err => {
         console.error('响应失败:', err)
         this.handleError(err)
         return Promise.reject(err)
@@ -58,10 +53,7 @@ class TaroRequest {
   }
 
   // 添加全局请求拦截器
-  addGlobalRequestInterceptor(
-    successFn: (config: Taro.request.Option) => Taro.request.Option,
-    failureFn?: (err: any) => any
-  ) {
+  addGlobalRequestInterceptor(successFn: (config: Taro.request.Option) => Taro.request.Option, failureFn?: (err: any) => any) {
     this.globalInterceptors.request.success.push(successFn)
     if (failureFn) {
       this.globalInterceptors.request.failure.push(failureFn)
@@ -69,10 +61,7 @@ class TaroRequest {
   }
 
   // 添加全局响应拦截器
-  addGlobalResponseInterceptor(
-    successFn: (res: any) => any,
-    failureFn?: (err: any) => any
-  ) {
+  addGlobalResponseInterceptor(successFn: (res: any) => any, failureFn?: (err: any) => any) {
     this.globalInterceptors.response.success.push(successFn)
     if (failureFn) {
       this.globalInterceptors.response.failure.push(failureFn)
@@ -229,8 +218,10 @@ class TaroRequest {
       const processedConfig = this.executeRequestInterceptors(mergedConfig)
 
       // 重写success回调
-      processedConfig.success = (res) => {
+      processedConfig.success = res => {
         try {
+          // 将原始配置附加到响应对象上
+          ;(res as any).config = mergedConfig
           // 执行响应拦截器
           const processedRes = this.executeResponseInterceptors(res, mergedConfig, true)
           // 调用原始success回调
@@ -247,7 +238,7 @@ class TaroRequest {
       }
 
       // 重写fail回调
-      processedConfig.fail = (err) => {
+      processedConfig.fail = err => {
         try {
           // 执行响应失败拦截器
           this.executeResponseInterceptors(err, mergedConfig, false)
@@ -262,7 +253,6 @@ class TaroRequest {
 
       // 发起请求
       return Taro.request(processedConfig as Taro.request.Option<T>)
-
     } catch (error) {
       // 请求拦截器错误处理
       for (const interceptor of this.globalInterceptors.request.failure) {
@@ -284,11 +274,11 @@ class TaroRequest {
 
       // 返回一个模拟的RequestTask
       return {
-        abort: () => { },
-        onHeadersReceived: () => { },
-        offHeadersReceived: () => { },
-        onChunkReceived: () => { },
-        offChunkReceived: () => { },
+        abort: () => {},
+        onHeadersReceived: () => {},
+        offHeadersReceived: () => {},
+        onChunkReceived: () => {},
+        offChunkReceived: () => {},
         then: () => Promise.resolve(),
         catch: () => Promise.resolve()
       } as unknown as Taro.RequestTask<T>

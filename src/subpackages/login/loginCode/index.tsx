@@ -34,6 +34,7 @@ function Index() {
       pageNo: 1,
       pageSize: 10
     })
+    setCountdown(60)
   }, [])
 
   // 清理定时器
@@ -131,6 +132,8 @@ function Index() {
 
   const setInfo = (apiResponse: IResponse<IUserInfo>) => {
     if (apiResponse.success) {
+      console.log(apiResponse)
+
       dispatch(userInfoAction({ type: 'set', data: apiResponse.data }))
       if (apiResponse.data?.companyName && apiResponse.data?.targetCompanyServe) {
         let targetCompanyServe = JSON.parse(apiResponse?.data?.targetCompanyServe || '{}')
@@ -172,16 +175,16 @@ function Index() {
                 duration: 2000
               })
               Taro.setStorageSync('token', res.data)
-              dispatch(userInfoAction({ type: 'set', data: res.data }))
               dispatch(setLoginStatus(1))
               loginByInfoAPI(setInfo)
-              Taro.navigateTo({ url: '/subpackages/login/companyProfile/index' })
             } else {
               Taro.showToast({
-                title: '登录失败',
+                title: res.data.msg,
                 icon: 'none',
                 duration: 2000
               })
+              setCodeValues(['', '', '', '', '', ''])
+              setCurrentIndex(0)
             }
           })
         } else {

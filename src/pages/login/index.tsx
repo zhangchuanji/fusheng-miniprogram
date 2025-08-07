@@ -20,26 +20,7 @@ function Index() {
     // 页面加载时从本地存储读取token
     const storedToken = Taro.getStorageSync('token')
     if (storedToken.accessToken) {
-      // 检查token是否需要刷新（25天）
-      const loginTime = Taro.getStorageSync('loginTime')
-      const currentTime = Date.now()
-      const TOKEN_REFRESH_INTERVAL = 25 * 24 * 60 * 60 * 1000 // 25天的毫秒数
-
-      if (loginTime && Math.abs(currentTime - loginTime) >= TOKEN_REFRESH_INTERVAL) {
-        refreshTokenAPI({ refreshToken: storedToken.refreshToken }, response => {
-          if (response.success) {
-            Taro.setStorageSync('token', response.data)
-            Taro.setStorageSync('loginTime', Date.now())
-            loginByInfoAPI(setInfoCode)
-          } else {
-            Taro.removeStorageSync('token')
-            Taro.removeStorageSync('loginTime')
-            Taro.removeStorageSync('userOpenid')
-          }
-        })
-      } else {
-        loginByInfoAPI(setInfoCode)
-      }
+      loginByInfoAPI(setInfoCode)
     }
   }, [])
 

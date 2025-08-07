@@ -5,6 +5,7 @@ import { Add, ArrowDown } from '@nutui/icons-react-taro'
 import Taro, { useLoad } from '@tarojs/taro'
 import './index.scss'
 import CustomDialog from '@/components/CustomDialog'
+import ContactPopup from '@/components/ContactPopup'
 
 function Index() {
   // ==================== 搜索相关状态 ====================
@@ -85,8 +86,48 @@ function Index() {
     query.exec()
   }, [])
 
+  const formatInfo = (val: any) => {
+    // 创建深拷贝以避免修改只读对象
+    let newVal = JSON.parse(JSON.stringify(val))
+    let companyList = [...newVal]
+
+    let res = companyList.map((item: any) => {
+      // 创建新的对象副本
+      const newItem = { ...item }
+
+      let locationStr = newItem.province || newItem.address || newItem.location || '未知省份'
+      if (locationStr.includes('省')) {
+        newItem.handleLocation = locationStr.split('省')[0] + '省'
+      } else if (locationStr.includes('市')) {
+        const directMunicipalities = ['北京', '上海', '天津', '重庆']
+        const found = directMunicipalities.find(city => locationStr.includes(city))
+        newItem.handleLocation = found ? found + '市' : locationStr.split('市')[0] + '市'
+      } else if (locationStr.includes('自治区')) {
+        newItem.handleLocation = locationStr.split('自治区')[0] + '自治区'
+      } else {
+        newItem.handleLocation = '未知省份'
+      }
+
+      // 处理评分（去除小数点）
+      if (newItem.score && typeof newItem.score === 'number') {
+        newItem.score = Math.floor(newItem.score)
+      } else if (newItem.score && typeof newItem.score === 'string') {
+        let scoreNumber = parseFloat(newItem.score)
+        newItem.score = isNaN(scoreNumber) ? 0 : Math.floor(scoreNumber)
+      }
+
+      // 处理tags字段
+      newItem.tags = Array.isArray(newItem.tags) ? newItem.tags.filter((tag: any) => tag !== '曾用名') : []
+      return newItem
+    })
+
+    // 返回修改后的新对象
+    newVal = res
+    return newVal
+  }
+
   useLoad(options => {
-    setCustomList(JSON.parse(options.list))
+    setCustomList(formatInfo(JSON.parse(options.list)))
   })
 
   function toAiResearchReport(company: any): void {
@@ -105,180 +146,19 @@ function Index() {
   return (
     <View className="searchEnterprisePage">
       {/* 联系人 */}
-      <Popup position="bottom" style={{ maxHeight: '95%', minHeight: '95%' }} visible={isShowPhone} onClose={() => setIsShowPhone(false)}>
-        <View className="popup_header">
-          <View className="popup_header_title">联系人</View>
-          <Image onClick={() => setIsShowPhone(false)} src="http://36.141.100.123:10013/glks/assets/enterprise/enterprise14.png" className="popup_header_img" />
-        </View>
-        <Tabs
-          value={tabValue}
-          onChange={(value: number) => {
-            setTabValue(value)
-          }}
-        >
-          {tabList.map(item => (
-            <Tabs.TabPane key={item.id} title={item.name}>
-              {tabValue === 0 && (
-                <>
-                  <View className="tab_content">
-                    {phoneInfo.map((item, index) => (
-                      <View className="tab_content_item" key={item} onClick={() => Taro.makePhoneCall({ phoneNumber: item })}>
-                        <View className="tab_content_item_one">
-                          <View className="modile">{item}</View>
-                          {index < 3 ? <View className="recommend">推荐</View> : null}
-                        </View>
-                        <View className="tab_content_item_two">
-                          <View className="name">- -</View>
-                          <View className="position">- -</View>
-                          <View className="security">
-                            <Image src="http://36.141.100.123:10013/glks/assets/enterprise/enterprise12.png" className="security_img" />
-                            <View className="security_dot"></View>
-                            <View className="security_text">未检测</View>
-                          </View>
-                        </View>
-                        <View className="tab_content_item_three">
-                          <Text style={{ color: '#333333' }}>来自：</Text> - -
-                        </View>
-                        {index < 3 ? (
-                          <View className="tab_content_item_four">
-                            <Image src="http://36.141.100.123:10013/glks/assets/enterprise/enterprise13.png" className="tab_content_item_four_img" />
-                            <Image src="http://36.141.100.123:10013/glks/assets/enterprise/enterprise13.png" className="tab_content_item_four_img" />
-                            <Image src="http://36.141.100.123:10013/glks/assets/enterprise/enterprise13.png" className="tab_content_item_four_img" />
-                          </View>
-                        ) : null}
-                      </View>
-                    ))}
-                  </View>
-                </>
-              )}
-              {tabValue === 1 && (
-                <>
-                  <View className="tab_content">
-                    {phoneInfo.map(item => (
-                      <View className="tab_content_item">
-                        <View className="tab_content_item_one">
-                          <View className="modile">{item}</View>
-                          <View className="recommend">推荐</View>
-                        </View>
-                        <View className="tab_content_item_two">
-                          <View className="name">- -</View>
-                          <View className="position">- -</View>
-                          <View className="security">
-                            <Image src="http://36.141.100.123:10013/glks/assets/enterprise/enterprise12.png" className="security_img" />
-                            <View className="security_dot"></View>
-                            <View className="security_text">未检测</View>
-                          </View>
-                        </View>
-                        <View className="tab_content_item_three">
-                          <Text style={{ color: '#333333' }}>来自：</Text> - -
-                        </View>
-                        <View className="tab_content_item_four">
-                          <Image src="http://36.141.100.123:10013/glks/assets/enterprise/enterprise13.png" className="tab_content_item_four_img" />
-                          <Image src="http://36.141.100.123:10013/glks/assets/enterprise/enterprise13.png" className="tab_content_item_four_img" />
-                          <Image src="http://36.141.100.123:10013/glks/assets/enterprise/enterprise13.png" className="tab_content_item_four_img" />
-                        </View>
-                      </View>
-                    ))}
-                  </View>
-                </>
-              )}
-              {tabValue === 2 && (
-                <>
-                  <View className="tab_content">
-                    {emails.map(item => (
-                      <View className="tab_content_item" key={item} onClick={() => Taro.setClipboardData({ data: item })}>
-                        <View className="tab_content_item_one">
-                          <View className="modile">{item}</View>
-                          <View className="recommend">推荐</View>
-                        </View>
-                        <View className="tab_content_item_two">
-                          <View className="name">- -</View>
-                          <View className="position">- -</View>
-                          <View className="security">
-                            <Image src="http://36.141.100.123:10013/glks/assets/enterprise/enterprise12.png" className="security_img" />
-                            <View className="security_dot"></View>
-                            <View className="security_text">未检测</View>
-                          </View>
-                        </View>
-                        <View className="tab_content_item_three">
-                          <Text style={{ color: '#333333' }}>来自：</Text> - -
-                        </View>
-                        <View className="tab_content_item_four">
-                          <Image src="http://36.141.100.123:10013/glks/assets/enterprise/enterprise13.png" className="tab_content_item_four_img" />
-                          <Image src="http://36.141.100.123:10013/glks/assets/enterprise/enterprise13.png" className="tab_content_item_four_img" />
-                          <Image src="http://36.141.100.123:10013/glks/assets/enterprise/enterprise13.png" className="tab_content_item_four_img" />
-                        </View>
-                      </View>
-                    ))}
-                  </View>
-                </>
-              )}
-              {tabValue === 3 && (
-                <>
-                  <View className="tab_content">
-                    {phoneInfo.map(item => (
-                      <View className="tab_content_item">
-                        <View className="tab_content_item_one">
-                          <View className="modile">{item}</View>
-                          <View className="recommend">推荐</View>
-                        </View>
-                        <View className="tab_content_item_two">
-                          <View className="name">- -</View>
-                          <View className="position">- -</View>
-                          <View className="security">
-                            <Image src="http://36.141.100.123:10013/glks/assets/enterprise/enterprise12.png" className="security_img" />
-                            <View className="security_dot"></View>
-                            <View className="security_text">未检测</View>
-                          </View>
-                        </View>
-                        <View className="tab_content_item_three">
-                          <Text style={{ color: '#333333' }}>来自：</Text> - -
-                        </View>
-                        <View className="tab_content_item_four">
-                          <Image src="http://36.141.100.123:10013/glks/assets/enterprise/enterprise13.png" className="tab_content_item_four_img" />
-                          <Image src="http://36.141.100.123:10013/glks/assets/enterprise/enterprise13.png" className="tab_content_item_four_img" />
-                          <Image src="http://36.141.100.123:10013/glks/assets/enterprise/enterprise13.png" className="tab_content_item_four_img" />
-                        </View>
-                      </View>
-                    ))}
-                  </View>
-                </>
-              )}
-              {tabValue === 4 && (
-                <>
-                  <View className="tab_content">
-                    {phoneInfo.map(item => (
-                      <View className="tab_content_item">
-                        <View className="tab_content_item_one">
-                          <View className="modile">{item}</View>
-                          <View className="recommend">推荐</View>
-                        </View>
-                        <View className="tab_content_item_two">
-                          <View className="name">- -</View>
-                          <View className="position">- -</View>
-                          <View className="security">
-                            <Image src="http://36.141.100.123:10013/glks/assets/enterprise/enterprise12.png" className="security_img" />
-                            <View className="security_dot"></View>
-                            <View className="security_text">未检测</View>
-                          </View>
-                        </View>
-                        <View className="tab_content_item_three">
-                          <Text style={{ color: '#333333' }}>来自：</Text> - -
-                        </View>
-                        <View className="tab_content_item_four">
-                          <Image src="http://36.141.100.123:10013/glks/assets/enterprise/enterprise13.png" className="tab_content_item_four_img" />
-                          <Image src="http://36.141.100.123:10013/glks/assets/enterprise/enterprise13.png" className="tab_content_item_four_img" />
-                          <Image src="http://36.141.100.123:10013/glks/assets/enterprise/enterprise13.png" className="tab_content_item_four_img" />
-                        </View>
-                      </View>
-                    ))}
-                  </View>
-                </>
-              )}
-            </Tabs.TabPane>
-          ))}
-        </Tabs>
-      </Popup>
+      <ContactPopup
+        visible={isShowPhone}
+        onClose={() => setIsShowPhone(false)}
+        contactData={{
+          phoneInfo,
+          fixedLines,
+          emails,
+          address,
+          others
+        }}
+        tabValue={tabValue}
+        onTabChange={(value: number) => setTabValue(value)}
+      />
 
       {/* 工厂地址 */}
       <Popup position="bottom" style={{ maxHeight: '95%', minHeight: '95%' }} visible={isShowAddress} onClose={() => setIsShowAddress(false)}>
@@ -322,27 +202,37 @@ function Index() {
                     <View className="description">
                       <View className="certification">
                         <Image src="http://36.141.100.123:10013/glks/assets/enterprise/enterprise3.png" className="certification_img" />
-                        <View className="certification_text">认证</View>
+                        <View className="certification_text">官网</View>
                       </View>
-                      <View className="match">匹配80%</View>
+                      <View className="match">匹配{item.score}%</View>
                     </View>
                   </View>
                 </View>
                 <View className="enterpriseContent_item_tag">
-                  <View className="enterpriseContent_item_tag_item">存续</View>
-                  <View className="enterpriseContent_item_tag_item">省级制造业单项冠军企业</View>
-                  <View className="enterpriseContent_item_tag_item">高新企业</View>
-                  <View className="enterpriseContent_item_tag_item">展开</View>
+                  <View className="enterpriseContent_item_tag_item">{item.regStatus}</View>
+                  {item.tags &&
+                    item.tags.length > 0 &&
+                    item.tags.map((tag: any, tagIndex: number) => (
+                      <View key={tagIndex} className="enterpriseContent_item_tag_item">
+                        {tag}
+                      </View>
+                    ))}
                 </View>
                 <View className="enterpriseContent_item_info">
-                  <View className="enterpriseContent_item_info_item avsd">{item.legalPersonName}</View>
+                  <View className="enterpriseContent_item_info_item">{item.legalPersonName}</View>
                   <View className="enterpriseContent_item_info_item">{item.regCapital}</View>
                   <View className="enterpriseContent_item_info_item">{item.estiblishTime}</View>
-                  <View className="enterpriseContent_item_info_item">深圳</View>
+                  <View className="enterpriseContent_item_info_item">{item.location}</View>
                 </View>
                 <View className="enterpriseContent_item_product">
-                  <View className={`enterpriseContent_item_product_left${expandedProducts[index] ? ' expanded' : ''}`}>{highlightKeyword('产品与服务：柴油发电机组、驱动电机、新能源发电机、高新能源发电机、驱动电机、新能源发电机、高新能源发电机、驱动电机、新能源发电机、高新能源发电机、驱动电机、新能源发电机、高新能源发电机、驱动电机、新能源发电机、高新能源发电机', '电机')}</View>
-                  <View className="enterpriseContent_item_product_right" onClick={() => setExpandedProducts(prev => ({ ...prev, [index]: !prev[index] }))}>
+                  <View className={`enterpriseContent_item_product_left${expandedProducts[index] ? ' expanded' : ''}`}>{highlightKeyword(item.businessScope, false || item.orgType)}</View>
+                  <View
+                    className="enterpriseContent_item_product_right"
+                    onClick={e => {
+                      e.stopPropagation()
+                      setExpandedProducts(prev => ({ ...prev, [index]: !prev[index] }))
+                    }}
+                  >
                     {expandedProducts[index] ? '收起' : '展开'}
                   </View>
                 </View>
