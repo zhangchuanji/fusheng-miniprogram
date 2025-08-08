@@ -3,10 +3,13 @@ import { View, Text, Input } from '@tarojs/components'
 import Taro from '@tarojs/taro'
 import { loginInfoUpdateAPI } from '@/api/setting'
 import { useAppSelector } from '@/hooks/useAppStore'
-import { sendSmsCodeAPI } from '@/api/login'
+import { sendSmsCodeAPI, validateSmsCodeAPI } from '@/api/login'
+import { useAppDispatch } from '@/hooks/useAppStore'
+import { userInfoAction } from '@/redux/modules/login'
 import './index.scss'
 
 function Index() {
+  const dispatch = useAppDispatch()
   // 控制显示注销说明还是安全校验
   const [showVerify, setShowVerify] = useState(false)
   const userInfo = useAppSelector(state => state.login.userInfo)
@@ -64,53 +67,7 @@ function Index() {
     setCountdown(60)
   }
 
-  // 处理输入变化
-  const handleInputChange = (index: number, value: string) => {
-    const numericValue = value.replace(/[^0-9]/g, '')
-    const newCodeValues = [...codeValues]
-    if (numericValue === '' && codeValues[index] !== '') {
-      newCodeValues[index] = ''
-      setCodeValues(newCodeValues)
-      if (index > 0) {
-        setCurrentIndex(index - 1)
-        focusTimeoutRef.current = setTimeout(() => {
-          if (inputRefs.current[index - 1]) inputRefs.current[index - 1].focus()
-        }, 100)
-      }
-      return
-    }
-    if (numericValue.length > 1) {
-      newCodeValues[index] = numericValue.charAt(0)
-    } else {
-      newCodeValues[index] = numericValue
-    }
-    setCodeValues(newCodeValues)
-    if (numericValue && index < 5) {
-      setCurrentIndex(index + 1)
-      focusTimeoutRef.current = setTimeout(() => {
-        if (inputRefs.current[index + 1]) inputRefs.current[index + 1].focus()
-      }, 100)
-    }
-  }
-
-  const handleInputClick = (index: number) => {
-    setCurrentIndex(index)
-    focusTimeoutRef.current = setTimeout(() => {
-      if (inputRefs.current[index]) inputRefs.current[index].focus()
-    }, 100)
-  }
-
   const isCodeComplete = codeValues.every(value => value !== '')
-
-  // 验证码输入完成回调
-  useEffect(() => {
-    if (isCodeComplete && showVerify) {
-      const code = codeValues.join('')
-      // 这里可以调用注销API
-      Taro.showToast({ title: '注销成功', icon: 'success' })
-      // 这里可以跳转或做其他处理
-    }
-  }, [codeValues, isCodeComplete, showVerify])
 
   // 切换到安全校验界面
   const handleConfirm = () => {
@@ -126,6 +83,7 @@ function Index() {
             icon: 'success',
             duration: 2000
           })
+          handleResendCode()
         }
       }
     )
@@ -141,6 +99,48 @@ function Index() {
     } else {
       // 这里可以返回上一页
       Taro.navigateBack()
+    }
+  }
+
+  // 确定注销
+  const handleLogout = () => {
+    if (isCodeComplete) {
+      validateSmsCodeAPI(
+        {
+          mobile: userInfo?.mobile,
+          scene: 1,
+          code: codeValues.join('')
+        },
+        res => {
+          if (res.success) {
+            Taro.showToast({ title: '注销成功', icon: 'success' })
+            Taro.reLaunch({ url: '/pages/login/index' })
+            Taro.clearStorageSync()
+            dispatch(
+              userInfoAction({
+                type: 'set',
+                data: {
+                  openid: '',
+                  userInfo: {},
+                  id: undefined,
+                  nickname: undefined,
+                  avatar: undefined,
+                  routineOpenid: undefined,
+                  mobile: undefined,
+                  companyName: undefined,
+                  name: undefined,
+                  targetCompanyServe: undefined,
+                  companyServe: undefined
+                }
+              })
+            )
+          } else {
+            Taro.showToast({ title: '验证码错误', icon: 'none' })
+          }
+        }
+      )
+    } else {
+      Taro.showToast({ title: '请输入完整验证码', icon: 'none' })
     }
   }
 
@@ -177,7 +177,7 @@ function Index() {
           />
         </View>
         <View style={{ height: '40rpx' }}></View>
-        <View style={{ width: '90%', margin: '0 auto', border: '2rpx solid #FF1818', borderRadius: '48rpx', height: '96rpx', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#FF1818', fontSize: '32rpx', marginBottom: '40rpx' }} onClick={isCodeComplete ? () => Taro.showToast({ title: '注销成功', icon: 'success' }) : undefined}>
+        <View style={{ width: '90%', margin: '0 auto', border: '2rpx solid #FF1818', borderRadius: '48rpx', height: '96rpx', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#FF1818', fontSize: '32rpx', marginBottom: '40rpx' }} onClick={() => handleLogout()}>
           确定注销
         </View>
       </View>

@@ -1,6 +1,7 @@
 export const TIME_OUT = 120000
 
-export const BASE_URL = 'http://192.168.110.35:10017'
+// export const BASE_URL = 'http://192.168.110.20:10017'
+export const BASE_URL = 'http://192.168.110.43:10017'
 // export const BASE_URL = 'https://fs.xiaohengquan.com'
 
 // 上传文件
@@ -16,8 +17,12 @@ export const getAreaURL = '/system/area/tree'
 export const configCompanyGetURL = '/fs/user-company/get'
 export const configCompanyPostURL = '/fs/user-company/create'
 export const configCompanyUpdateURL = '/fs/user-company/update'
+
 // 企业分类
 export const configCompanySectorURL = '/fs/industry-category/get'
+
+// 企业分类
+export const configPreprocessingURL = '/fs/ai/data-preprocessing'
 
 // 用户认证相关API
 export const loginByPhoneURL = '/member/auth/weixin-mini-app-login'

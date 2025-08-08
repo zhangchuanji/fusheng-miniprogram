@@ -1,5 +1,5 @@
 import { taroPost, taroGet, taroPut, taroDelete } from '@/service'
-import { textStageURL, companyStageURL, guessYouWantURL, aiSessionCreateURL, aiMessageCreateURL, aiSessionGetURL, aiSessionGetHistorySessionURL, aiSessionListURL, aiSessionPageURL, aiSessionUpdateURL, aiMessageEvaluationCreateURL, aiMessageEvaluationDeleteURL, userFavoriteCreateURL, userFavoriteListURL, userFavoriteDeleteURL, aiSessionDeleteURL } from '@/service/config'
+import { textStageURL, companyStageURL, guessYouWantURL, aiSessionCreateURL, aiMessageCreateURL, aiSessionGetURL, aiSessionGetHistorySessionURL, aiSessionListURL, aiSessionPageURL, aiSessionUpdateURL, aiMessageEvaluationCreateURL, aiMessageEvaluationDeleteURL, userFavoriteCreateURL, userFavoriteListURL, userFavoriteDeleteURL, aiSessionDeleteURL, configPreprocessingURL } from '@/service/config'
 import type { IResponse } from '../types'
 
 export const textStageAPI = (data: any, callback: (res: IResponse<any>) => void) => {
@@ -422,6 +422,34 @@ export const userFavoriteDeleteAPI = (data: any, callback: (res: IResponse<any>)
 export const userFavoriteListAPI = (data: any, callback: (res: IResponse<any>) => void) => {
   taroGet({
     url: userFavoriteListURL,
+    data,
+    success: (res: any) => {
+      callback({
+        success: true,
+        data: res.data
+      })
+    },
+    fail: (err: any) => {
+      if (err instanceof Promise) {
+        err.catch(errMsg => {
+          callback({
+            success: false,
+            data: errMsg
+          })
+        })
+      } else {
+        callback({
+          success: false,
+          data: err
+        })
+      }
+    }
+  }).catch(() => {})
+}
+
+export const preprocessingAPI = (data: any, callback: (res: IResponse<any>) => void) => {
+  taroPost({
+    url: configPreprocessingURL,
     data,
     success: (res: any) => {
       callback({

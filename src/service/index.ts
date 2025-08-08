@@ -6,7 +6,7 @@ import { refreshTokenAPI } from '@/api/login'
 
 // 先创建taroRequest实例
 const createTaroRequest = (baseURL: string) => {
-  return new TaroRequest({
+  const request = new TaroRequest({
     baseURL,
     timeout: TIME_OUT,
     header: {
@@ -47,8 +47,11 @@ const createTaroRequest = (baseURL: string) => {
               url: res.config?.url || '',
               method: res.config?.method || 'GET',
               data: res.config?.data,
-              header: res.config?.header || {}
+              header: res.config?.header || {},
+              request
             }
+
+            console.log(request, '==========')
 
             // 如果正在刷新token，将请求加入队列
             if (isRefreshing) {
@@ -101,6 +104,8 @@ const createTaroRequest = (baseURL: string) => {
       }
     }
   })
+
+  return request
 }
 
 // 创建不同的请求实例
@@ -124,7 +129,7 @@ const processQueue = (error: any, token: string | null = null) => {
         originalRequest.header.Authorization = `Bearer ${token}`
       }
       // 现在可以正确使用taroRequest
-      taroRequest.request({
+      originalRequest.request({
         ...originalRequest,
         success: resolve,
         fail: reject

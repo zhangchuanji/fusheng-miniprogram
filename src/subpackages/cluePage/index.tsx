@@ -1,16 +1,17 @@
-import React, { useState, useCallback, useEffect } from 'react'
+import React, { useState, useCallback, useEffect, forwardRef, useImperativeHandle } from 'react'
 import { View, Text, Image, ScrollView } from '@tarojs/components'
 import { Cell, Popup, Tabs, Input, Calendar, Drag, Empty } from '@nutui/nutui-react-taro'
 import './index.scss'
 import { SearchBar } from '@nutui/nutui-react-taro'
-import { ArrowRight, Checked } from '@nutui/icons-react-taro'
-import Taro, { useDidShow } from '@tarojs/taro' // 添加useDidShow导入
+import { ArrowRight, Checked, Search } from '@nutui/icons-react-taro'
+import Taro, { useDidShow, useLoad } from '@tarojs/taro' // 添加useDidShow导入
 import { clueListAPI, clueDeleteAPI, clueFollowUpPageAPI, clueFollowUpHistoryAPI } from '@/api/clue'
 import { useSelector } from 'react-redux'
 import useDebounce from '@/hooks/useDebounce'
 import { aiSessionListAPI } from '@/api/chatMsg'
+import ContactPopup from '@/components/ContactPopup'
 
-function CluePage({ height }: { height: number }) {
+const CluePage = forwardRef<{ getClueList: (page?: number, append?: boolean) => void }, { height: number }>(({ height }, ref) => {
   const userInfo = useSelector((state: any) => state.login.userInfo)
   const [tabvalue, setTabvalue] = useState(0)
   const [isShowPhone, setIsShowPhone] = useState(false)
@@ -19,21 +20,22 @@ function CluePage({ height }: { height: number }) {
   const [tabFilterValue, setTabFilterValue] = useState(0)
   const [tabValue, setTabValue] = useState(0)
   const [isVisible, setIsVisible] = useState(false)
+  const [isShowFollowUp, setIsShowFollowUp] = useState(false)
   const [clueList, setClueList] = useState<any[]>([])
+  const [selectedItem, setSelectedItem] = useState<any>({})
   const [historySession, setHistorySession] = useState<any[]>([])
-  const [tabList, setTabList] = useState([
-    { id: 1, name: '手机号 148' },
-    { id: 2, name: '固话 148' },
-    { id: 3, name: '邮箱 148' },
-    { id: 4, name: '地址 148' },
-    { id: 5, name: '其他 148' }
-  ])
   const [followUpList, setFollowUpList] = useState<any[]>([])
+  const [followUpListPopup, setFollowUpListPopup] = useState<any[]>([])
 
   // ==================== 筛选相关状态 ====================
   const [sortType, setSortType] = useState('asc') // 排序类型：asc-正序，desc-倒序
   const [selectedSortField, setSelectedSortField] = useState('followTime') // 选中的排序字段
   const [selectedFilterFields, setSelectedFilterFields] = useState<string[]>([]) // 选中的筛选字段
+  const [phoneInfo, setPhoneInfo] = useState<any[]>([]) // 手机号
+  const [fixedLines, setFixedLines] = useState<any[]>([]) // 固话
+  const [emails, setEmails] = useState<any[]>([]) // 邮箱
+  const [address, setAddress] = useState<any[]>([]) // 地址
+  const [others, setOthers] = useState<any[]>([]) // 其他
 
   // 筛选页面状态
   const [selectedModule, setSelectedModule] = useState('all') // 选中的模块：all-全部，clue-线索
@@ -94,7 +96,6 @@ function CluePage({ height }: { height: number }) {
       setTabFilterValue(1)
     }
     if (index === 3) {
-      setIsShowPhone(true)
     }
     if (index === 4) {
       setIsShowPhone(true)
@@ -102,6 +103,16 @@ function CluePage({ height }: { height: number }) {
     if (index === 5) {
       setIsShowAddress(true)
     }
+  }
+
+  function getFollowUpListPopup(item: any) {
+    setSelectedItem(item)
+    setIsShowFollowUp(true)
+    clueFollowUpPageAPI({ pageNum: 1, pageSize: 20, userId: userInfo?.id, leadId: item.id }, res => {
+      if (res.success && res.data) {
+        setFollowUpListPopup(res.data.list)
+      }
+    })
   }
 
   // 新增分页状态
@@ -123,8 +134,6 @@ function CluePage({ height }: { height: number }) {
     setClueLoading(true)
     clueListAPI({ pageNo: page, pageSize: 10, userId: userInfo?.id, keywords: searchValueClueList }, res => {
       if (res.success && res.data) {
-        console.log(res)
-
         res.data.list.forEach((item: any) => {
           if (item.tags && item.tags.length > 0 && typeof item.tags === 'string') {
             item.tags = item.tags
@@ -149,9 +158,8 @@ function CluePage({ height }: { height: number }) {
   const getFollowUpList = (page = 1, append = false) => {
     if (followUpLoading) return
     setFollowUpLoading(true)
-    clueFollowUpPageAPI({ pageNum: page, pageSize: 20, userId: userInfo?.id }, res => {
+    clueFollowUpPageAPI({ pageNum: page, pageSize: 20, userId: userInfo?.id, keywords: searchValueClueList }, res => {
       if (res.success && res.data) {
-        console.log(res)
         if (append) {
           setFollowUpList(prev => [...prev, ...res.data.list])
         } else {
@@ -170,7 +178,6 @@ function CluePage({ height }: { height: number }) {
     setHistoryLoading(true)
     clueFollowUpHistoryAPI({ pageNum: page, pageSize: 20 }, res => {
       if (res.success && res.data) {
-        console.log(res)
         res.data.list = res.data.list.map(item => {
           try {
             if (item.enterpriseInfo && typeof item.enterpriseInfo === 'string') {
@@ -224,10 +231,6 @@ function CluePage({ height }: { height: number }) {
     })
   }
 
-  useEffect(() => {
-    getClueList()
-  }, [])
-
   function changeTabValue(value: any) {
     setTabvalue(value)
     if (value === 0) {
@@ -264,37 +267,9 @@ function CluePage({ height }: { height: number }) {
     setSortType(type)
   }
 
-  // 新增：页面显示时刷新数据
-  useDidShow(() => {
-    // 根据当前选中的tab刷新对应的数据
-    if (tabvalue === 0) {
-      getClueList() // 刷新线索列表
-    } else if (tabvalue === 1) {
-      getFollowUpList() // 刷新跟进记录
-    } else if (tabvalue === 2) {
-      getSession() // 刷新历史匹配线索
-    }
-  })
-
   // 处理排序字段选择
   const handleSortFieldChange = (field: string) => {
     setSelectedSortField(field)
-  }
-
-  // 处理筛选字段选择
-  const handleFilterFieldChange = (field: string) => {
-    setSelectedFilterFields(prev => {
-      if (prev.includes(field)) {
-        return prev.filter(item => item !== field)
-      } else {
-        return [...prev, field]
-      }
-    })
-  }
-
-  // 检查字段是否被选中
-  const isFieldSelected = (field: string) => {
-    return selectedFilterFields.includes(field)
   }
 
   // 处理模块选择
@@ -352,10 +327,6 @@ function CluePage({ height }: { height: number }) {
     setSelectedFilterFields([])
   }
 
-  const searchClueListChange = (e: any) => {
-    setSearchValueClueList(e)
-  }
-
   const handleAiResearchReport = (company: any) => {
     Taro.navigateTo({
       url: `/subpackages/company/aiResearchReport/index?creditCode=${company.unifiedSocialCreditCode}`
@@ -386,12 +357,10 @@ function CluePage({ height }: { height: number }) {
   const handleSearchClueList = () => {
     getClueList()
   }
-  // 在组件内部
-  const debouncedSearchValue = useDebounce<any>(searchValueFollowRecord, 500)
 
-  useEffect(() => {
-    // 执行搜索逻辑
-  }, [debouncedSearchValue])
+  const handleSearchFollowRecord = () => {
+    getFollowUpList()
+  }
 
   function addFollow() {
     if (clueList && clueList.length > 0) {
@@ -422,6 +391,17 @@ function CluePage({ height }: { height: number }) {
     getClueList(cluePageNum + 1, true)
   }
 
+  const openPhone = (item: any) => {
+    setIsShowPhone(true)
+    setPhoneInfo(item.contactInfo?.phones || [])
+    setEmails(item.contactInfo?.emails || [])
+  }
+
+  const openAddress = (item: any) => {
+    setIsShowPhone(true)
+    setAddress(item.contactInfo?.address || [])
+  }
+
   const loadMoreFollowUpList = () => {
     if (followUpLoading || !followUpHasMore) return
     getFollowUpList(followUpPageNum + 1, true)
@@ -432,135 +412,26 @@ function CluePage({ height }: { height: number }) {
     getSession(historyPageNum + 1, true)
   }
 
+  useImperativeHandle(ref, () => ({
+    getClueList
+  }))
+
   return (
     <View className="cluePage" style={{ height: `calc(100vh - ${height}px)` }}>
       {/* 联系人 */}
-      <Popup position="bottom" style={{ maxHeight: '85%', minHeight: '85%' }} visible={isShowPhone} onClose={() => setIsShowPhone(false)}>
-        <View className="popup_header" style={{ height: '100rpx' }}>
-          <View className="popup_header_title">联系人</View>
-          <Image onClick={() => setIsShowPhone(false)} src="http://36.141.100.123:10013/glks/assets/enterprise/enterprise14.png" className="popup_header_img" />
-        </View>
-        <Tabs
-          value={tabValue}
-          onChange={(value: number) => {
-            setTabValue(value)
-          }}
-        >
-          {tabList.map(item => (
-            <Tabs.TabPane key={item.id} title={item.name}>
-              {tabValue === 0 && (
-                <>
-                  <View className="tab_content">
-                    <View className="tab_content_item">
-                      <View className="tab_content_item_one">
-                        <View className="modile">13355557676</View>
-                        <View className="recommend">推荐</View>
-                      </View>
-                      <View className="tab_content_item_two">
-                        <View className="name">王紫郡</View>
-                        <View className="position">总经理</View>
-                        <View className="security">
-                          <Image src="http://36.141.100.123:10013/glks/assets/enterprise/enterprise12.png" className="security_img" />
-                          <View className="security_dot"></View>
-                          <View className="security_text">未检测</View>
-                        </View>
-                      </View>
-                      <View className="tab_content_item_three">
-                        <Text style={{ color: '#333333' }}>来自：</Text>杭州XX科技有限公司
-                      </View>
-                      <View className="tab_content_item_four">
-                        <Image src="http://36.141.100.123:10013/glks/assets/enterprise/enterprise13.png" className="tab_content_item_four_img" />
-                        <Image src="http://36.141.100.123:10013/glks/assets/enterprise/enterprise13.png" className="tab_content_item_four_img" />
-                        <Image src="http://36.141.100.123:10013/glks/assets/enterprise/enterprise13.png" className="tab_content_item_four_img" />
-                      </View>
-                    </View>
-                    <View className="tab_content_item">
-                      <View className="tab_content_item_one">
-                        <View className="modile">13355557676</View>
-                        <View className="recommend">推荐</View>
-                      </View>
-                      <View className="tab_content_item_two">
-                        <View className="name">王紫郡</View>
-                        <View className="position">总经理</View>
-                        <View className="security">
-                          <Image src="http://36.141.100.123:10013/glks/assets/enterprise/enterprise12.png" className="security_img" />
-                          <View className="security_dot"></View>
-                          <View className="security_text">未检测</View>
-                        </View>
-                      </View>
-                      <View className="tab_content_item_three">
-                        <Text style={{ color: '#333333' }}>来自：</Text>杭州XX科技有限公司
-                      </View>
-                      <View className="tab_content_item_four">
-                        <Image src="http://36.141.100.123:10013/glks/assets/enterprise/enterprise13.png" className="tab_content_item_four_img" />
-                        <Image src="http://36.141.100.123:10013/glks/assets/enterprise/enterprise13.png" className="tab_content_item_four_img" />
-                      </View>
-                    </View>
-                    <View className="tab_content_item">
-                      <View className="tab_content_item_one">
-                        <View className="modile">13355557676</View>
-                        <View className="recommend">推荐</View>
-                      </View>
-                      <View className="tab_content_item_two">
-                        <View className="name">王紫郡</View>
-                        <View className="position">总经理</View>
-                        <View className="security">
-                          <Image src="http://36.141.100.123:10013/glks/assets/enterprise/enterprise12.png" className="security_img" />
-                          <View className="security_dot"></View>
-                          <View className="security_text">未检测</View>
-                        </View>
-                      </View>
-                      <View className="tab_content_item_three">
-                        <Text style={{ color: '#333333' }}>来自：</Text>杭州XX科技有限公司
-                      </View>
-                      <View className="tab_content_item_four">
-                        <Image src="http://36.141.100.123:10013/glks/assets/enterprise/enterprise13.png" className="tab_content_item_four_img" />
-                      </View>
-                    </View>
-                  </View>
-                </>
-              )}
-              {tabValue === 1 && (
-                <>
-                  <View>固话内容</View>
-                  <View>固话内容</View>
-                  <View>固话内容</View>
-                  <View>固话内容</View>
-                  <View>固话内容</View>
-                </>
-              )}
-              {tabValue === 2 && (
-                <>
-                  <View>邮箱内容</View>
-                  <View>邮箱内容</View>
-                  <View>邮箱内容</View>
-                  <View>邮箱内容</View>
-                  <View>邮箱内容</View>
-                </>
-              )}
-              {tabValue === 3 && (
-                <>
-                  <View>地址内容</View>
-                  <View>地址内容</View>
-                  <View>地址内容</View>
-                  <View>地址内容</View>
-                  <View>地址内容</View>
-                </>
-              )}
-              {tabValue === 4 && (
-                <>
-                  <View>其他内容</View>
-                  <View>其他内容</View>
-                  <View>其他内容</View>
-                  <View>其他内容</View>
-                  <View>其他内容</View>
-                </>
-              )}
-            </Tabs.TabPane>
-          ))}
-        </Tabs>
-      </Popup>
-
+      <ContactPopup
+        visible={isShowPhone}
+        onClose={() => setIsShowPhone(false)}
+        contactData={{
+          phoneInfo,
+          fixedLines,
+          emails,
+          address,
+          others
+        }}
+        tabValue={tabValue}
+        onTabChange={(value: number) => setTabValue(value)}
+      />
       {/* 工厂地址 */}
       <Popup position="bottom" style={{ maxHeight: '85%', minHeight: '85%' }} visible={isShowAddress} onClose={() => setIsShowAddress(false)}>
         <View className="popup_header" style={{ height: '100rpx' }}>
@@ -697,6 +568,49 @@ function CluePage({ height }: { height: number }) {
         </View>
       </Popup>
 
+      {/* 跟进列表 */}
+      <Popup position="bottom" title={`${selectedItem?.name || ''} - 跟进记录`} style={{ maxHeight: '85%', minHeight: '85%' }} visible={isShowFollowUp} onClose={() => setIsShowFollowUp(false)}>
+        <ScrollView scrollY className="followUp_list" onScrollToLower={loadMoreFollowUpList} lowerThreshold={50}>
+          {followUpListPopup.map((item: any, index: number) => (
+            <View className="clueRecord_item" onClick={() => toFollowPage(item)} key={index}>
+              <View className="clueRecord_item_left">{item?.avatar ? <Image src={item.avatar} className="avatar" /> : <Image src="http://36.141.100.123:10013/glks/assets/enterprise/enterprise11.png" className="avatar" />}</View>
+              <View className="clueRecord_item_right">
+                <View className="clueRecord_item_right_top">
+                  <View className="name text-ellipsis">{userInfo?.nickname || '客户名称'}</View>
+                  <View className="position text-ellipsis">{userInfo?.position || '客户职位'}</View>
+                  <View className="status text-ellipsis">
+                    {item.type || '跟进类型'}（{item.method || '跟进方式'})
+                  </View>
+                </View>
+                <View className="item_content">{item.content || '跟进内容'}</View>
+                <View className="item_time">
+                  <Image src="http://36.141.100.123:10013/glks/assets/chat/chat1.png" className="item_time_img"></Image>
+                  {parseDate(item.createTime || '跟进时间')}
+                </View>
+                <View className="item_link">
+                  联系人：{item.followUpName || '跟进人'}｜{item.followUpPosition || '跟进人职位'}｜{item.followUpPhone || '跟进人手机号'}
+                </View>
+                <View className="item_from">来自线索：{item.followUpCompany || '客户所属公司'}</View>
+              </View>
+            </View>
+          ))}
+          {(!followUpListPopup || followUpListPopup.length === 0) && (
+            <Empty
+              description="暂无跟进"
+              image={
+                <Image
+                  style={{
+                    width: '100%',
+                    height: '100%'
+                  }}
+                  src="http://36.141.100.123:10013/glks/assets/emptyImg.png"
+                />
+              }
+            />
+          )}
+        </ScrollView>
+      </Popup>
+
       <Calendar visible={isVisible} type="range" onClose={() => setIsVisible(false)} onConfirm={handleCalendarConfirm} />
 
       <View className="floating-add-btn" onClick={() => addFollow()}>
@@ -711,7 +625,12 @@ function CluePage({ height }: { height: number }) {
       >
         <Tabs.TabPane title="线索列表">
           <View className="cluePage_list">
-            <SearchBar placeholder="搜索内容" style={{ width: '100%' }} onChange={searchClueListChange} onBlur={handleSearchClueList} />
+            <View className="cluePage_input_box">
+              <View className="cluePage_input_icon">
+                <Search color="#AAAAAA" size="36rpx" />
+              </View>
+              <Input className="cluePage_input" placeholder="搜索内容" style={{ width: '100%' }} value={searchValueClueList} onChange={e => setSearchValueClueList(e)} onBlur={handleSearchClueList} clearable={true} />
+            </View>
             <ScrollView
               scrollY
               style={{
@@ -796,17 +715,17 @@ function CluePage({ height }: { height: number }) {
                       <View className="cluePage_item_contact_item">
                         <Image onClick={() => handleAiResearchReport(item)} src="http://36.141.100.123:10013/glks/assets/enterprise/enterprise5.png" className="cluePage_item_contact_item_img" />
                       </View>
-                      <View onClick={() => handleActiveIndex(3)} className="cluePage_item_contact_item">
+                      <View onClick={() => getFollowUpListPopup(item)} className="cluePage_item_contact_item">
                         <Image src="http://36.141.100.123:10013/glks/assets/enterprise/enterprise15.png" className="cluePage_item_contact_item_img" />
                         跟进
                       </View>
-                      <View onClick={() => handleActiveIndex(4)} className="cluePage_item_contact_item">
+                      <View onClick={() => openPhone(item)} className="cluePage_item_contact_item">
                         <Image src="http://36.141.100.123:10013/glks/assets/enterprise/enterprise1.png" className="cluePage_item_contact_item_img" />
-                        电话(112)
+                        电话({item.phoneInfo})
                       </View>
-                      <View onClick={() => handleActiveIndex(5)} className="cluePage_item_contact_item">
+                      <View onClick={() => openAddress(item)} className="cluePage_item_contact_item">
                         <Image src="http://36.141.100.123:10013/glks/assets/enterprise/enterprise2.png" className="cluePage_item_contact_item_img" />
-                        地址(2)
+                        地址({item.address})
                       </View>
                     </View>
                   </View>
@@ -830,8 +749,9 @@ function CluePage({ height }: { height: number }) {
         </Tabs.TabPane>
         <Tabs.TabPane title="跟进记录">
           <View className="cluePage_list">
-            <SearchBar placeholder="搜索内容" style={{ width: '100%' }} value={searchValueFollowRecord} onChange={(e: any) => setSearchValueFollowRecord(e)} />
+            <SearchBar placeholder="搜索内容" style={{ width: '100%' }} value={searchValueFollowRecord} onChange={e => setSearchValueFollowRecord(e)} onBlur={handleSearchFollowRecord} />
             {/* <View className="cluePage_filter">
+
               <View className="filter_item" onClick={() => handleActiveIndex(0)}>
                 <View className="item_textI">
                   <Image src="http://36.141.100.123:10013/glks/assets/enterprise/enterprise11.png" className="item_img" />
@@ -989,6 +909,6 @@ function CluePage({ height }: { height: number }) {
       </Tabs>
     </View>
   )
-}
+})
 
 export default CluePage

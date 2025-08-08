@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState, forwardRef, useImperativeHandle } f
 import { View, Image, Input, Text, ScrollView, Textarea } from '@tarojs/components'
 import Taro, { useDidShow, useDidHide } from '@tarojs/taro'
 import './index.scss'
-import { textStageAPI, companyStageAPI, guessYouWantAPI, aiSessionCreateAPI, aiMessageCreateAPI, aiSessionUpdateAPI, aiMessageEvaluationCreateAPI, userFavoriteCreateAPI } from '@/api/chatMsg'
+import { textStageAPI, companyStageAPI, guessYouWantAPI, aiSessionCreateAPI, aiMessageCreateAPI, aiSessionUpdateAPI, aiMessageEvaluationCreateAPI, userFavoriteCreateAPI, preprocessingAPI } from '@/api/chatMsg'
 import { useAppSelector } from '@/hooks/useAppStore'
 import { Dialog, TextArea, BackTop } from '@nutui/nutui-react-taro'
 import { ArrowDownSize6, ArrowUpSize6 } from '@nutui/icons-react-taro'
@@ -29,6 +29,7 @@ const Index = forwardRef<{ getAiSessionCopy: () => void }, { height: number }>((
     total: any
     role: string
     content: string
+    conclusion: string
     companyList: any[]
     apiStatus: { textComplete: boolean; companyComplete: boolean }
     favorite: boolean
@@ -44,13 +45,9 @@ const Index = forwardRef<{ getAiSessionCopy: () => void }, { height: number }>((
   const contentRef = useRef<any>(null)
   const [recommendAnim, setRecommendAnim] = useState('')
   const [conversationId, setConversationId] = useState('')
-  const [likeImage, setLikeImage] = useState('http://36.141.100.123:10013/glks/assets/home/home11.png')
-  const [clickOnTheImage, setClickOnTheImage] = useState('http://36.141.100.123:10013/glks/assets/home/home12.png')
-  const [collectPictures, setCollectPictures] = useState('http://36.141.100.123:10013/glks/assets/home/home13.png')
   const recommendRef = useRef<HTMLDivElement>(null)
   const [shouldAutoScroll, setShouldAutoScroll] = useState(true)
   const [loadFailed, setLoadFailed] = useState(false)
-  const [inputRef, setInputRef] = useState<any>(null)
   const [currentScrollTop, setCurrentScrollTop] = useState(0)
   const [scrollToBottomTrigger, setScrollToBottomTrigger] = useState(0)
   const [scrollToBottomTriggerCopy, setScrollToBottomTriggerCopy] = useState(0)
@@ -61,18 +58,9 @@ const Index = forwardRef<{ getAiSessionCopy: () => void }, { height: number }>((
   const [recommendBatches, setRecommendBatches] = useState<any[]>([])
   const [aiSessionId, setAiSessionId] = useState('')
   const [questionTime, setQuestionTime] = useState('')
-  const [showScrollButtons, setShowScrollButtons] = useState(false)
-  const [isAtTop, setIsAtTop] = useState(true)
-  const [isAtBottom, setIsAtBottom] = useState(true)
   const [yiJianVisible, setYiJianVisible] = useState(false)
   const [yiJianInput, setYiJianInput] = useState('')
-  const [answerContent, setAnswerContent] = useState({
-    content: '',
-    companyList: [] as any[],
-    userInput: '',
-    like: 0,
-    dislike: 0
-  })
+  const [saveQueue, setSaveQueue] = useState<Set<string>>(new Set())
 
   // 添加功能按钮状态管理
   const [buttonStates, setButtonStates] = useState<{ [key: string]: { [buttonIndex: number]: boolean } }>({})
@@ -99,8 +87,6 @@ const Index = forwardRef<{ getAiSessionCopy: () => void }, { height: number }>((
       like: msg.filter(item => item.role === 'ai')[0].like,
       dislike: msg.filter(item => item.role === 'ai')[0].dislike
     }
-
-    setAnswerContent(currentAnswerContent)
 
     setButtonStates(prev => ({
       ...prev,
@@ -210,67 +196,80 @@ const Index = forwardRef<{ getAiSessionCopy: () => void }, { height: number }>((
     }
   }
 
-  // useEffect(() => {
-  //   if (isStreaming) return
-  //   // console.log(aiMessage.apiStatus?.textComplete)
-  //   // console.log(aiMessage.apiStatus?.companyComplete)
+  function listenerInterface(type: string, messageId: string, userMessageId: string | number, isItCompleted: boolean, messagesInfo: Message[]) {
+    let userMsg = messagesInfo.filter(item => item.messageId === userMessageId && item.role === 'user')
+    let aiMsg = messagesInfo.filter(item => item.messageId === messageId && item.role === 'ai')
 
-  //   // // 获取最后两条消息（用户消息和AI回复）
-  //   // const lastTwoMessages = messages.slice(-2)
+    // 检查是否两个API都完成且未保存
+    if (aiMsg[0]?.apiStatus?.textComplete && aiMsg[0]?.apiStatus?.companyComplete && !saveQueue.has(messageId)) {
+      // 添加到保存队列，防止重复保存
+      setSaveQueue(prev => new Set([...prev, messageId]))
 
-  //   // const aiMessage = lastTwoMessages.find(msg => msg.role === 'ai' && msg.messageId === '')
-
-  //   // // 如果没有找到未保存的AI消息，直接返回
-  //   // if (!aiMessage) return
-
-  //   // if (!aiMessage.apiStatus?.textComplete || !aiMessage.apiStatus?.companyComplete) return
-
-  //   // const answerTime = formatTime(new Date())
-  //   // const userMessage = lastTwoMessages.find(msg => msg.role === 'user' && msg.messageId === '')
-
-  //   // if (aiMessage) {
-  //   //   const questionTimestamp = new Date(questionTime).getTime()
-  //   //   const answerTimestamp = new Date(answerTime).getTime()
-  //   //   const responseDurationMs = answerTimestamp - questionTimestamp
-  //   //   let responseDuration: number = Number((responseDurationMs / 1000).toFixed(1))
-
-  //   //   aiMessageCreateAPI(
-  //   //     {
-  //   //       sessionId: aiSessionId,
-  //   //       userMessage: userMessage?.content,
-  //   //       aiResponse: aiMessage.content,
-  //   //       questionTime,
-  //   //       answerTime,
-  //   //       responseDuration,
-  //   //       enterpriseInfo: JSON.stringify({ companyList: aiMessage.companyList, splitNum: aiMessage.splitNum, total: aiMessage.total })
-  //   //     },
-  //   //     res => {
-  //   //       if (res.success && res.data) {
-  //   //         setMessages(msgs => {
-  //   //           const newMsgs = [...msgs]
-  //   //           if (newMsgs.length >= 2) {
-  //   //             newMsgs[newMsgs.length - 2].messageId = res.data
-  //   //             newMsgs[newMsgs.length - 1].messageId = res.data
-  //   //           }
-  //   //           return newMsgs
-  //   //         })
-  //   //       }
-  //   //     }
-  //   //   )
-  //   // }
-
-  //   // setTimeout(() => {
-  //   //   if (shouldAutoScroll) {
-  //   //     getChatMsgHeight()
-  //   //   }
-  //   // }, 200)
-  // }, [isStreaming, messages])
-
-  function listenerInterface(type, messageId, isItCompleted) {
-    console.log(type)
-    console.log(messageId)
-    console.log(isItCompleted)
+      // 保存到数据库
+      saveMessageToDatabase(userMsg[0], aiMsg[0], messageId)
+    }
   }
+
+  const saveMessageToDatabase = async (userMessage: Message, aiMessage: Message, messageId: string) => {
+    try {
+      const answerTime = formatTime(new Date())
+      const questionTimestamp = new Date(questionTime).getTime()
+      const answerTimestamp = new Date(answerTime).getTime()
+      const responseDurationMs = answerTimestamp - questionTimestamp
+      const responseDuration = Number((responseDurationMs / 1000).toFixed(1))
+
+      const result = await new Promise((resolve, reject) => {
+        aiMessageCreateAPI(
+          {
+            sessionId: aiSessionId,
+            userMessage: userMessage?.content,
+            aiResponse: aiMessage.content,
+            questionTime,
+            answerTime,
+            responseDuration,
+            enterpriseInfo: JSON.stringify({
+              companyList: aiMessage.companyList,
+              splitNum: aiMessage.splitNum,
+              total: aiMessage.total
+            })
+          },
+          res => {
+            if (res.success) {
+              resolve(res.data)
+            } else {
+              reject(res)
+            }
+          }
+        )
+      })
+
+      // 保存成功后更新消息ID
+      if (result) {
+        setMessages(msgs => {
+          return msgs.map(msg => {
+            if (msg.messageId === messageId) {
+              return { ...msg, messageId: result as string }
+            }
+            return msg
+          })
+        })
+      }
+    } catch (error) {
+      console.error('保存消息失败:', error)
+    } finally {
+      // 从保存队列中移除
+      setSaveQueue(prev => {
+        const newSet = new Set(prev)
+        newSet.delete(messageId)
+        return newSet
+      })
+    }
+  }
+
+  // 监听键盘高度变化（仅微信小程序）
+  useEffect(() => {
+    console.log(messages)
+  }, [messages])
 
   // 监听键盘高度变化（仅微信小程序）
   useEffect(() => {
@@ -319,6 +318,7 @@ const Index = forwardRef<{ getAiSessionCopy: () => void }, { height: number }>((
         dispatch(getSessionListAsync())
         Taro.eventCenter.trigger('addSession', true)
         setMessages([])
+        setConversationId('')
       }
     })
   }
@@ -332,6 +332,7 @@ const Index = forwardRef<{ getAiSessionCopy: () => void }, { height: number }>((
         Taro.eventCenter.trigger('addSession', true)
         setMessages([])
         Taro.showToast({ title: '会话创建成功', icon: 'none' })
+        setConversationId('')
       }
     })
   }
@@ -348,6 +349,7 @@ const Index = forwardRef<{ getAiSessionCopy: () => void }, { height: number }>((
 
   useEffect(() => {
     Taro.eventCenter.on('getChatItem', res => {
+      setConversationId(res.conversationId)
       setMessages([])
       setTimeout(() => {
         const newMessages: Message[] = []
@@ -358,6 +360,7 @@ const Index = forwardRef<{ getAiSessionCopy: () => void }, { height: number }>((
               splitNum: 0,
               total: 0,
               content: item.userMessage,
+              conclusion: '',
               companyList: [],
               apiStatus: { textComplete: true, companyComplete: true },
               messageId: item.id || generateUniqueId(),
@@ -370,6 +373,7 @@ const Index = forwardRef<{ getAiSessionCopy: () => void }, { height: number }>((
             newMessages.push({
               role: 'ai',
               content: item.aiResponse,
+              conclusion: item.conclusion,
               companyList: JSON.parse(item.enterpriseInfo).companyList,
               splitNum: JSON.parse(item.enterpriseInfo).splitNum,
               total: JSON.parse(item.enterpriseInfo).total,
@@ -411,7 +415,7 @@ const Index = forwardRef<{ getAiSessionCopy: () => void }, { height: number }>((
   }
 
   // 流式输出AI回复
-  const streamAIReply = async (text: string, targetMessageId: string) => {
+  const streamAIReply = async (text: string, targetMessageId: string, userMessageId: string) => {
     const STREAM_CONFIG = {
       chunkSize: 10, // 每次输出的字符数量，控制打字机效果的速度
       delay: 10, // 每次输出间隔时间（毫秒），数值越小输出越快
@@ -448,7 +452,7 @@ const Index = forwardRef<{ getAiSessionCopy: () => void }, { height: number }>((
     // 流式输出完成后，设置textComplete为true
     setIsStreaming(false)
     setMessages(msgs => {
-      return msgs.map(msg => {
+      const updatedMessages = msgs.map(msg => {
         if (msg.messageId === targetMessageId && msg.role === 'ai') {
           return {
             ...msg,
@@ -460,6 +464,11 @@ const Index = forwardRef<{ getAiSessionCopy: () => void }, { height: number }>((
         }
         return msg
       })
+
+      // 在状态更新完成后，使用更新后的数据调用监听器
+      listenerInterface('text', targetMessageId, userMessageId, true, updatedMessages)
+
+      return updatedMessages
     })
   }
 
@@ -484,56 +493,44 @@ const Index = forwardRef<{ getAiSessionCopy: () => void }, { height: number }>((
           dispatch(getSessionListAsync())
 
           // 在这里使用新创建的 sessionId 继续执行后续逻辑
-          continueWithSessionId(res.data, input, res => {
-            console.log(res)
-          })
+          continueWithSessionId(res.data, input)
         }
       })
     } else {
       // 如果已有 sessionId，直接继续执行
-      continueWithSessionId(aiSessionId, input, res => {
-        console.log(res)
-      })
+      continueWithSessionId(aiSessionId, input)
     }
   }
 
   // 发送消息
   const defaultSend = (val: string) => {
-    console.log(val)
     if (!Taro.getStorageSync('aiSessionId')) {
-      console.log('执行1')
       aiSessionCreateAPI({ userId: userInfo?.id }, res => {
         if (res.success && res.data) {
           Taro.setStorageSync('aiSessionId', res.data)
           setAiSessionId(res.data)
           dispatch(getSessionListAsync())
-          continueWithSessionId(res.data, val, res => {
-            console.log(res)
-          })
+          continueWithSessionId(res.data, val)
         }
       })
     } else {
-      console.log('执行2')
-      // 如果已有 sessionId，直接继续执行
-      continueWithSessionId(aiSessionId, val, res => {
-        console.log(res)
-      })
+      continueWithSessionId(aiSessionId, val)
     }
   }
 
   // 提取公共逻辑到单独函数
-  const continueWithSessionId = (sessionId: string, text: string, callback: (res: any) => void) => {
+  const continueWithSessionId = (sessionId: string, text: string) => {
     if (!Taro.getStorageSync('companyInfo')) {
       Taro.eventCenter.trigger('companyShow', true)
     }
     if (!text.trim() || isStreaming) return
 
     // 使用传入的 sessionId 而不是状态中的 aiSessionId
-    aiSessionUpdateAPI({ userId: userInfo?.id, id: sessionId, title: text }, res => {
-      if (res.success) {
-        dispatch(getSessionListAsync())
-      }
-    })
+    // aiSessionUpdateAPI({ userId: userInfo?.id, id: sessionId, title: text, conversationId: conversationId }, res => {
+    //   if (res.success) {
+    //     dispatch(getSessionListAsync())
+    //   }
+    // })
 
     setQuestionTime(formatTime(new Date())) // 用户发送消息的时间
 
@@ -548,6 +545,7 @@ const Index = forwardRef<{ getAiSessionCopy: () => void }, { height: number }>((
         total: 0,
         role: 'user',
         content: text,
+        conclusion: '',
         companyList: [],
         apiStatus: { textComplete: false, companyComplete: false },
         messageId: userMessageId,
@@ -560,6 +558,7 @@ const Index = forwardRef<{ getAiSessionCopy: () => void }, { height: number }>((
         total: 0,
         role: 'ai',
         content: '',
+        conclusion: '',
         companyList: [],
         apiStatus: { textComplete: false, companyComplete: false },
         messageId: aiMessageId,
@@ -574,24 +573,24 @@ const Index = forwardRef<{ getAiSessionCopy: () => void }, { height: number }>((
     }
 
     const doAll = () => {
-      try {
-        // 找出最后一个有值的companyList
-        let lastCompanyList: any[] = []
-        for (let i = messages.length - 1; i >= 0; i--) {
-          if (messages[i].companyList && messages[i].companyList.length > 0) {
-            lastCompanyList = messages[i].companyList
-            break
-          }
+      // 找出最后一个有值的companyList
+      let lastCompanyList: any[] = []
+      for (let i = messages.length - 1; i >= 0; i--) {
+        if (messages[i].companyList && messages[i].companyList.length > 0) {
+          lastCompanyList = messages[i].companyList
+          break
         }
+      }
 
-        // 直接调用textStageAPI
-        textStageAPI(
+      try {
+        preprocessingAPI(
           {
             targetCompanyName: companyInfo.companyName,
             query: text,
             questionKeyword: companyInfo.expansionDomainKeywordsSelected.join(','),
-            aiSessionId: aiSessionId,
-            conversationId: conversationId,
+            responseMode: 'blocking',
+            user: userInfo?.id,
+            conversationId: conversationId || '',
             productSellingPointsRespDTO: {
               coreSellingPoints: {
                 coreBusiness: companyInfo.coreSellingPoints.coreBusiness,
@@ -602,123 +601,161 @@ const Index = forwardRef<{ getAiSessionCopy: () => void }, { height: number }>((
             },
             extendContextInfo: JSON.stringify(lastCompanyList.length > 5 ? lastCompanyList.slice(0, 5) : lastCompanyList)
           },
-          res => {
-            if (res && res.success && res.data) {
-              setConversationId(res.data.conversationId)
-              listenerInterface('text', aiMessageId, true)
-              let responseText = ''
-              if (typeof res.data === 'string') {
-                responseText = res.data
-              } else if (typeof res.data === 'object') {
-                if (res.data.text) {
-                  responseText = res.data.text
-                } else if (res.data.content) {
-                  responseText = res.data.content
-                } else if (res.data.message) {
-                  responseText = res.data.message
-                } else {
-                  responseText = JSON.stringify(res.data, null, 2)
-                }
-              } else {
-                responseText = String(res.data)
-              }
-              // 开始流式输出，使用正确的messageId
-              streamAIReply(responseText, aiMessageId)
-            } else {
-              listenerInterface('text', aiMessageId, true)
-              setMessages((msgs: any) => {
-                return msgs.map((msg: any) => {
-                  if (msg.messageId === aiMessageId && msg.role === 'ai') {
-                    return {
-                      ...msg,
-                      content: '抱歉，我暂时无法回答您的问题，请稍后再试。',
-                      apiStatus: { textComplete: true, companyComplete: true }
+          parameter => {
+            if (parameter.success || parameter.data) {
+              // 直接调用textStageAPI
+              textStageAPI({ ...parameter.data, conversationId }, res => {
+                if (res && res.success && res.data) {
+                  setConversationId(res.data.conversationId)
+                  aiSessionUpdateAPI({ userId: userInfo?.id, id: sessionId, title: text, conversationId: res.data.conversationId }, res => {
+                    if (res.success) {
+                      dispatch(getSessionListAsync())
                     }
-                  }
-                  return msg
-                })
-              })
-            }
-          }
-        )
+                  })
+                  let responseText = ''
+                  if (res.data.introduction) {
+                    responseText = `${res.data.introduction || ''}${res.data.analysisContent || ''}`
+                    streamAIReply(responseText, aiMessageId, userMessageId)
+                    setMessages(msgs => {
+                      return msgs.map(msg => {
+                        // 只更新匹配的消息
+                        if (msg.messageId === aiMessageId && msg.role === 'ai') {
+                          // 处理企业信息
+                          const processedCompanyList = res.data.companyBody.companyInfoResponseList.map((item: any) => {
+                            let locationStr = item.province || item.address || item.location || '未知省份'
+                            if (locationStr.includes('省')) {
+                              item.handleLocation = locationStr.split('省')[0] + '省'
+                            } else if (locationStr.includes('自治区')) {
+                              item.handleLocation = locationStr.split('自治区')[0] + '自治区'
+                            } else if (locationStr.includes('市')) {
+                              const directMunicipalities = ['北京', '上海', '天津', '重庆']
+                              const found = directMunicipalities.find(city => locationStr.includes(city))
+                              item.handleLocation = found ? found + '市' : locationStr.split('市')[0] + '市'
+                            } else {
+                              item.handleLocation = '未知省份'
+                            }
 
-        // 直接调用companyStageAPI
-        companyStageAPI(
-          {
-            targetCompanyName: companyInfo.companyName,
-            query: text,
-            questionKeyword: companyInfo.expansionDomainKeywordsSelected.join(','),
-            aiSessionId: aiSessionId,
-            productSellingPointsRespDTO: {
-              coreSellingPoints: {
-                coreBusiness: companyInfo.coreSellingPoints.coreBusiness,
-                productDescription: companyInfo.coreSellingPoints.productDescription,
-                productFeatures: companyInfo.coreSellingPoints.productFeatures
-              },
-              expansionDomainKeywords: companyInfo.expansionDomainKeywordsSelected
-            }
-          },
-          res => {
-            if (res.success && res.data) {
-              listenerInterface('company', aiMessageId, true)
-              setMessages(msgs => {
-                return msgs.map(msg => {
-                  if (msg.messageId === aiMessageId && msg.role === 'ai') {
-                    res.data.companyInfoResponseList.forEach((item: any) => {
-                      let locationStr = item.province || item.address || item.location || '未知省份'
-                      if (locationStr.includes('省')) {
-                        item.handleLocation = locationStr.split('省')[0] + '省'
-                      } else if (locationStr.includes('市')) {
-                        const directMunicipalities = ['北京', '上海', '天津', '重庆']
-                        const found = directMunicipalities.find(city => locationStr.includes(city))
-                        item.handleLocation = found ? found + '市' : locationStr.split('市')[0] + '市'
-                      } else if (locationStr.includes('自治区')) {
-                        item.handleLocation = locationStr.split('自治区')[0] + '自治区'
-                      } else {
-                        item.handleLocation = '未知省份'
+                            if (item.legalPerson) {
+                              item.legalPerson = item.legalPerson.replace(/\s*\([^)]*\)\s*/g, '').trim() || '- -'
+                            } else {
+                              item.legalPerson = '- -'
+                            }
+
+                            console.log(item)
+
+                            return item
+                          })
+
+                          return {
+                            ...msg,
+                            companyList: processedCompanyList,
+                            total: res.data.companyBody.total,
+                            splitNum: res.data.companyBody.splitNum || 10
+                          }
+                        }
+                        return msg
+                      })
+                    })
+                  } else {
+                    responseText = res.data.normalAnswer
+                    streamAIReply(responseText, aiMessageId, userMessageId)
+                  }
+                } else {
+                  setMessages(msgs => {
+                    const updatedMessages = msgs.map(msg => {
+                      if (msg.messageId === aiMessageId && msg.role === 'ai') {
+                        return {
+                          ...msg,
+                          content: '抱歉，我暂时无法回答您的问题，请稍后再试。',
+                          apiStatus: { textComplete: true, companyComplete: true }
+                        }
                       }
-                      // 移除英文名，只保留中文名
-                      if (item.legalPerson) {
-                        // 使用正则表达式移除括号及其内容（英文名部分）
-                        item.legalPerson = item.legalPerson.replace(/\s*\([^)]*\)\s*/g, '').trim() || '- -'
-                      } else {
-                        item.legalPerson = '- -'
+                      return msg
+                    })
+                    // 在状态更新完成后，使用更新后的数据调用监听器
+                    listenerInterface('text', aiMessageId, userMessageId, true, updatedMessages)
+                    return updatedMessages
+                  })
+                }
+              })
+              // 直接调用companyStageAPI
+              companyStageAPI(parameter.data, res => {
+                if (res.success && res.data) {
+                  setMessages(msgs => {
+                    const updatedMessages = msgs.map(msg => {
+                      // 只更新匹配的消息
+                      if (msg.messageId === aiMessageId && msg.role === 'ai') {
+                        // 处理企业信息
+                        const processedCompanyList = res.data.companyInfoResponseList.map((item: any) => {
+                          let locationStr = item.province || item.address || item.location || '未知省份'
+                          if (locationStr.includes('省')) {
+                            item.handleLocation = locationStr.split('省')[0] + '省'
+                          } else if (locationStr.includes('自治区')) {
+                            item.handleLocation = locationStr.split('自治区')[0] + '自治区'
+                          } else if (locationStr.includes('市')) {
+                            const directMunicipalities = ['北京', '上海', '天津', '重庆']
+                            const found = directMunicipalities.find(city => locationStr.includes(city))
+                            item.handleLocation = found ? found + '市' : locationStr.split('市')[0] + '市'
+                          } else {
+                            item.handleLocation = '未知省份'
+                          }
+
+                          if (item.legalPerson) {
+                            item.legalPerson = item.legalPerson.replace(/\s*\([^)]*\)\s*/g, '').trim() || '- -'
+                          } else {
+                            item.legalPerson = '- -'
+                          }
+                          return item
+                        })
+
+                        return {
+                          ...msg,
+                          companyList: processedCompanyList,
+                          total: res.data.total,
+                          splitNum: res.data.splitNum,
+                          apiStatus: {
+                            ...msg.apiStatus,
+                            companyComplete: true
+                          }
+                        }
                       }
+                      return msg
                     })
 
-                    return {
-                      ...msg,
-                      companyList: res.data.companyInfoResponseList,
-                      total: res.data.total,
-                      splitNum: res.data.splitNum
-                    }
-                  }
-                  return msg
-                })
-              })
-            } else {
-              listenerInterface('company', aiMessageId, true)
-              if (res.data == null) return
-              Taro.showToast({
-                title: '公司信息获取失败',
-                icon: 'none'
-              })
-            }
-            // 更新公司API状态
-            setMessages(msgs => {
-              return msgs.map(msg => {
-                if (msg.messageId === aiMessageId && msg.role === 'ai') {
-                  return {
-                    ...msg,
-                    apiStatus: {
-                      ...msg.apiStatus,
-                      companyComplete: true
-                    }
+                    // 在状态更新完成后，使用更新后的数据调用监听器
+                    listenerInterface('company', aiMessageId, userMessageId, true, updatedMessages)
+                    return updatedMessages
+                  })
+                } else {
+                  // 错误处理
+                  setMessages(msgs => {
+                    const updatedMessages = msgs.map(msg => {
+                      if (msg.messageId === aiMessageId && msg.role === 'ai') {
+                        return {
+                          ...msg,
+                          apiStatus: {
+                            ...msg.apiStatus,
+                            companyComplete: true
+                          }
+                        }
+                      }
+                      return msg
+                    })
+
+                    // 在状态更新完成后，使用更新后的数据调用监听器
+                    listenerInterface('company', aiMessageId, userMessageId, true, updatedMessages)
+                    return updatedMessages
+                  })
+
+                  if (res.data !== null) {
+                    Taro.showToast({
+                      title: '公司信息获取失败',
+                      icon: 'none'
+                    })
                   }
                 }
-                return msg
               })
-            })
+            }
           }
         )
       } catch (error) {}
@@ -762,10 +799,6 @@ const Index = forwardRef<{ getAiSessionCopy: () => void }, { height: number }>((
     // 新增：控制置顶置底按钮显示
     const isAtTopPosition = currentScrollTop <= 10
     const isAtBottomPosition = currentScrollHeight - currentScrollTop - clientHeight < 50
-
-    setIsAtTop(isAtTopPosition)
-    setIsAtBottom(isAtBottomPosition)
-    setShowScrollButtons(!isAtTopPosition || !isAtBottomPosition)
   }
 
   // 新增：滚动到顶部函数
@@ -888,7 +921,7 @@ const Index = forwardRef<{ getAiSessionCopy: () => void }, { height: number }>((
         }}
       >
         <View className="chatPage_bottom_input">
-          <Textarea ref={inputRef} adjust-position={false} value={input} onInput={handleInput} className="chatPage_input" onConfirm={send} placeholder="请输入您的客户需求～" placeholderStyle="color: #A9A9A9;" disabled={isStreaming} />
+          <Textarea adjust-position={false} value={input} onInput={handleInput} className="chatPage_input" onConfirm={send} placeholder="请输入您的客户需求～" placeholderStyle="color: #A9A9A9;" disabled={isStreaming} />
           <View className="chatPage_fun">
             <View className="chatPage_fun_left">
               {/* <Image

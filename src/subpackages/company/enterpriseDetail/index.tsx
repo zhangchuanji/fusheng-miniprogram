@@ -49,19 +49,10 @@ function Index() {
   const [emails, setEmails] = useState<any[]>([]) // 邮箱
   const [address, setAddress] = useState<any[]>([]) // 地址
   const [others, setOthers] = useState<any[]>([]) // 其他
+  const [notDisplaying, setNotDisplaying] = useState(true) // 不显示
 
   const [tabValue, setTabValue] = useState(0) // 当前选中的标签页
   const [allContactInformation, setAllContactInformation] = useState(0) // 全部联系数量
-  const tabList = useMemo(
-    () => [
-      { id: 1, name: `手机号 ${phoneInfo?.length || 0}` },
-      { id: 2, name: `固话 ${fixedLines?.length || 0}` },
-      { id: 3, name: `邮箱 ${emails?.length || 0}` },
-      { id: 4, name: `地址 ${address?.length || 0}` },
-      { id: 5, name: `其他 ${others?.length || 0}` }
-    ],
-    [phoneInfo, fixedLines, emails, address, others]
-  )
 
   // ==================== 线索操作状态 ====================
   const [isShowAdd, setIsShowAdd] = useState(true) // 是否显示加入线索按钮
@@ -79,23 +70,6 @@ function Index() {
 
   // ==================== 反馈相关状态 ====================
   const [feedBackValue, setFeedBackValue] = useState('') // 反馈内容
-
-  // ==================== 工具函数 ====================
-  // 使用 useCallback 优化高亮关键词函数
-  const highlightKeyword = useCallback((text: string, keyword: string) => {
-    if (!keyword) return text
-    const regex = new RegExp(`(${keyword})`, 'gi')
-    const parts = text.split(regex)
-    return parts.map((part, index) =>
-      regex.test(part) ? (
-        <Text key={index} style={{ color: '#426EFF', fontWeight: 'bold' }}>
-          {part}
-        </Text>
-      ) : (
-        part
-      )
-    )
-  }, [])
 
   // ==================== 点赞点踩处理函数 ====================
   // 处理点赞点击
@@ -261,22 +235,29 @@ function Index() {
   }
 
   useLoad(options => {
+    setNotDisplaying(options && options.notDisplaying ? Boolean(options.notDisplaying) : false)
     let res = JSON.parse(options.company)
 
     // 统计联系方式总数
     const totalCount = Object.values(res.contactInfo || {}).reduce<number>((sum, arr: any) => {
       return sum + (Array.isArray(arr) ? arr.length : 0)
     }, 0)
-    setPhoneInfo(res.contactInfo?.phones || []) // 添加默认值 []
-    setEmails(res.contactInfo?.emails || []) // 添加默认值 []
-    // 同样需要为其他可能缺失的字段添加默认值
+    setPhoneInfo(res.contactInfo?.phones || [])
+    setEmails(res.contactInfo?.emails || [])
     setFixedLines(res.contactInfo?.fixedLines || [])
     setAddress(res.contactInfo?.address || [])
     setOthers(res.contactInfo?.others || [])
     setAllContactInformation(totalCount)
+    Taro.showLoading({
+      title: '正在加载企业详情',
+      mask: true
+    })
     enterpriseDetailAPI({ gid: res.gid, pageNum: 1, pageSize: 3 }, res => {
       if (res.success) {
         setCompanyDetail(res.data)
+        Taro.hideLoading()
+      } else {
+        Taro.hideLoading()
       }
     })
     setCompany(res)
@@ -463,31 +444,33 @@ function Index() {
       </View>
 
       {/* 智能分析结果 */}
-      <View className="analysis">
-        <View className="analysis_content" onClick={() => Taro.navigateTo({ url: '/subpackages/company/enterpriseDetail/detail/analysisInfo/index' })}>
-          <View className="analysis_top">
-            <Image src="http://36.141.100.123:10013/glks/assets/corpDetail/corpDetail25.png" className="analysis_top_Img" />
-            <View className="analysis_top_left">
-              匹配度：<Text className="analysis_top_left_text">{Math.floor(company.score)}%</Text>
+      {company.score && (
+        <View className="analysis">
+          <View className="analysis_content" onClick={() => Taro.navigateTo({ url: '/subpackages/company/enterpriseDetail/detail/analysisInfo/index' })}>
+            <View className="analysis_top">
+              <Image src="http://36.141.100.123:10013/glks/assets/corpDetail/corpDetail25.png" className="analysis_top_Img" />
+              <View className="analysis_top_left">
+                匹配度：<Text className="analysis_top_left_text">{Math.floor(company.score)}%</Text>
+              </View>
+              <Image src="http://36.141.100.123:10013/glks/assets/corpDetail/corpDetail19.png" className="analysis_top_leftImg" />
             </View>
-            <Image src="http://36.141.100.123:10013/glks/assets/corpDetail/corpDetail19.png" className="analysis_top_leftImg" />
-          </View>
-          <View className="analysis_bottom">
-            <View className="analysis_bottom_item">
-              产品匹配度：<Text style={{ color: '#629EE7' }}>{company.productMatch}%</Text>
-            </View>
-            <View className="analysis_bottom_item">
-              合作风险：<Text style={{ color: '#629EE7' }}>{company.riskLevel}%</Text>
-            </View>
-            <View className="analysis_bottom_item">
-              市场潜力：<Text style={{ color: '#629EE7' }}>{company.marketPotential}%</Text>
+            <View className="analysis_bottom">
+              <View className="analysis_bottom_item">
+                产品匹配度：<Text style={{ color: '#629EE7' }}>{company.productMatch}%</Text>
+              </View>
+              <View className="analysis_bottom_item">
+                合作风险：<Text style={{ color: '#629EE7' }}>{company.riskLevel}%</Text>
+              </View>
+              <View className="analysis_bottom_item">
+                市场潜力：<Text style={{ color: '#629EE7' }}>{company.marketPotential}%</Text>
+              </View>
             </View>
           </View>
         </View>
-      </View>
+      )}
 
       {/* 商机情报 */}
-      <View
+      {/* <View
         className="business_intelligence"
         onClick={() => {
           setShowBusinessIntelligence(true)
@@ -513,7 +496,7 @@ function Index() {
           </View>
           <Image src="http://36.141.100.123:10013/glks/assets/corpDetail/corpDetail19.png" className="business_intelligence_content_img" />
         </View>
-      </View>
+      </View> */}
 
       {/* 商机情报弹窗 */}
       <Popup
@@ -619,7 +602,7 @@ function Index() {
       </View>
 
       {/* 企业图谱 */}
-      <View className="enterprise_graph">
+      {/* <View className="enterprise_graph">
         <View className="enterprise_graph_title">企业图谱</View>
         <View className="enterprise_graph_content">
           <View className="enterprise_graph_content_item">
@@ -635,7 +618,7 @@ function Index() {
             <View className="enterprise_graph_content_item_text">企业图谱</View>
           </View>
         </View>
-      </View>
+      </View> */}
 
       {/* 基本信息 */}
       <View className="enterprise_info">
@@ -645,7 +628,7 @@ function Index() {
             <View className="enterprise_info_content_item" onClick={() => Taro.navigateTo({ url: item.router })} key={index}>
               <View className="enterprise_info_content_item_title">{item.title}</View>
               <View className="enterprise_info_content_item_value">{item.value}</View>
-              <Image src="http://36.141.100.123:10013/glks/assets/corpDetail/corpDetail17.png" className="info_Img" />
+              <Image src={`http://36.141.100.123:10013/glks/assets/corpDetail/corpDetail${index + 1}.png`} className="info_Img" />
             </View>
           ))}
         </View>

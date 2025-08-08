@@ -50,6 +50,7 @@ interface AiMessageComponentProps {
     splitNum: number
     total: number
     content: string
+    conclusion: string
     companyList: any[]
     apiStatus: { textComplete: boolean; companyComplete: boolean }
     messageId: string
@@ -139,6 +140,7 @@ const AiMessageComponent: React.FC<AiMessageComponentProps> = ({ msg }) => {
             </View>
           ))
         : null}
+      {msg.conclusion ? <View className="chatMsg_ai_text" dangerouslySetInnerHTML={{ __html: parseMarkdown(msg.conclusion) }}></View> : null}
       {/* 加载动画单独显示在文字和公司列表下方 */}
       {(!msg.apiStatus.textComplete || !msg.apiStatus.companyComplete) && <ChatTechLoadingAnimation />}
     </View>

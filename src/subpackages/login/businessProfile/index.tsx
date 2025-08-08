@@ -59,7 +59,7 @@ function BusinessProfile() {
 
   useEffect(() => {
     Taro.showLoading({
-      title: '加载中...',
+      title: 'AI分析中...',
       mask: true
     })
     const companyName = Taro.getCurrentInstance().router?.params?.companyName
