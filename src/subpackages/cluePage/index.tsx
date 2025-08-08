@@ -397,9 +397,16 @@ const CluePage = forwardRef<{ getClueList: (page?: number, append?: boolean) => 
     setEmails(item.contactInfo?.emails || [])
   }
 
-  const openAddress = (item: any) => {
-    setIsShowPhone(true)
-    setAddress(item.contactInfo?.address || [])
+  function openAddress(item: any) {
+    if (item.regLocation) {
+      setAddress([item.regLocation])
+      setIsShowAddress(true)
+    } else {
+      Taro.showToast({
+        title: '暂无地址',
+        icon: 'none'
+      })
+    }
   }
 
   const loadMoreFollowUpList = () => {
@@ -440,8 +447,9 @@ const CluePage = forwardRef<{ getClueList: (page?: number, append?: boolean) => 
         </View>
         <View className="address_content">
           <Cell.Group>
-            <Cell align="center" title="公司总部地址" description="中国(上海)自由贸易试验区临港新片区江山路" />
-            <Cell align="center" title="公司总部地址" description="中国(上海)自由贸易试验区临港新片区江山路" />
+            {address.map((item, index) => (
+              <Cell key={index} align="center" title={`公司地址${index + 1}`} description={item} />
+            ))}
           </Cell.Group>
         </View>
       </Popup>

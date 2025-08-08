@@ -2,10 +2,10 @@ import React, { useState, useCallback, useEffect, useMemo } from 'react'
 import { Checkbox, Popup, Tabs, TextArea } from '@nutui/nutui-react-taro'
 import { View, Image, Text, ScrollView } from '@tarojs/components'
 import { Add, ArrowDown } from '@nutui/icons-react-taro'
-import Taro, { useLoad } from '@tarojs/taro'
+import Taro from '@tarojs/taro'
 import './index.scss'
 import CustomDialog from '@/components/CustomDialog'
-import { enterpriseDetailAPI } from '@/api/company'
+import { companyFeedbackCreateAPI, enterpriseDetailAPI } from '@/api/company'
 import { clueCreateAPI, clueDeleteAPI } from '@/api/clue'
 import ContactPopup from '@/components/ContactPopup'
 
@@ -50,6 +50,7 @@ function Index() {
   const [address, setAddress] = useState<any[]>([]) // 地址
   const [others, setOthers] = useState<any[]>([]) // 其他
   const [notDisplaying, setNotDisplaying] = useState(true) // 不显示
+  const [checked, setChecked] = useState(['1']) // 地区选择弹窗高度
 
   const [tabValue, setTabValue] = useState(0) // 当前选中的标签页
   const [allContactInformation, setAllContactInformation] = useState(0) // 全部联系数量
@@ -71,36 +72,124 @@ function Index() {
   // ==================== 反馈相关状态 ====================
   const [feedBackValue, setFeedBackValue] = useState('') // 反馈内容
 
+  // 处理反馈选项变化
+  const CheckedChange = (e: any) => {
+    const value = e?.detail?.value || e
+    setChecked(value)
+  }
+
   // ==================== 点赞点踩处理函数 ====================
   // 处理点赞点击
   const handleLike = (e: any) => {
     e.stopPropagation()
-    setIsLiked(!isLiked)
-    if (isDisliked) setIsDisliked(false)
 
-    // 触发心跳动画
-    if (!isLiked) {
-      setShowHeartbeat(true)
-      setTimeout(() => {
-        setShowHeartbeat(false)
-      }, 600)
-    }
+    const newFeedbackStatus = company.hasFeedback === 0 ? 1 : 0
+
+    companyFeedbackCreateAPI(
+      {
+        creditCode: company.creditCode,
+        isLiked: newFeedbackStatus,
+        commentContent: '有效'
+      },
+      res => {
+        if (res.success) {
+          Taro.showToast({
+            title: newFeedbackStatus === 1 ? '点赞成功' : '取消点赞',
+            icon: 'success',
+            duration: 500
+          })
+
+          setCompany((prevCompany: any) => ({
+            ...prevCompany,
+            hasFeedback: newFeedbackStatus
+          }))
+
+          // 触发心跳动画（仅在点赞时）
+          if (newFeedbackStatus === 1) {
+            setShowHeartbeat(true)
+            setTimeout(() => {
+              setShowHeartbeat(false)
+            }, 600)
+          }
+        } else {
+          Taro.showToast({
+            title: res.data.msg || '操作失败',
+            icon: 'none',
+            duration: 1000
+          })
+        }
+      }
+    )
   }
+
+  Taro.useUnload(() => {
+    Taro.eventCenter.trigger('enterpriseDetailUnload', company)
+  })
 
   // 处理点踩点击
   const handleDislike = (e: any) => {
+    e.stopPropagation()
+
     // 触发抖动动画
     setShowShake(true)
     setTimeout(() => {
       setShowShake(false)
     }, 500)
-    if (isDisliked) {
+
+    // 如果已经是点踩状态，显示无效原因
+    if (company.hasFeedback === 2) {
       setIsShowInvalid(true)
     } else {
+      // 否则显示反馈弹窗
       setIsShowFeedback(true)
     }
   }
 
+  // 处理提交反馈
+  const handleSubmitFeedback = () => {
+    if (!company?.creditCode) {
+      Taro.showToast({
+        title: '企业信息错误',
+        icon: 'none',
+        duration: 1000
+      })
+      return
+    }
+
+    companyFeedbackCreateAPI(
+      {
+        creditCode: company.creditCode,
+        isLiked: 0,
+        feedbackType: parseInt(checked[0]),
+        commentContent: feedBackValue || '不符合我的业务'
+      },
+      res => {
+        if (res.success) {
+          Taro.showToast({
+            title: '提交成功',
+            icon: 'none',
+            duration: 500
+          })
+
+          setCompany(prevList => ({
+            ...prevList,
+            hasFeedback: 2,
+            commentContent: feedBackValue || '不符合我的业务'
+          }))
+
+          // 重置状态
+          setFeedBackValue('')
+          setIsShowFeedback(false)
+        } else {
+          Taro.showToast({
+            title: res.data.msg || '提交失败',
+            icon: 'none',
+            duration: 1000
+          })
+        }
+      }
+    )
+  }
   // ==================== 线索操作处理函数 ====================
   // 处理加入线索点击
   const handleAddToLeads = (e: any) => {
@@ -114,6 +203,59 @@ function Index() {
     e.stopPropagation()
     setDialogType('remove')
     setShowCustomDialog(true)
+    // 保存当前操作的线索ID
+  }
+
+  // 处理确认弹窗
+  const handleDialogConfirm = () => {
+    setShowCustomDialog(false)
+    const itemId = company.gid || company.id || company.name
+
+    if (dialogType === 'add') {
+      clueCreateAPI({ unifiedSocialCreditCodes: company.creditCode }, res => {
+        if (res.success) {
+          setCompany(prevCompany => ({
+            ...prevCompany,
+            isJoinClue: true
+          }))
+
+          Taro.showToast({
+            title: '已添加线索',
+            icon: 'none',
+            duration: 500
+          })
+        } else {
+          Taro.showToast({
+            title: res.data.msg || '添加失败',
+            icon: 'none',
+            duration: 1000
+          })
+        }
+      })
+    } else if (dialogType === 'remove') {
+      // 移除线索
+      clueDeleteAPI({ unifiedSocialCreditCode: company.creditCode }, res => {
+        if (res.success) {
+          setCompany(prevCompany => ({
+            ...prevCompany,
+            isJoinClue: false
+          }))
+
+          Taro.showToast({
+            title: '已移除线索',
+            icon: 'none',
+            duration: 500
+          })
+        } else {
+          // 失败时恢复状态
+          Taro.showToast({
+            title: res.data.msg || '移除失败',
+            icon: 'none',
+            duration: 1000
+          })
+        }
+      })
+    }
   }
 
   // 更安全的时间戳转换函数，包含错误处理
@@ -130,34 +272,6 @@ function Index() {
     } catch (error) {
       console.error('时间戳转换错误:', error)
       return '--'
-    }
-  }
-
-  // 处理确认弹窗
-  const handleDialogConfirm = () => {
-    setShowCustomDialog(false)
-    if (dialogType === 'add') {
-      setIsShowAdd(false)
-      clueCreateAPI({ unifiedSocialCreditCode: company.creditCode }, res => {
-        if (res.success) {
-          Taro.showToast({
-            title: '已添加线索',
-            icon: 'none',
-            duration: 500
-          })
-        }
-      })
-    } else {
-      setIsShowAdd(true)
-      clueDeleteAPI({ unifiedSocialCreditCode: company.creditCode }, res => {
-        if (res.success) {
-          Taro.showToast({
-            title: '已移除线索',
-            icon: 'none',
-            duration: 500
-          })
-        }
-      })
     }
   }
 
@@ -190,16 +304,30 @@ function Index() {
   // ==================== 恢复操作处理函数 ====================
   // 处理恢复确认
   const handleRestoreConfirm = () => {
-    setShowRestoreDialog(false)
-    setIsShowInvalid(false)
-    setIsDisliked(false)
-    Taro.showToast({
-      title: '已恢复',
-      icon: 'none',
-      duration: 500
-    })
+    companyFeedbackCreateAPI(
+      {
+        creditCode: company?.creditCode || '',
+        isLiked: 0,
+        commentContent: ''
+      },
+      res => {
+        if (res.success) {
+          setShowRestoreDialog(false)
+          setIsShowInvalid(false)
+          Taro.showToast({
+            title: '恢复成功',
+            icon: 'none',
+            duration: 500
+          })
+          setCompany(prevList => ({
+            ...prevList,
+            hasFeedback: 0,
+            commentContent: ''
+          }))
+        }
+      }
+    )
   }
-
   // 处理恢复取消
   const handleRestoreCancel = () => {
     setShowRestoreDialog(false)
@@ -216,25 +344,13 @@ function Index() {
     setFeedBackValue(value)
   }, [])
 
-  // 处理提交反馈
-  const handleSubmitFeedback = () => {
-    setIsShowFeedback(false)
-    setIsDisliked(!isDisliked)
-    setFeedBackValue('')
-    Taro.showToast({
-      title: '提交成功',
-      icon: 'none',
-      duration: 500
-    })
-  }
-
   function toAiResearchReport(): void {
     Taro.navigateTo({
       url: `/subpackages/company/aiResearchReport/index?creditCode=${company.creditCode}`
     })
   }
 
-  useLoad(options => {
+  Taro.useLoad(options => {
     setNotDisplaying(options && options.notDisplaying ? Boolean(options.notDisplaying) : false)
     let res = JSON.parse(options.company)
 
@@ -277,7 +393,7 @@ function Index() {
           <View className="popup_header_title">无效线索原因</View>
           <Image onClick={() => setIsShowInvalid(false)} src="http://36.141.100.123:10013/glks/assets/enterprise/enterprise14.png" className="popup_header_img" />
         </View>
-        <View className="invalid_content">不匹配原因不匹配原因不匹配原因不匹配原因不匹配原因不匹配原因不匹配原因不匹配原因不匹配原因不匹配原因</View>
+        <View className="invalid_content">{company.commentContent || '与我的业务无关'}</View>
         <View onClick={() => setShowRestoreDialog(true)} className="invalid_content_button">
           恢复
         </View>
@@ -292,7 +408,7 @@ function Index() {
           <Image onClick={() => setIsShowFeedback(false)} src="http://36.141.100.123:10013/glks/assets/enterprise/enterprise14.png" className="popup_header_img" />
         </View>
         <View className="feedBack_content">
-          <Checkbox.Group defaultValue={['1']} style={{ width: '100%', padding: '24rpx', boxSizing: 'border-box' }}>
+          <Checkbox.Group defaultValue={['1']} value={checked} style={{ width: '100%', padding: '24rpx', boxSizing: 'border-box' }} onChange={CheckedChange}>
             <Checkbox value="1" label="产品不匹配" />
             <Checkbox value="2" label="公司与信息匹配不上" />
             <Checkbox value="3" label="公司类型错误" />
@@ -671,35 +787,37 @@ function Index() {
             )
           })}
         </View>
+      </View>
 
-        <View className="enterpriseContent_item_bottom">
-          <View className="enterpriseContent_item_bottom_left">
-            {!isDisliked && (
-              <View onClick={handleLike} className={`enterpriseContent_item_bottom_left_good ${isLiked ? 'liked' : ''} ${showHeartbeat ? 'heartbeat' : ''}`}>
-                <Image src={!isLiked ? 'http://36.141.100.123:10013/glks/assets/enterprise/enterprise8.png' : 'http://36.141.100.123:10013/glks/assets/enterprise/enterprise6.png'} className="enterpriseContent_item_bottom_left_good_img" />
-                <Text className="enterpriseContent_item_bottom_left_good_text">有效</Text>
-              </View>
-            )}
-            {!isLiked && (
-              <View onClick={handleDislike} className={`enterpriseContent_item_bottom_left_bad ${isDisliked ? 'disliked' : ''} ${showShake ? 'shake' : ''}`}>
-                <Image src={!isDisliked ? 'http://36.141.100.123:10013/glks/assets/enterprise/enterprise9.png' : 'http://36.141.100.123:10013/glks/assets/enterprise/enterprise7.png'} className="enterpriseContent_item_bottom_left_bad_img" />
-                <Text className="enterpriseContent_item_bottom_left_bad_text">无效线索</Text>
-                {isDisliked && <ArrowDown color="#8E8E8E" style={{ width: '28rpx', height: '28rpx', marginLeft: '6rpx' }} />}
-              </View>
-            )}
-          </View>
-          {isShowAdd ? (
-            <View onClick={handleAddToLeads} className="enterpriseContent_item_bottom_right">
-              <Add color="#fff" style={{ marginRight: '12rpx', width: '32rpx', height: '32rpx' }} />
-              <Text className="enterpriseContent_item_bottom_right_add_text">加入线索</Text>
+      {/* 底部操作按钮 */}
+      <View className="enterpriseContent_item_bottom">
+        <View className="enterpriseContent_item_bottom_left">
+          {(company.hasFeedback === 0 || company.hasFeedback === 1) && (
+            <View onClick={e => handleLike(e)} className={`enterpriseContent_item_bottom_left_good ${company.hasFeedback === 1 ? 'liked' : ''} ${showHeartbeat ? 'heartbeat' : ''}`}>
+              <Image src={company.hasFeedback === 1 ? 'http://36.141.100.123:10013/glks/assets/enterprise/enterprise6.png' : 'http://36.141.100.123:10013/glks/assets/enterprise/enterprise8.png'} className="enterpriseContent_item_bottom_left_good_img" />
+              <Text className="enterpriseContent_item_bottom_left_good_text">有效</Text>
             </View>
-          ) : (
-            <View onClick={handleRemoveFromLeads} className="remove">
-              <Text className="remove_text">移除</Text>
-              <View className="remove_icon"></View>
+          )}
+          {(company.hasFeedback === 0 || company.hasFeedback === 2) && (
+            <View onClick={e => handleDislike(e)} className={`enterpriseContent_item_bottom_left_bad ${company.hasFeedback === 2 ? 'disliked' : ''} ${showShake ? 'shake' : ''}`}>
+              <Image src={company.hasFeedback === 2 ? 'http://36.141.100.123:10013/glks/assets/enterprise/enterprise7.png' : 'http://36.141.100.123:10013/glks/assets/enterprise/enterprise9.png'} className="enterpriseContent_item_bottom_left_bad_img" />
+              <Text className="enterpriseContent_item_bottom_left_bad_text">无效线索</Text>
+              {company.hasFeedback === 2 && <ArrowDown color="#8E8E8E" style={{ width: '28rpx', height: '28rpx', marginLeft: '6rpx' }} />}
             </View>
           )}
         </View>
+        {/* 获取当前线索的状态，默认为 true（显示加入线索按钮） */}
+        {!company.isJoinClue ? (
+          <View onClick={e => handleAddToLeads(e)} className="enterpriseContent_item_bottom_right">
+            <Add color="#fff" style={{ marginRight: '12rpx', width: '32rpx', height: '32rpx' }} />
+            <Text className="enterpriseContent_item_bottom_right_add_text">加入线索</Text>
+          </View>
+        ) : (
+          <View onClick={e => handleRemoveFromLeads(e)} className="remove">
+            <Text className="remove_text">移除</Text>
+            <View className="remove_icon"></View>
+          </View>
+        )}
       </View>
     </View>
   )

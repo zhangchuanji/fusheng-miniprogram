@@ -1,12 +1,22 @@
+// ==================== 依赖导入区域 ====================
+// React核心依赖
 import React, { useEffect, useRef, useState, useCallback, useMemo } from 'react'
+// UI组件库导入
 import { Checkbox, InfiniteLoading, Radio, Popup, Cell, Button, Tabs, TextArea, SearchBar } from '@nutui/nutui-react-taro'
+// Taro框架组件
 import { View, Image, Text } from '@tarojs/components'
+// 图标组件
 import { Add, ArrowDown, Checked } from '@nutui/icons-react-taro'
+// Taro核心功能
 import Taro, { useLoad } from '@tarojs/taro'
+// 样式文件
 import './index.scss'
+// 自定义组件
 import CustomDialog from '@/components/CustomDialog'
+// API接口
 import { clueCreateAPI, clueDeleteAPI } from '@/api/clue'
 import { companyFeedbackCreateAPI } from '@/api/company'
+// 自定义Hooks
 import { useAppSelector } from '@/hooks/useAppStore'
 import ContactPopup from '@/components/ContactPopup'
 
@@ -40,7 +50,7 @@ function Index() {
   const [selectedId, setSelectedId] = useState(sheetList[0]?.id || 1) // 选中的行业ID
   const [sheetIndex, setSheetIndex] = useState({
     id: 1,
-    name: '行业前10'
+    name: '行业'
   }) // 当前选中的行业信息
 
   // ==================== 地区选择相关状态 ====================
@@ -49,72 +59,11 @@ function Index() {
   const [regionPopupHeight, setRegionPopupHeight] = useState(0) // 地区选择弹窗高度
   const [checked, setChecked] = useState(['1']) // 地区选择弹窗高度
   const [selectedRegion, setSelectedRegion] = useState({
-    province: '浙江省',
-    city: '杭州市',
-    fullName: '浙江省 杭州市'
+    province: '',
+    city: '',
+    fullName: '地区'
   }) // 当前选中的地区信息
-  const [regionList, setRegionList] = useState([
-    {
-      province: '浙江省',
-      cities: [
-        { name: '杭州市', selected: true },
-        { name: '宁波市', selected: false },
-        { name: '温州市', selected: false },
-        { name: '嘉兴市', selected: false },
-        { name: '湖州市', selected: false },
-        { name: '绍兴市', selected: false },
-        { name: '金华市', selected: false },
-        { name: '衢州市', selected: false },
-        { name: '舟山市', selected: false },
-        { name: '台州市', selected: false },
-        { name: '丽水市', selected: false }
-      ]
-    },
-    {
-      province: '江苏省',
-      cities: [
-        { name: '南京市', selected: false },
-        { name: '无锡市', selected: false },
-        { name: '徐州市', selected: false },
-        { name: '常州市', selected: false },
-        { name: '苏州市', selected: false },
-        { name: '南通市', selected: false },
-        { name: '连云港市', selected: false },
-        { name: '淮安市', selected: false },
-        { name: '盐城市', selected: false },
-        { name: '扬州市', selected: false },
-        { name: '镇江市', selected: false },
-        { name: '泰州市', selected: false },
-        { name: '宿迁市', selected: false }
-      ]
-    },
-    {
-      province: '广东省',
-      cities: [
-        { name: '广州市', selected: false },
-        { name: '深圳市', selected: false },
-        { name: '珠海市', selected: false },
-        { name: '汕头市', selected: false },
-        { name: '佛山市', selected: false },
-        { name: '韶关市', selected: false },
-        { name: '湛江市', selected: false },
-        { name: '肇庆市', selected: false },
-        { name: '江门市', selected: false },
-        { name: '茂名市', selected: false },
-        { name: '惠州市', selected: false },
-        { name: '梅州市', selected: false },
-        { name: '汕尾市', selected: false },
-        { name: '河源市', selected: false },
-        { name: '阳江市', selected: false },
-        { name: '清远市', selected: false },
-        { name: '东莞市', selected: false },
-        { name: '中山市', selected: false },
-        { name: '潮州市', selected: false },
-        { name: '揭阳市', selected: false },
-        { name: '云浮市', selected: false }
-      ]
-    }
-  ]) // 地区列表数据
+  const [regionList, setRegionList] = useState<any>([]) // 地区列表数据
 
   // ==================== 弹窗显示状态 ====================
   const [isShowActionSheet, setIsShowActionSheet] = useState(false) // 行业选择弹窗
@@ -133,8 +82,6 @@ function Index() {
   const [dialogType, setDialogType] = useState<'add' | 'remove' | 'batchAdd'>('add') // 弹窗类型：添加/移除
 
   // ==================== 点赞点踩状态 ====================
-  const [isLiked, setIsLiked] = useState(false) // 是否已点赞
-  const [isDisliked, setIsDisliked] = useState(false) // 是否已点踩
   const [showHeartbeat, setShowHeartbeat] = useState(false) // 心跳动画状态
   const [showShake, setShowShake] = useState(false) // 抖动动画状态
 
@@ -143,16 +90,6 @@ function Index() {
 
   // ==================== 标签页相关状态 ====================
   const [tabValue, setTabValue] = useState(0) // 当前选中的标签页
-  const tabList = useMemo(
-    () => [
-      { id: 1, name: `手机号 ${phoneInfo?.length || 0}` },
-      { id: 2, name: `固话 ${fixedLines?.length || 0}` },
-      { id: 3, name: `邮箱 ${emails?.length || 0}` },
-      { id: 4, name: `地址 ${address?.length || 0}` },
-      { id: 5, name: `其他 ${others?.length || 0}` }
-    ],
-    [phoneInfo, fixedLines, emails, address, others]
-  )
 
   // ==================== 反馈相关状态 ====================
   const [feedBackValue, setFeedBackValue] = useState('') // 反馈内容
@@ -183,13 +120,11 @@ function Index() {
       setTimeout(resolve, time)
     })
 
-  useLoad(options => {})
+  // 格式化企业信息数据
   const formatInfo = (val: any) => {
     // 创建深拷贝以避免修改只读对象
     const newVal = JSON.parse(JSON.stringify(val))
     let companyList = [...newVal.companyList]
-    console.log(companyList, 123123)
-
     let res = companyList.map((item: any) => {
       // 创建新的对象副本
       const newItem = { ...item }
@@ -224,6 +159,18 @@ function Index() {
     newVal.companyList = res
     return newVal
   }
+
+  // 数组随机打乱函数
+  function shuffleArray(customList: any[]): React.SetStateAction<any[]> {
+    const shuffled = [...customList]
+    for (let i = shuffled.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1))
+      ;[shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]]
+    }
+    return shuffled
+  }
+
+  // ==================== 事件监听和生命周期 ====================
   // 添加事件监听来接收复杂数据
   useEffect(() => {
     const handleEnterpriseSearchData = (res: any) => {
@@ -238,22 +185,91 @@ function Index() {
     }
   }, [])
 
+  // 监听企业详情页面卸载事件
+  useEffect(() => {
+    const handleEnterpriseDetailUnload = (res: any) => {
+      setCustomList((prevList: any[]) => {
+        return prevList.map((item: any) => {
+          if (item.creditCode === res.creditCode) {
+            return {
+              ...item,
+              hasFeedback: res.hasFeedback,
+              isCollect: res.isCollect,
+              commentContent: res.commentContent
+            }
+          }
+          return item
+        })
+      })
+    }
+    Taro.eventCenter.on('enterpriseDetailUnload', handleEnterpriseDetailUnload)
+
+    return () => {
+      Taro.eventCenter.off('enterpriseDetailUnload', handleEnterpriseDetailUnload)
+    }
+  })
+
+  // 监听全选状态变化
+  useEffect(() => {
+    if (isAllSelected) {
+      // 提取customList中的所有creditCode并用逗号拼接
+      const creditCodes = customList
+        .filter(item => item.creditCode) // 过滤出有creditCode的项目
+        .map(item => item.creditCode)
+        .join(',') // 用逗号拼接成字符串
+
+      setCreditCodes(creditCodes)
+    }
+  }, [isAllSelected, customList])
+
+  // 初始化页面尺寸
+  useEffect(() => {
+    const query = Taro.createSelectorQuery()
+
+    query.select('.headerSearch').boundingClientRect(rect => {
+      if (rect && 'height' in rect) {
+        setHeaderHeight(rect.height)
+      }
+    })
+    query.select('.enterpriseBottom').boundingClientRect(rect => {
+      if (rect && 'height' in rect) {
+        setBottomHeight(rect.height)
+      }
+    })
+    query.exec()
+  }, [])
+
+  // 监听地区选择弹窗显示状态
+  useEffect(() => {
+    if (isShowRegion) {
+      // 延迟获取弹窗高度，确保弹窗已经渲染
+      setTimeout(() => {
+        getRegionPopupHeight()
+      }, 100)
+    }
+  }, [isShowRegion])
+
+  // ==================== 基础操作函数 ====================
+  // 打开联系人弹窗
   function openPhone(val: any) {
     setIsShowPhone(true)
     setPhoneInfo(val.contactInfo?.phones)
     setEmails(val.contactInfo.emails)
   }
 
-  function shuffleArray(customList: any[]): React.SetStateAction<any[]> {
-    const shuffled = [...customList]
-    for (let i = shuffled.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1))
-      ;[shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]]
+  // 打开地址弹窗
+  function openAddress(item: any) {
+    if (item.regLocation) {
+      setAddress([item.regLocation])
+      setIsShowAddress(true)
+    } else {
+      Taro.showToast({
+        title: '暂无地址',
+        icon: 'none'
+      })
     }
-    return shuffled
   }
 
-  // ==================== 事件处理函数 ====================
   // 处理头部筛选按钮点击
   const handleActiveIndex = (index: number) => {
     if (index === 0) {
@@ -288,27 +304,6 @@ function Index() {
     if (index === 4) {
       setIsShowPhone(true)
     }
-    if (index === 5) {
-      setIsShowAddress(true)
-    }
-  }
-
-  useEffect(() => {
-    if (isAllSelected) {
-      // 提取customList中的所有creditCode并用逗号拼接
-      const creditCodes = customList
-        .filter(item => item.creditCode) // 过滤出有creditCode的项目
-        .map(item => item.creditCode)
-        .join(',') // 用逗号拼接成字符串
-
-      setCreditCodes(creditCodes)
-    }
-  }, [isAllSelected, customList])
-
-  const handleAiResearchReport = (company: any) => {
-    Taro.navigateTo({
-      url: `/subpackages/company/aiResearchReport/index?creditCode=${company.creditCode}`
-    })
   }
 
   // 处理搜索页跳转
@@ -336,6 +331,14 @@ function Index() {
     })
   }
 
+  // AI研究报告
+  const handleAiResearchReport = (company: any) => {
+    Taro.navigateTo({
+      url: `/subpackages/company/aiResearchReport/index?creditCode=${company.creditCode}`
+    })
+  }
+
+  // ==================== 地区选择处理函数 ====================
   // 处理地区选择
   const handleRegionSelect = (province: string, city: string) => {
     // 检查当前城市是否已被选中
@@ -700,7 +703,7 @@ function Index() {
       {
         creditCode: itemInfo?.creditCode || '',
         isLiked: 0,
-        commentContent:  ''
+        commentContent: ''
       },
       res => {
         if (res.success) {
@@ -753,43 +756,17 @@ function Index() {
     setCustomHasMore(false)
   }
 
-  // ==================== 生命周期钩子 ====================
-  // 初始化页面尺寸
-  useEffect(() => {
-    const query = Taro.createSelectorQuery()
-
-    query.select('.headerSearch').boundingClientRect(rect => {
-      if (rect && 'height' in rect) {
-        setHeaderHeight(rect.height)
-      }
-    })
-    query.select('.enterpriseBottom').boundingClientRect(rect => {
-      if (rect && 'height' in rect) {
-        setBottomHeight(rect.height)
-      }
-    })
-    query.exec()
-  }, [])
-
-  // 监听地区选择弹窗显示状态
-  useEffect(() => {
-    if (isShowRegion) {
-      // 延迟获取弹窗高度，确保弹窗已经渲染
-      setTimeout(() => {
-        getRegionPopupHeight()
-      }, 100)
-    }
-  }, [isShowRegion])
-
+  // ==================== 组件渲染区域 ====================
   return (
     <View className="enterprisePage">
+      {/* ==================== 弹窗组件区域 ==================== */}
       {/* 自定义弹窗 */}
       <CustomDialog visible={showCustomDialog} title={dialogType === 'add' ? '您确定要将该线索匹配吗？' : dialogType === 'batchAdd' ? '您确定要批量添加线索吗？' : '您确定要将该线索移除线索池吗？'} content={dialogType === 'add' ? '标记后会自动转入线索池哦～' : dialogType === 'batchAdd' ? '批量添加后会自动转入线索池哦～' : '移除后会自动消失线索池，请谨慎操作'} onConfirm={handleDialogConfirm} onCancel={handleDialogCancel} />
 
       {/* 恢复弹窗 */}
       <CustomDialog visible={showRestoreDialog} title="您确定要恢复该线索吗？" content="恢复后该线索可以重新选择匹配与不匹配" onConfirm={handleRestoreConfirm} onCancel={handleRestoreCancel} />
 
-      {/* 行业前10 */}
+      {/* 行业前10选择弹窗 */}
       <Popup position="bottom" style={{ height: '50%' }} visible={isShowActionSheet} onClose={() => setIsShowActionSheet(false)}>
         <View className="popup_header">
           <View className="popup_header_title"></View>
@@ -811,7 +788,7 @@ function Index() {
         </View>
       </Popup>
 
-      {/* 无效线索原因 */}
+      {/* 无效线索原因弹窗 */}
       <Popup position="bottom" style={{ height: '50%' }} visible={isShowInvalid} onClose={() => setIsShowInvalid(false)}>
         <View className="popup_header">
           <View className="popup_header_title">无效线索原因</View>
@@ -823,6 +800,7 @@ function Index() {
         </View>
       </Popup>
 
+      {/* 联系人信息弹窗 */}
       <ContactPopup
         visible={isShowPhone}
         onClose={() => setIsShowPhone(false)}
@@ -837,7 +815,7 @@ function Index() {
         onTabChange={(value: number) => setTabValue(value)}
       />
 
-      {/* 工厂地址 */}
+      {/* 工厂地址弹窗 */}
       <Popup position="bottom" style={{ maxHeight: '95%', minHeight: '95%' }} visible={isShowAddress} onClose={() => setIsShowAddress(false)}>
         <View className="popup_header">
           <View className="popup_header_title">工厂地址</View>
@@ -845,13 +823,14 @@ function Index() {
         </View>
         <View className="address_content">
           <Cell.Group>
-            <Cell align="center" title="公司总部地址" description="中国(上海)自由贸易试验区临港新片区江山路" />
-            <Cell align="center" title="公司总部地址" description="中国(上海)自由贸易试验区临港新片区江山路" />
+            {address.map((item, index) => (
+              <Cell key={index} align="center" title={`公司地址${index + 1}`} description={item} />
+            ))}
           </Cell.Group>
         </View>
       </Popup>
 
-      {/* 反馈 */}
+      {/* 反馈弹窗 */}
       <Popup position="bottom" style={{ maxHeight: '95%', minHeight: '95%' }} visible={isShowFeedback} onClose={() => setIsShowFeedback(false)}>
         <View className="popup_header">
           <View className="popup_header_title" style={{ fontSize: '40rpx', color: '#333333', textAlign: 'left', paddingLeft: '24rpx' }}>
@@ -885,7 +864,7 @@ function Index() {
         </View>
       </Popup>
 
-      {/* 地区选择 */}
+      {/* 地区选择弹窗 */}
       <Popup className="region-popup" position="bottom" style={{ maxHeight: '95%', minHeight: '95%' }} visible={isShowRegion} onClose={() => setIsShowRegion(false)}>
         <View className="popup_header">
           <View className="popup_header_title">选择地区</View>
@@ -932,6 +911,7 @@ function Index() {
         </View>
       </Popup>
 
+      {/* ==================== 主要内容区域 ==================== */}
       {/* 头部搜索区域 */}
       <View className="headerSearch">
         <View className="headerSearch_Item_box">
@@ -994,9 +974,11 @@ function Index() {
           hasMore={customHasMore}
           onLoadMore={customLoadMore}
         >
+          {/* 企业列表渲染 */}
           {customList.map((item, index) => (
             <View key={item.creditCode || item.id || `${item.companyName}-${index}`} onClick={() => handleEnterpriseDetail(item)}>
               <View className="enterpriseContent_item">
+                {/* 企业基本信息 */}
                 <View className="enterpriseContent_item_top">
                   {item.logo ? (
                     // 判断是否为图片链接（包含http或https）
@@ -1025,6 +1007,8 @@ function Index() {
                     </View>
                   </View>
                 </View>
+
+                {/* 企业标签 */}
                 <View className="enterpriseContent_item_tag">
                   <View className="enterpriseContent_item_tag_item">{item.regStatus}</View>
                   {item.tags &&
@@ -1035,12 +1019,16 @@ function Index() {
                       </View>
                     ))}
                 </View>
+
+                {/* 企业详细信息 */}
                 <View className="enterpriseContent_item_info">
                   <View className="enterpriseContent_item_info_item">{item.legalPerson}</View>
                   <View className="enterpriseContent_item_info_item">{item.regCapital}</View>
                   <View className="enterpriseContent_item_info_item">{item.establishTime}</View>
                   <View className="enterpriseContent_item_info_item">{item.handleLocation}</View>
                 </View>
+
+                {/* 企业产品信息 */}
                 <View className="enterpriseContent_item_product">
                   <View className={`enterpriseContent_item_product_left${expandedProducts[index] ? ' expanded' : ''}`}>{highlightKeyword(item.businessScope, searchValue || item.orgType)}</View>
                   <View
@@ -1053,6 +1041,8 @@ function Index() {
                     {expandedProducts[index] ? '收起' : '展开'}
                   </View>
                 </View>
+
+                {/* 企业联系方式 */}
                 <View className="enterpriseContent_item_contact">
                   <View className="enterpriseContent_item_contact_item">
                     <Image onClick={() => handleAiResearchReport(item)} src="http://36.141.100.123:10013/glks/assets/enterprise/enterprise5.png" className="enterpriseContent_item_contact_item_img" />
@@ -1070,22 +1060,26 @@ function Index() {
                   <View
                     onClick={e => {
                       e.stopPropagation()
-                      handleActiveIndex(5)
+                      openAddress(item)
                     }}
                     className="enterpriseContent_item_contact_item"
                   >
                     <Image src="http://36.141.100.123:10013/glks/assets/enterprise/enterprise2.png" className="enterpriseContent_item_contact_item_img" />
-                    地址({address?.length || 0})
+                    地址({item?.regLocation ? 1 : 0 || 0})
                   </View>
                 </View>
+
+                {/* 企业操作按钮 */}
                 <View className="enterpriseContent_item_bottom">
                   <View className="enterpriseContent_item_bottom_left">
+                    {/* 点赞按钮 */}
                     {(item.hasFeedback === 0 || item.hasFeedback === 1) && (
                       <View onClick={e => handleLike(e, item)} className={`enterpriseContent_item_bottom_left_good ${item.hasFeedback === 1 ? 'liked' : ''} ${showHeartbeat ? 'heartbeat' : ''}`}>
                         <Image src={item.hasFeedback === 1 ? 'http://36.141.100.123:10013/glks/assets/enterprise/enterprise6.png' : 'http://36.141.100.123:10013/glks/assets/enterprise/enterprise8.png'} className="enterpriseContent_item_bottom_left_good_img" />
                         <Text className="enterpriseContent_item_bottom_left_good_text">有效</Text>
                       </View>
                     )}
+                    {/* 点踩按钮 */}
                     {(item.hasFeedback === 0 || item.hasFeedback === 2) && (
                       <View onClick={e => handleDislike(e, item)} className={`enterpriseContent_item_bottom_left_bad ${item.hasFeedback === 2 ? 'disliked' : ''} ${showShake ? 'shake' : ''}`}>
                         <Image src={item.hasFeedback === 2 ? 'http://36.141.100.123:10013/glks/assets/enterprise/enterprise7.png' : 'http://36.141.100.123:10013/glks/assets/enterprise/enterprise9.png'} className="enterpriseContent_item_bottom_left_bad_img" />
@@ -1094,7 +1088,7 @@ function Index() {
                       </View>
                     )}
                   </View>
-                  {/* 获取当前线索的状态，默认为 true（显示加入线索按钮） */}
+                  {/* 线索操作按钮 */}
                   {!item.isJoinClue ? (
                     <View onClick={e => handleAddToLeads(e, item)} className="enterpriseContent_item_bottom_right">
                       <Add color="#fff" style={{ marginRight: '12rpx', width: '32rpx', height: '32rpx' }} />
@@ -1133,4 +1127,5 @@ function Index() {
   )
 }
 
+// ==================== 组件导出 ====================
 export default Index

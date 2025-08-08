@@ -32,10 +32,9 @@ const Index = forwardRef<{ getAiSessionCopy: () => void }, { height: number }>((
     conclusion: string
     companyList: any[]
     apiStatus: { textComplete: boolean; companyComplete: boolean }
-    favorite: boolean
-    like: number
-    dislike: number
     messageId: string
+    isCollect: boolean
+    isLike: number
   }
   const dispatch = useAppDispatch()
 
@@ -60,6 +59,7 @@ const Index = forwardRef<{ getAiSessionCopy: () => void }, { height: number }>((
   const [questionTime, setQuestionTime] = useState('')
   const [yiJianVisible, setYiJianVisible] = useState(false)
   const [yiJianInput, setYiJianInput] = useState('')
+  const [copyMessageId, setCopyMessageId] = useState('')
   const [saveQueue, setSaveQueue] = useState<Set<string>>(new Set())
 
   // 添加功能按钮状态管理
@@ -78,14 +78,12 @@ const Index = forwardRef<{ getAiSessionCopy: () => void }, { height: number }>((
   // 处理功能按钮点击
   const handleButtonClick = (messageId: string, buttonIndex: number) => {
     let msg = messages.filter(item => item.messageId === messageId)
-
+    setCopyMessageId(messageId)
     // 直接计算answerContent，不依赖状态
     const currentAnswerContent = {
       content: msg.filter(item => item.role === 'ai')[0].content,
       companyList: msg.filter(item => item.role === 'ai')[0].companyList,
-      userInput: msg.filter(item => item.role === 'user')[0].content,
-      like: msg.filter(item => item.role === 'ai')[0].like,
-      dislike: msg.filter(item => item.role === 'ai')[0].dislike
+      userInput: msg.filter(item => item.role === 'user')[0].content
     }
 
     setButtonStates(prev => ({
@@ -125,43 +123,76 @@ const Index = forwardRef<{ getAiSessionCopy: () => void }, { height: number }>((
         data: copyContent
       })
     } else if (buttonIndex === 1) {
-      // 更新messages状态，只修改特定messageId的消息
       setMessages(prevMessages =>
         prevMessages.map(message => {
           if (message.messageId === messageId && message.role === 'ai') {
-            const newLikeStatus = message.like === 1 ? 0 : 1
-            return { ...message, like: newLikeStatus }
-          }
-          return message
-        })
-      )
+            const newLikeStatus = message.isLike === 1 ? 0 : 1
+            aiMessageEvaluationCreateAPI(
+              {
+                userId: userInfo?.id,
+                messageId: messageId,
+                entryPoint: 'ai_chat',
+                isLiked: newLikeStatus,
+                questionContent: currentAnswerContent.userInput,
+                answerContent: JSON.stringify(currentAnswerContent)
+              },
+              res => {
+                if (!res.success) {
+                  setMessages(prevMsgs => prevMsgs.map(msg => (msg.messageId === messageId && msg.role === 'ai' ? { ...msg, isLike: message.isLike } : msg)))
+                  Taro.showToast({
+                    title: '点赞失败',
+                    icon: 'none'
+                  })
+                } else {
+                  Taro.showToast({
+                    title: '点赞成功',
+                    icon: 'none'
+                  })
+                }
+              }
+            )
 
-      // 根据当前消息的状态设置图片
-      const aiMsg = msg.filter(item => item.role === 'ai')[0]
-      const newLikeStatus = aiMsg.like === 1 ? 0 : 1
-      // aiMessageEvaluationCreateAPI({ userId: userInfo?.id, messageId: aiSessionId, entryPoint: 'ai_chat', isLiked: 1, questionContent: currentAnswerContent.userInput, answerContent: JSON.stringify(currentAnswerContent) }, res => {
-      //   if (res.success) {
-      //     msg.filter(item => item.role === 'ai')[0].like = 1
-      //   }
-      // })
-    } else if (buttonIndex === 2) {
-      // 更新messages状态，只修改特定messageId的消息
-      setMessages(prevMessages =>
-        prevMessages.map(message => {
-          if (message.messageId === messageId && message.role === 'ai') {
-            const newDislikeStatus = message.dislike === 1 ? 0 : 1
-            return { ...message, dislike: newDislikeStatus }
+            return { ...message, isLike: newLikeStatus }
           }
           return message
         })
       )
-      // setYiJianVisible(true)
+    } else if (buttonIndex === 2) {
+      setMessages(prevMessages =>
+        prevMessages.map(message => {
+          if (message.messageId === messageId && message.role === 'ai') {
+            if (message.isLike === 0) {
+              setYiJianVisible(true)
+            } else {
+              const updatedMessage = { ...message, isLike: 0 }
+              aiMessageEvaluationCreateAPI(
+                {
+                  userId: userInfo?.id,
+                  messageId: messageId,
+                  entryPoint: 'ai_chat',
+                  isLiked: 0,
+                  questionContent: currentAnswerContent.userInput,
+                  answerContent: JSON.stringify(currentAnswerContent)
+                },
+                res => {
+                  if (!res.success) {
+                    setMessages(prevMsgs => prevMsgs.map(msg => (msg.messageId === messageId && msg.role === 'ai' ? { ...msg, isLike: message.isLike } : msg)))
+                  }
+                }
+              )
+
+              return updatedMessage
+            }
+          }
+          return message
+        })
+      )
     } else if (buttonIndex === 3) {
       // 更新messages状态，只修改特定messageId的消息
       setMessages(prevMessages =>
         prevMessages.map(message => {
           if (message.messageId === messageId && message.role === 'ai') {
-            return { ...message, favorite: !message.favorite }
+            return { ...message, isCollect: !message.isCollect }
           }
           return message
         })
@@ -178,7 +209,7 @@ const Index = forwardRef<{ getAiSessionCopy: () => void }, { height: number }>((
         messageId,
         contentSummary: contentSummary
       }
-      if (!msg.filter(item => item.role === 'ai')[0].favorite) {
+      if (!msg.filter(item => item.role === 'ai')[0].isCollect) {
         userFavoriteCreateAPI(queryParams, res => {
           if (res.success) {
             dispatch(getFavoriteListAsync())
@@ -194,6 +225,32 @@ const Index = forwardRef<{ getAiSessionCopy: () => void }, { height: number }>((
         })
       }
     }
+  }
+
+  const yiJianConfirm = () => {
+    let msg = messages.filter(item => item.messageId === copyMessageId)
+    // 直接计算answerContent，不依赖状态
+    const currentAnswerContent = {
+      content: msg.filter(item => item.role === 'ai')[0].content,
+      companyList: msg.filter(item => item.role === 'ai')[0].companyList,
+      userInput: msg.filter(item => item.role === 'user')[0].content
+    }
+
+    aiMessageEvaluationCreateAPI({ userId: userInfo?.id, messageId: aiSessionId, entryPoint: 'ai_chat', isLiked: 2, questionContent: currentAnswerContent.userInput, answerContent: JSON.stringify(currentAnswerContent), commentContent: yiJianInput }, res => {
+      if (res.success) {
+        Taro.showToast({ title: '反馈成功', icon: 'none' })
+        setMessages(prevMessages =>
+          prevMessages.map(message => {
+            if (message.messageId === copyMessageId && message.role === 'ai') {
+              const newDislikeStatus = message.isLike === 2 ? 0 : 2
+              return { ...message, isLike: newDislikeStatus }
+            }
+            return message
+          })
+        )
+      }
+    })
+    setYiJianVisible(false)
   }
 
   function listenerInterface(type: string, messageId: string, userMessageId: string | number, isItCompleted: boolean, messagesInfo: Message[]) {
@@ -364,9 +421,8 @@ const Index = forwardRef<{ getAiSessionCopy: () => void }, { height: number }>((
               companyList: [],
               apiStatus: { textComplete: true, companyComplete: true },
               messageId: item.id || generateUniqueId(),
-              favorite: false,
-              like: 0,
-              dislike: 0
+              isCollect: item.isCollect,
+              isLike: item.isLike
             })
           }
           if (item.aiResponse) {
@@ -379,9 +435,8 @@ const Index = forwardRef<{ getAiSessionCopy: () => void }, { height: number }>((
               total: JSON.parse(item.enterpriseInfo).total,
               apiStatus: { textComplete: true, companyComplete: true },
               messageId: item.id || generateUniqueId(),
-              favorite: false,
-              like: 0,
-              dislike: 0
+              isCollect: item.isCollect,
+              isLike: item.isLike
             })
           }
         })
@@ -549,9 +604,8 @@ const Index = forwardRef<{ getAiSessionCopy: () => void }, { height: number }>((
         companyList: [],
         apiStatus: { textComplete: false, companyComplete: false },
         messageId: userMessageId,
-        favorite: false,
-        like: 0,
-        dislike: 0
+        isCollect: false,
+        isLike: 0
       },
       {
         splitNum: 0,
@@ -562,9 +616,8 @@ const Index = forwardRef<{ getAiSessionCopy: () => void }, { height: number }>((
         companyList: [],
         apiStatus: { textComplete: false, companyComplete: false },
         messageId: aiMessageId,
-        favorite: false,
-        like: 0,
-        dislike: 0
+        isCollect: false,
+        isLike: 0
       }
     ])
 
@@ -811,17 +864,6 @@ const Index = forwardRef<{ getAiSessionCopy: () => void }, { height: number }>((
     setScrollToBottomTrigger(scrollToBottomTriggerCopy)
   }
 
-  const yiJianConfirm = () => {
-    // aiMessageEvaluationCreateAPI({ userId: userInfo?.id, messageId: aiSessionId, entryPoint: 'ai_chat', isLiked: 0, questionContent: answerContent.userInput, answerContent: JSON.stringify(answerContent), commentContent: yiJianInput }, res => {
-    //   if (res.success) {
-    //     answerContent.dislike = 1
-    //     Taro.showToast({ title: '反馈成功', icon: 'none' })
-    //     setClickOnTheImage('http://36.141.100.123:10013/glks/assets/home/home15.png')
-    //   }
-    // })
-    setYiJianVisible(false)
-  }
-
   const handleInput = (e: any) => {
     setInput(e.detail.value)
   }
@@ -875,7 +917,9 @@ const Index = forwardRef<{ getAiSessionCopy: () => void }, { height: number }>((
           {messages.map((msg, idx) => (
             <View key={idx} className={`chatMsg ${msg.role === 'user' ? 'user' : 'ai'}`} style={{ padding: '8px 0' }}>
               {msg.role === 'user' ? (
-                <View className="chatMsg_user">{msg.content}</View>
+                <Text user-select className="chatMsg_user">
+                  {msg.content}
+                </Text>
               ) : (
                 <View className="chatMsg_ai">
                   {/* 使用AiMessageComponent替换原有的AI消息显示逻辑 */}
@@ -885,9 +929,9 @@ const Index = forwardRef<{ getAiSessionCopy: () => void }, { height: number }>((
                   {msg.content && msg.apiStatus.textComplete && msg.apiStatus.companyComplete ? (
                     <View className="chatMsg_ai_fun">
                       <Image src="http://36.141.100.123:10013/glks/assets/home/home10.png" className={`chatMsg_ai_fun_img ${buttonStates[msg.messageId]?.[0] ? 'button-active' : ''}`} onClick={() => handleButtonClick(msg.messageId, 0)} data-message-id={msg.messageId} data-button-index={0} />
-                      {msg.dislike == 0 ? <Image src={msg.like == 0 ? 'http://36.141.100.123:10013/glks/assets/home/home11.png' : 'http://36.141.100.123:10013/glks/assets/home/home14.png'} className={`chatMsg_ai_fun_img ${buttonStates[msg.messageId]?.[1] ? 'button-active' : ''}`} onClick={() => handleButtonClick(msg.messageId, 1)} data-message-id={msg.messageId} data-button-index={1} /> : null}
-                      {msg.like == 0 ? <Image src={msg.dislike == 0 ? 'http://36.141.100.123:10013/glks/assets/home/home12.png' : 'http://36.141.100.123:10013/glks/assets/home/home15.png'} className={`chatMsg_ai_fun_img ${buttonStates[msg.messageId]?.[2] ? 'button-active' : ''}`} onClick={() => handleButtonClick(msg.messageId, 2)} data-message-id={msg.messageId} data-button-index={2} /> : null}
-                      <Image src={!msg.favorite ? 'http://36.141.100.123:10013/glks/assets/home/home13.png' : 'http://36.141.100.123:10013/glks/assets/home/home16.png'} className={`chatMsg_ai_fun_img ${buttonStates[msg.messageId]?.[3] ? 'button-active' : ''}`} onClick={() => handleButtonClick(msg.messageId, 3)} data-message-id={msg.messageId} data-button-index={3} />
+                      {(msg.isLike == 0 || msg.isLike == 1) && <Image src={msg.isLike == 1 ? 'http://36.141.100.123:10013/glks/assets/home/home14.png' : 'http://36.141.100.123:10013/glks/assets/home/home11.png'} className={`chatMsg_ai_fun_img ${buttonStates[msg.messageId]?.[1] ? 'button-active' : ''}`} onClick={() => handleButtonClick(msg.messageId, 1)} data-message-id={msg.messageId} data-button-index={1} />}
+                      {(msg.isLike == 0 || msg.isLike == 2) && <Image src={msg.isLike == 2 ? 'http://36.141.100.123:10013/glks/assets/home/home15.png' : 'http://36.141.100.123:10013/glks/assets/home/home12.png'} className={`chatMsg_ai_fun_img ${buttonStates[msg.messageId]?.[2] ? 'button-active' : ''}`} onClick={() => handleButtonClick(msg.messageId, 2)} data-message-id={msg.messageId} data-button-index={2} />}
+                      <Image src={!msg.isCollect ? 'http://36.141.100.123:10013/glks/assets/home/home13.png' : 'http://36.141.100.123:10013/glks/assets/home/home16.png'} className={`chatMsg_ai_fun_img ${buttonStates[msg.messageId]?.[3] ? 'button-active' : ''}`} onClick={() => handleButtonClick(msg.messageId, 3)} data-message-id={msg.messageId} data-button-index={3} />
                     </View>
                   ) : null}
                 </View>

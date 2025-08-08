@@ -169,6 +169,18 @@ function Index() {
     }
   }
 
+  function openAddress(item: any) {
+    if (item.regLocation) {
+      setAddress([item.regLocation])
+      setIsShowAddress(true)
+    } else {
+      Taro.showToast({
+        title: '暂无地址',
+        icon: 'none'
+      })
+    }
+  }
+
   // ==================== 线索操作处理函数 ====================
   // 处理加入线索点击
   const handleAddToLeads = (e: any, item: any) => {
@@ -354,8 +366,9 @@ function Index() {
         </View>
         <View className="address_content">
           <Cell.Group>
-            <Cell align="center" title="公司总部地址" description="中国(上海)自由贸易试验区临港新片区江山路" />
-            <Cell align="center" title="公司总部地址" description="中国(上海)自由贸易试验区临港新片区江山路" />
+            {address.map((item, index) => (
+              <Cell key={index} align="center" title={`公司地址${index + 1}`} description={item} />
+            ))}
           </Cell.Group>
         </View>
       </Popup>
@@ -500,12 +513,12 @@ function Index() {
                   <View
                     onClick={e => {
                       e.stopPropagation()
-                      handleActiveIndex(5)
+                      openAddress(item)
                     }}
                     className="enterpriseContent_item_contact_item"
                   >
                     <Image src="http://36.141.100.123:10013/glks/assets/enterprise/enterprise2.png" className="enterpriseContent_item_contact_item_img" />
-                    地址({address?.length || 0})
+                    地址({item?.regLocation ? 1 : 0})
                   </View>
                 </View>
                 <View className="enterpriseContent_item_bottom">
