@@ -1,5 +1,5 @@
 import { taroPost, taroGet, taroPut, taroDelete } from '@/service'
-import { userAgreementURL, getAreaURL, loginInfoURL, loginInfoUpdateURL, updateMobileURL, configCompanyUpdateURL, configCompanyPostURL, configCompanyGetURL, configCompanySectorURL } from '@/service/config'
+import { feedbackCreateURL, feedbackListURL, feedbackDetailURL, userAgreementURL, getAreaURL, loginInfoURL, loginInfoUpdateURL, updateMobileURL, configCompanyUpdateURL, configCompanyPostURL, configCompanyGetURL, configCompanySectorURL } from '@/service/config'
 import type { IResponse } from '../types'
 
 export const userAgreementAPI = (data: any, callback: (res: IResponse<any>) => void) => {
@@ -229,6 +229,90 @@ export const configCompanyUpdateAPI = (data: any, callback: (res: IResponse<any>
 export const configCompanySectorAPI = (data: any, callback: (res: IResponse<any>) => void) => {
   taroGet({
     url: configCompanySectorURL,
+    data,
+    success: (res: any) => {
+      callback({
+        success: true,
+        data: res.data
+      })
+    },
+    fail: (err: any) => {
+      if (err instanceof Promise) {
+        err.catch(errMsg => {
+          callback({
+            success: false,
+            data: errMsg
+          })
+        })
+      } else {
+        callback({
+          success: false,
+          data: err
+        })
+      }
+    }
+  }).catch(() => {})
+}
+
+export const feedbackCreateAPI = (data: any, callback: (res: IResponse<any>) => void) => {
+  taroPost({
+    url: feedbackCreateURL,
+    data,
+    success: (res: any) => {
+      callback({
+        success: true,
+        data: res.data
+      })
+    },
+    fail: (err: any) => {
+      if (err instanceof Promise) {
+        err.catch(errMsg => {
+          callback({
+            success: false,
+            data: errMsg
+          })
+        })
+      } else {
+        callback({
+          success: false,
+          data: err
+        })
+      }
+    }
+  }).catch(() => {})
+}
+
+export const feedbackListAPI = (data: any, callback: (res: IResponse<any>) => void) => {
+  taroGet({
+    url: feedbackListURL,
+    data,
+    success: (res: any) => {
+      callback({
+        success: true,
+        data: res.data
+      })
+    },
+    fail: (err: any) => {
+      if (err instanceof Promise) {
+        err.catch(errMsg => {
+          callback({
+            success: false,
+            data: errMsg
+          })
+        })
+      } else {
+        callback({
+          success: false,
+          data: err
+        })
+      }
+    }
+  }).catch(() => {})
+}
+
+export const feedbackDetailAPI = (data: any, callback: (res: IResponse<any>) => void) => {
+  taroGet({
+    url: feedbackDetailURL,
     data,
     success: (res: any) => {
       callback({

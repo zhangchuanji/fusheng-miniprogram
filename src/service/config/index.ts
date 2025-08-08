@@ -93,3 +93,10 @@ export const clueFollowUpHistoryURL = '/fs/ai-message/page'
 
 // 企业反馈
 export const companyFeedbackCreateURL = '/fs/company-feedback/create'
+
+// 意见反馈
+export const feedbackCreateURL = '/member/feedback/create'
+// 意见反馈列表
+export const feedbackListURL = '/member/feedback/list'
+// 意见反馈详情
+export const feedbackDetailURL = '/member/feedback/get'

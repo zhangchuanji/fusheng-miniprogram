@@ -3,29 +3,46 @@ import { Image, View, Text } from '@tarojs/components'
 import './index.scss'
 import { TextArea, Input } from '@nutui/nutui-react-taro'
 import { ArrowRight } from '@nutui/icons-react-taro'
-import Taro from '@tarojs/taro'
+import Taro, { useLoad } from '@tarojs/taro'
+import { feedbackDetailAPI } from '@/api/setting'
 
 function Index() {
-  const feedbackRecords = {
-    id: 1,
-    title: '功能建议反馈',
-    content:
-      '希望可以增加夜间模式功能，希望可以增加夜间模式功能功能，希望可以增加夜间模式功能，希望可以增加夜间模式功能，希望可以增加夜间模式功能，希望可以增加夜间模式功能，希望可以增加夜间模式功能，希望可以增加夜间模式功能，希望可以增加夜间模式功能，希望可以增加夜间模式功能，希望可以增加夜间模式功能，希望可以增加夜间模式功能，希望可以增加夜间模式功能，希望可以增加夜间模式功能，希望可以增加夜间模式功能，希望可以增加夜间模式功能，希望可以增加夜间模式功能，希望可以增加夜间模式功能，希望可以增加夜间模式功能，希望可以增加夜间模式功能，希望可以增加夜间模式功能，希望可以增加夜间模式功能，希望可以增加夜间模式功能，希望可以增加夜间模式功能，希望可以增加夜间模式功能，希望可以增加夜间模式功能，希望可以增加夜间模式功能，希望可以增加夜间模式功能，希望可以增加夜间模式功能，希望可以增加夜间模式功能，希望可以增加夜间模式功能，希望可以增加夜间模式功能，希望可以增加夜间模式功能，希望可以增加夜间模式功能，希望可以增加夜间模式功能，希望可以增加夜间模式功能，希望可以增加夜间模式功能，希望可以增加夜间模式功能，希望可以增加夜间模式功能，希望可以增加夜间模式功能，希望可以增加夜间模式功能，希望可以增加夜间模式功能，希望可以增加夜间模式功能，希望可以增加夜间模式功能，希望可以增加夜间模式功能，希望可以增加夜间模式功能，希望可以增加夜间模式功能，希望可以增加夜间模式功能，希望可以增加夜间模式功能，希望可以增加夜间模式功能，希望可以增加夜间模式功能，希望可以增加夜间模式功能，希望可以增加夜间模式功能，希望可以增加夜间模式功能，希望可以增加夜间模式功能，希望可以增加夜间模式功能，希望可以增加夜间模式功能，希望可以增加夜间模式功能，希望可以增加夜间模式功能，希望可以增加夜间模式功能，希望可以增加夜间模式功能，希望可以增加夜间模式功能，希望可以增加夜间模式功能，希望可以增加夜间模式功能，希望可以增加夜间模式功能，希望可以增加夜间模式功能，希望可以增加夜间模式功能，希望可以增加夜间模式功能，希望可以增加夜间模式功能，希望可以增加夜间模式功能，希望可以增加夜间模式功能，希望可以增加夜间模式功能，希望可以增加夜间模式功能，希望可以增加夜间模式功能，希望可以增加夜间模式功能，希望可以增加夜间模式功能，希望可以增加夜间模式功能，希望可以增加夜间模式功能，希望可以增加夜间模式功能，希望可以增加夜间模式功能，希望可以增加夜间模式功能，希望可以增加夜间模式功能，希望可以增加夜间模式功能，希望可以增加夜间模式功能，希望可以增加夜间模式功能，希望可以增加夜间模式功能，希望可以增加夜间模式功能，希望可以增加夜间模式功能，希望可以增加夜间模式功能，希望可以增加夜间模式功能，希望可以增加夜间模式功能，希望可以增加夜间模式功能，希望可以增加夜间模式功能，希望可以增加夜间模式功能，希望可以增加夜间模式功能，希望可以增加夜间模式功能，希望可以增加夜间模式功能，希望可以增加夜间模式功能，希望可以增加夜间模式功能，希望可以增加夜间模式功能，希望可以增加夜间模式功能，希望可以增加夜间模式功能，希望可以增加夜间模式功能，希望可以增加夜间模式功能，希望可以增加夜间模式功能，希望可以增加夜间模式功能，希望可以增加夜间模式功能，希望可以增加夜间模式功能，希望可以增加夜间模式功能，希望可以增加夜间模式功能，希望可以增加夜间模式功能，希望可以增加夜间模式功能，希望可以增加夜间模式功能，希望可以增加夜间模式功能，希望可以增加夜间',
-    image: ['home/home1.png', 'home/home2.png', 'home/home3.png', 'home/home4.png', 'home/home5.png', 'home/home6.png', 'home/home7.png', 'home/home8.png', 'home/home9.png'],
-    time: '2024-01-15 14:30'
+  const [feedbackRecords, setFeedbackRecords] = useState<any>({})
+
+  useLoad(options => {
+    const { id } = options
+    getFeedbackDetail(id)
+  })
+
+  function getFeedbackDetail(id: any) {
+    feedbackDetailAPI({ id }, res => {
+      setFeedbackRecords(res.data)
+    })
+  }
+
+  // 转化时间戳
+  function formatTimestamp(timestamp: number) {
+    const date = new Date(timestamp)
+    const year = date.getFullYear()
+    const month = String(date.getMonth() + 1).padStart(2, '0')
+    const day = String(date.getDate()).padStart(2, '0')
+    const hours = String(date.getHours()).padStart(2, '0')
+    const minutes = String(date.getMinutes()).padStart(2, '0')
+    const seconds = String(date.getSeconds()).padStart(2, '0')
+    return `${year}-${month}-${day} ${hours}:${minutes}`
   }
 
   return (
     <View className="detailPage">
       <View className="item">
-        <Text className="content_text">{feedbackRecords.content}</Text>
+        <Text className="content_text">{feedbackRecords?.content}</Text>
         <View className="item_img">
-          {feedbackRecords.image.map((imgSrc, index) => (
-            <Image key={index} src={`http://36.141.100.123:10013/glks/assets/${imgSrc}`} className="item_img_item" mode="aspectFit" />
+          {(feedbackRecords?.images || []).map((imgSrc: string, index: number) => (
+            <Image key={index} src={`${imgSrc}`} className="item_img_item" mode="aspectFit" />
           ))}
         </View>
         <View className="item_time">
-          <Text className="time_text">{feedbackRecords.time}</Text>
+          <Text className="time_text">{formatTimestamp(feedbackRecords?.createTime || 0)}</Text>
         </View>
       </View>
     </View>
