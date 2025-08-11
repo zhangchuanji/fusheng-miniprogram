@@ -104,10 +104,17 @@
         display: flex;
         justify-content: space-between;
         align-items: center;
-        margin-bottom: 24rpx;
+        margin-bottom: 70rpx;
 
         .feedback_input_right {
             flex: 1;
+            position: relative;
+
+            .phone_error_tip {
+                position: absolute;
+                bottom: -58rpx;
+                left: 0;
+            }
         }
 
         .nut-input {

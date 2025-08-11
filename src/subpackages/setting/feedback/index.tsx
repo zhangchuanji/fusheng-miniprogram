@@ -34,7 +34,7 @@ function Index() {
 
   const getImage = () => {
     Taro.chooseImage({
-      count: 3,
+      count: 6,
       sizeType: ['original', 'compressed'],
       sourceType: ['album', 'camera'],
       success: res => {
@@ -94,13 +94,13 @@ function Index() {
       Taro.showToast({ title: '请输入反馈内容', icon: 'none' })
       return
     }
-    
+
     // 新增：手机号校验
     if (phone && !validatePhone(phone)) {
       Taro.showToast({ title: '请输入正确的手机号', icon: 'none' })
       return
     }
-    
+
     try {
       // 获取当前设备信息
       const currentDeviceInfo = await getFormattedDeviceInfo()
@@ -165,9 +165,9 @@ function Index() {
       <View className="feedback_input">
         <View>手机号</View>
         <View className="feedback_input_right">
-          <Input 
-            placeholder="请输入手机号" 
-            value={phone} 
+          <Input
+            placeholder="请输入手机号"
+            value={phone}
             onChange={(e: any) => handlePhoneChange(e)}
             type="number" // 限制输入类型为数字
             maxLength={11} // 限制最大长度为11位

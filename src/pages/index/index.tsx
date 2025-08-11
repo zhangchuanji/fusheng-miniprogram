@@ -204,9 +204,11 @@ function Index() {
   }
 
   const getChatItem = (chatItem: any) => {
+    Taro.showLoading({ title: '获取内容中', mask: true })
     aiSessionGetHistorySessionAPI({ id: chatItem.id }, res => {
       if (res.success && res.data) {
         setActiveIndex(0)
+        Taro.hideLoading()
         nextTick(() => {
           Taro.eventCenter.trigger('getChatItem', res.data)
           Taro.setStorageSync('aiSessionId', chatItem.id)

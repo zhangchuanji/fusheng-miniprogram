@@ -729,11 +729,11 @@ const CluePage = forwardRef<{ getClueList: (page?: number, append?: boolean) => 
                       </View>
                       <View onClick={() => openPhone(item)} className="cluePage_item_contact_item">
                         <Image src="http://36.141.100.123:10013/glks/assets/enterprise/enterprise1.png" className="cluePage_item_contact_item_img" />
-                        电话({item.phoneInfo})
+                        电话({item?.contactInfo?.phones?.length})
                       </View>
                       <View onClick={() => openAddress(item)} className="cluePage_item_contact_item">
                         <Image src="http://36.141.100.123:10013/glks/assets/enterprise/enterprise2.png" className="cluePage_item_contact_item_img" />
-                        地址({item.address})
+                        地址({item?.regLocation ? 1 : 0})
                       </View>
                     </View>
                   </View>

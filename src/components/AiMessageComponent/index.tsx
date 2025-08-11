@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useEffect } from 'react'
 import { View, Image, Text } from '@tarojs/components'
 import { ArrowRight, ArrowRightSmall } from '@nutui/icons-react-taro'
 import { marked } from 'marked'
@@ -15,19 +15,27 @@ const parseMarkdown = (text: string): string => {
   if (!text) return ''
 
   try {
-    const result = marked.parse(text)
+    // 先对HTML标签进行转义，防止接口返回的HTML标签被直接渲染
+    const escapedText = text
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;')
+    
+    const result = marked.parse(escapedText)
     if (typeof result === 'string') {
       return result
     } else if (result instanceof Promise) {
-      // 如果是Promise，返回原文本
-      console.warn('Marked returned a Promise, using original text')
-      return text.replace(/\n/g, '<br>')
+      // 如果是Promise，返回转义后的文本
+      console.warn('Marked returned a Promise, using escaped text')
+      return escapedText.replace(/\n/g, '<br>')
     } else {
       return String(result)
     }
   } catch (error) {
     console.error('Markdown parsing error:', error)
-    // 如果解析失败，返回原文本并进行基本HTML转义
+    // 如果解析失败，返回转义后的文本
     return text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;').replace(/\n/g, '<br>')
   }
 }
@@ -79,11 +87,24 @@ const navigateToCompanyList = (msg: any) => {
 }
 
 const AiMessageComponent: React.FC<AiMessageComponentProps> = ({ msg }) => {
+  useEffect(() => {
+    const handleEnterpriseSearchDataEdit = (data: any) => {
+      if (data.messageId === msg.messageId) {
+        msg.companyList = data.companyList
+      }
+    }
+    Taro.eventCenter.on('enterpriseSearchDataEdit', handleEnterpriseSearchDataEdit)
+
+    return () => {
+      Taro.eventCenter.off('enterpriseSearchDataEdit', handleEnterpriseSearchDataEdit)
+    }
+  }, [])
   return (
     <View>
+      {msg.splitNum == 0 || msg.splitNum == null ? 10 : msg.splitNum}
       {msg.content ? <View className="chatMsg_ai_text" dangerouslySetInnerHTML={{ __html: parseMarkdown(msg.content) }}></View> : null}
       {msg.role === 'ai' && msg.companyList && msg.companyList.length > 0
-        ? msg.companyList.slice(0, msg.splitNum).map((val, valIdx) => (
+        ? msg.companyList.slice(0, msg.splitNum == 0 || msg.splitNum == null ? 10 : msg.splitNum).map((val, valIdx) => (
             <View key={valIdx}>
               <View className="chat_ai_company" onClick={() => navigateToCompanyDetail(val)}>
                 <View className="company_left">

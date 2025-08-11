@@ -60,13 +60,13 @@ const ContactPopup: React.FC<ContactPopupProps> = ({ visible, onClose, contactDa
         <View className="tab_content_item_three">
           <Text style={{ color: '#333333' }}>来自：</Text> - -
         </View>
-        {(type === 'phone' && index < 3) || type === 'email' ? (
+        {/* {(type === 'phone' && index < 3) || type === 'email' ? (
           <View className="tab_content_item_four">
             <Image src="http://36.141.100.123:10013/glks/assets/enterprise/enterprise13.png" className="tab_content_item_four_img" />
             <Image src="http://36.141.100.123:10013/glks/assets/enterprise/enterprise13.png" className="tab_content_item_four_img" />
             <Image src="http://36.141.100.123:10013/glks/assets/enterprise/enterprise13.png" className="tab_content_item_four_img" />
           </View>
-        ) : null}
+        ) : null} */}
       </View>
     )
   }

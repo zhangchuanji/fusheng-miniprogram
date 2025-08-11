@@ -8,7 +8,7 @@ import { View, Image, Text } from '@tarojs/components'
 // 图标组件
 import { Add, ArrowDown, Checked } from '@nutui/icons-react-taro'
 // Taro核心功能
-import Taro, { useLoad } from '@tarojs/taro'
+import Taro from '@tarojs/taro'
 // 样式文件
 import './index.scss'
 // 自定义组件
@@ -23,6 +23,7 @@ import ContactPopup from '@/components/ContactPopup'
 function Index() {
   // ==================== 搜索相关状态 ====================
   const [searchValue, setSearchValue] = useState('') // 搜索关键词
+  const [messageId, setMessageId] = useState('') // 搜索关键词
   const [matchHighest, setMatchHighest] = useState(false) // 匹配最高开关
   const [headerHeight, setHeaderHeight] = useState(0) // 头部高度
   const [bottomHeight, setBottomHeight] = useState(0) // 底部高度
@@ -176,6 +177,7 @@ function Index() {
     const handleEnterpriseSearchData = (res: any) => {
       setCustomList(formatInfo(res).companyList)
       setTotal(res.total)
+      setMessageId(res.messageId)
     }
 
     Taro.eventCenter.on('enterpriseSearchData', handleEnterpriseSearchData)
@@ -184,6 +186,14 @@ function Index() {
       Taro.eventCenter.off('enterpriseSearchData', handleEnterpriseSearchData)
     }
   }, [])
+
+  Taro.useUnload(() => {
+    Taro.eventCenter.trigger('enterpriseSearchDataEdit', {
+      companyList: customList,
+      total: total,
+      messageId: messageId
+    })
+  })
 
   // 监听企业详情页面卸载事件
   useEffect(() => {
@@ -482,7 +492,7 @@ function Index() {
     companyFeedbackCreateAPI(
       {
         creditCode: itemInfo.creditCode,
-        isLiked: 0,
+        isLiked: 2,
         feedbackType: parseInt(checked[0]),
         commentContent: feedBackValue || '不符合我的业务'
       },
@@ -566,7 +576,6 @@ function Index() {
       if (dialogType === 'add') {
         // 添加线索
         setLeadStatus(prev => ({ ...prev, [itemId]: false }))
-
         clueCreateAPI({ unifiedSocialCreditCodes: currentOperatingItem.creditCode }, res => {
           if (res.success) {
             setCustomList(prevList => {

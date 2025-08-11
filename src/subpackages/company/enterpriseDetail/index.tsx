@@ -159,7 +159,7 @@ function Index() {
     companyFeedbackCreateAPI(
       {
         creditCode: company.creditCode,
-        isLiked: 0,
+        isLiked: 2,
         feedbackType: parseInt(checked[0]),
         commentContent: feedBackValue || '不符合我的业务'
       },

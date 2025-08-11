@@ -236,9 +236,10 @@ const Index = forwardRef<{ getAiSessionCopy: () => void }, { height: number }>((
       userInput: msg.filter(item => item.role === 'user')[0].content
     }
 
-    aiMessageEvaluationCreateAPI({ userId: userInfo?.id, messageId: aiSessionId, entryPoint: 'ai_chat', isLiked: 2, questionContent: currentAnswerContent.userInput, answerContent: JSON.stringify(currentAnswerContent), commentContent: yiJianInput }, res => {
+    aiMessageEvaluationCreateAPI({ userId: userInfo?.id, messageId: copyMessageId, entryPoint: 'ai_chat', isLiked: 2, questionContent: currentAnswerContent.userInput, answerContent: JSON.stringify(currentAnswerContent), commentContent: yiJianInput }, res => {
       if (res.success) {
         Taro.showToast({ title: '反馈成功', icon: 'none' })
+        setYiJianInput('')
         setMessages(prevMessages =>
           prevMessages.map(message => {
             if (message.messageId === copyMessageId && message.role === 'ai') {
